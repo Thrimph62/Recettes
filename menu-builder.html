@@ -11,11 +11,17 @@
   --ice:#e8f0fb;--ice2:#f5f8fe;--border:#c8d9f0;
   --text:#1a1a2e;--muted:#5a6a8a;
   --bg:#f0f2f7;--white:#ffffff;
-  --green:#1a7a4a;--red:#a02020;
+  --gold:#b8860b;--green:#1a7a4a;--red:#a02020;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
+.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,0.08);}
+.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;text-decoration:none;white-space:nowrap;}
+.nav-links{display:flex;}
+.nav-link{color:rgba(255,255,255,0.45);text-decoration:none;font-size:12px;letter-spacing:0.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-link:hover{color:rgba(255,255,255,0.8);}
+.nav-link.active{color:#fff;border-bottom-color:var(--gold);}
 .app-header{background:var(--navy);padding:1.5rem 2.5rem;display:flex;align-items:center;gap:1.25rem;}
 .header-icon{width:44px;height:44px;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
 .header-title{color:#fff;}
@@ -252,8 +258,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </head>
 <body>
 
+<nav class="app-nav">
+  <a href="index.html" class="nav-brand">🍽 Mes Recettes</a>
+  <div class="nav-links">
+    <a href="index.html"         class="nav-link">Bibliothèque</a>
+    <a href="recipe-parser.html" class="nav-link">Parseur</a>
+    <a href="menu-builder.html"  class="nav-link active">Menus</a>
+    <a href="prep-planner.html"  class="nav-link">Planning</a>
+  </div>
+</nav>
+
 <header class="app-header">
-  <div class="header-icon">📅</div>
   <div class="header-title">
     <h1>Menu Hebdomadaire</h1>
     <p>Planificateur + Liste de courses · Étape 2 sur 5</p>

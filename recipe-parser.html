@@ -353,9 +353,27 @@ body {
 }
 
 .hidden { display: none !important; }
+
+/* ── NAV ── */
+.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,0.08);}
+.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;text-decoration:none;white-space:nowrap;}
+.nav-links{display:flex;}
+.nav-link{color:rgba(255,255,255,0.45);text-decoration:none;font-size:12px;letter-spacing:0.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-link:hover{color:rgba(255,255,255,0.8);}
+.nav-link.active{color:#fff;border-bottom-color:#b8860b;}
 </style>
 </head>
 <body>
+
+<nav class="app-nav">
+  <a href="index.html" class="nav-brand">🍽 Mes Recettes</a>
+  <div class="nav-links">
+    <a href="index.html"         class="nav-link">Bibliothèque</a>
+    <a href="recipe-parser.html" class="nav-link active">Parseur</a>
+    <a href="menu-builder.html"  class="nav-link">Menus</a>
+    <a href="prep-planner.html"  class="nav-link">Planning</a>
+  </div>
+</nav>
 
 <header class="app-header">
   <div class="header-icon">🍽️</div>
