@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bibliothèque de Recettes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ══════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════ */
+:root {
+  --navy:   #0f2d5a;
+  --navy2:  #1a4a8a;
+  --navy3:  #5a86c4;
+  --ice:    #e8f0fb;
+  --ice2:   #f5f8fe;
+  --border: #c8d9f0;
+  --text:   #1a1a2e;
+  --muted:  #5a6a8a;
+  --gold:   #b8860b;
+  --gold2:  #f5e6b8;
+  --green:  #1a7a4a;
+  --bg:     #f0f2f7;
+  --white:  #ffffff;
+  --red:    #a02020;
+  --radius: 10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ══════════════════════════════════════════
+   NAV
+══════════════════════════════════════════ */
+.app-nav {
+  background: var(--navy);
+  padding: 0 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+}
+.nav-brand {
+  font-family: 'DM Serif Display', serif;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 400;
+  padding: 1rem 0;
+  margin-right: 2rem;
+  white-space: nowrap;
+}
+.nav-links { display: flex; gap: 0; flex: 1; }
+.nav-link {
+  color: rgba(255,255,255,0.45);
+  text-decoration: none;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 1rem 1.2rem;
+  border-bottom: 2px solid transparent;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.nav-link:hover { color: rgba(255,255,255,0.8); }
+.nav-link.active { color: #fff; border-bottom-color: var(--gold); }
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+.page-header {
+  background: var(--navy);
+  padding: 2.5rem 2.5rem 0;
+}
+.header-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-bottom: 2rem;
+}
+.header-title h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.header-title p {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.header-stats {
+  display: flex;
+  gap: 1.5rem;
+}
+.stat-pill {
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid rgba(255,255,255,0.14);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.stat-pill span {
+  color: #fff;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════
+   SEARCH + FILTERS BAR
+══════════════════════════════════════════ */
+.controls-bar {
+  background: var(--navy);
+  padding: 0 2.5rem 1.5rem;
+}
+.search-row {
+  display: flex;
+  gap: .75rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 480px;
+}
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255,255,255,0.3);
+  font-size: 14px;
+  pointer-events: none;
+}
+.search-input {
+  width: 100%;
+  background: rgba(255,255,255,0.07);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 9px 14px 9px 38px;
+  font-size: 13px;
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  transition: border-color .15s, background .15s;
+}
+.search-input::placeholder { color: rgba(255,255,255,0.3); }
+.search-input:focus {
+  border-color: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.1);
+}
+.view-toggle {
+  display: flex;
+  background: rgba(255,255,255,0.07);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-left: auto;
+}
+.view-btn {
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.4);
+  font-size: 14px;
+  transition: background .15s, color .15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.view-btn.active {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+.view-btn:hover:not(.active) { color: rgba(255,255,255,0.7); }
+
+.filters-row {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.filter-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+.filter-select {
+  background: rgba(255,255,255,0.07);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 5px 24px 5px 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color .15s;
+}
+.filter-select:focus { border-color: rgba(255,255,255,0.35); }
+.filter-select option { background: var(--navy); color: #fff; }
+
+.ingredient-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.ingredient-input {
+  background: rgba(255,255,255,0.07);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  width: 150px;
+  transition: border-color .15s, width .2s;
+}
+.ingredient-input::placeholder { color: rgba(255,255,255,0.3); }
+.ingredient-input:focus {
+  border-color: rgba(255,255,255,0.35);
+  width: 200px;
+}
+
+.clear-btn {
+  margin-left: auto;
+  background: none;
+  border: 0.5px solid rgba(255,255,255,0.12);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  transition: color .15s, border-color .15s;
+}
+.clear-btn:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); }
+
+/* Active filter tags */
+.active-filters {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  padding: .75rem 2.5rem;
+  background: var(--ice2);
+  border-bottom: 0.5px solid var(--border);
+  min-height: 0;
+}
+.active-filters:empty { display: none; }
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--ice);
+  border: 0.5px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px 3px 12px;
+  font-size: 11px;
+  color: var(--navy2);
+}
+.filter-tag-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.filter-tag-remove:hover { color: var(--red); }
+
+/* ══════════════════════════════════════════
+   RESULTS BAR
+══════════════════════════════════════════ */
+.results-bar {
+  padding: .9rem 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--white);
+}
+.results-count {
+  font-size: 12px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+}
+.results-count strong { color: var(--text); }
+.sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: 11px;
+  color: var(--muted);
+}
+.sort-select {
+  border: 0.5px solid var(--border);
+  border-radius: 6px;
+  background: var(--white);
+  padding: 4px 24px 4px 8px;
+  font-size: 11px;
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%235a6a8a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 7px center;
+}
+
+/* ══════════════════════════════════════════
+   CONTENT
+══════════════════════════════════════════ */
+.page-body { padding: 2rem 2.5rem; }
+
+/* ── GRID VIEW ── */
+.recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+.recipe-card {
+  background: var(--white);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  box-shadow: 0 1px 6px rgba(15,45,90,0.04);
+}
+.recipe-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(15,45,90,0.1);
+  border-color: var(--navy3);
+}
+.card-category-bar {
+  height: 3px;
+}
+.card-body { padding: 1.25rem 1.25rem 1rem; flex: 1; }
+.card-cat-tag {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: .5rem;
+}
+.card-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: .75rem;
+  line-height: 1.25;
+}
+.card-meta {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.card-meta-icon { font-size: 12px; }
+.card-footer {
+  padding: .75rem 1.25rem;
+  border-top: 0.5px solid var(--border);
+  background: var(--ice2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-phases {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+}
+.card-arrow {
+  font-size: 12px;
+  color: var(--navy3);
+  opacity: 0;
+  transition: opacity .15s, transform .15s;
+}
+.recipe-card:hover .card-arrow { opacity: 1; transform: translateX(3px); }
+
+/* ── LIST VIEW ── */
+.recipes-list { display: none; flex-direction: column; gap: .5rem; }
+.recipe-row {
+  background: var(--white);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: background .12s, border-color .12s;
+  box-shadow: 0 1px 4px rgba(15,45,90,0.03);
+}
+.recipe-row:hover {
+  background: var(--ice2);
+  border-color: var(--navy3);
+}
+.row-cat-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.row-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+  font-weight: 400;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row-cat {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  width: 100px;
+  flex-shrink: 0;
+}
+.row-meta {
+  display: flex;
+  gap: 1.5rem;
+  flex-shrink: 0;
+}
+.row-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--muted);
+  width: 70px;
+}
+.row-arrow {
+  font-size: 12px;
+  color: var(--navy3);
+  opacity: 0;
+  transition: opacity .12s;
+  flex-shrink: 0;
+}
+.recipe-row:hover .row-arrow { opacity: 1; }
+
+/* ── VIEW MODES ── */
+body.view-list .recipes-grid { display: none; }
+body.view-list .recipes-list { display: flex; }
+
+/* ══════════════════════════════════════════
+   STATES
+══════════════════════════════════════════ */
+.state-box {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: var(--muted);
+}
+.state-icon { font-size: 40px; margin-bottom: 1rem; opacity: .4; }
+.state-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--text); margin-bottom: .5rem; }
+.state-msg { font-size: 13px; max-width: 340px; margin: 0 auto 1.5rem; line-height: 1.6; }
+.state-btn {
+  display: inline-block;
+  background: var(--navy);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background .15s;
+}
+.state-btn:hover { background: var(--navy2); }
+
+.loading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+.skeleton-card {
+  background: var(--white);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  height: 160px;
+}
+.skel {
+  background: var(--border);
+  border-radius: 4px;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer {
+  0%,100% { opacity: .4; }
+  50% { opacity: .9; }
+}
+.skel-line { height: 12px; margin-bottom: 10px; }
+.skel-title { height: 22px; width: 70%; margin-bottom: 14px; }
+
+/* ══════════════════════════════════════════
+   CATEGORY COLORS
+══════════════════════════════════════════ */
+.cat-plat      { --cat-color: #1a4a8a; }
+.cat-entree    { --cat-color: #1a7a4a; }
+.cat-dessert   { --cat-color: #b8860b; }
+.cat-aperitif  { --cat-color: #7a1a5a; }
+.cat-poisson   { --cat-color: #1a6a7a; }
+.cat-viande    { --cat-color: #8a2020; }
+.cat-accompagnement { --cat-color: #4a6a1a; }
+.cat-boissons  { --cat-color: #2a4a8a; }
+.cat-default   { --cat-color: #5a6a8a; }
+</style>
+</head>
+<body class="view-grid">
+
+<!-- ══ CONFIG SUPABASE (à remplir) ══════════════════ -->
+<script>
+const SUPABASE_URL = 'VOTRE_URL_SUPABASE';      // ex: https://xxxx.supabase.co
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';     // clé publique anon
+const TABLE_NAME = 'recettes';
+</script>
+<!-- ══════════════════════════════════════════════ -->
+
+<!-- NAV -->
+<nav class="app-nav">
+  <div class="nav-brand">🍽 Mes Recettes</div>
+  <div class="nav-links">
+    <a href="index.html"         class="nav-link active">Bibliothèque</a>
+    <a href="recipe-parser.html" class="nav-link">Parseur</a>
+    <a href="menu-builder.html"  class="nav-link">Menus</a>
+    <a href="prep-planner.html"  class="nav-link">Planning</a>
+  </div>
+</nav>
+
+<!-- HEADER -->
+<div class="page-header">
+  <div class="header-top">
+    <div class="header-title">
+      <h1>Bibliothèque de recettes</h1>
+      <p>Toutes vos recettes · cherchez, filtrez, consultez</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-pill"><span id="stat-total">—</span> recettes</div>
+      <div class="stat-pill"><span id="stat-cats">—</span> catégories</div>
+    </div>
+  </div>
+
+  <!-- SEARCH + FILTERS -->
+  <div class="controls-bar">
+    <div class="search-row">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" class="search-input" id="search-input"
+               placeholder="Rechercher une recette…" autocomplete="off">
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-grid" title="Vue grille" onclick="setView('grid')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/>
+            <rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/>
+          </svg>
+        </button>
+        <button class="view-btn" id="btn-list" title="Vue liste" onclick="setView('list')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+            <rect x="0" y="1" width="14" height="2" rx="1"/><rect x="0" y="6" width="14" height="2" rx="1"/>
+            <rect x="0" y="11" width="14" height="2" rx="1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="filters-row">
+      <div class="filter-group">
+        <span class="filter-label">Catégorie</span>
+        <select class="filter-select" id="f-category" onchange="applyFilters()">
+          <option value="">Toutes</option>
+          <option value="Plat">Plat</option>
+          <option value="Entrée">Entrée</option>
+          <option value="Dessert">Dessert</option>
+          <option value="Apéritif">Apéritif</option>
+          <option value="Poisson">Poisson</option>
+          <option value="Viande">Viande</option>
+          <option value="Accompagnement">Accompagnement</option>
+          <option value="Boissons">Boissons</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Temps total</span>
+        <select class="filter-select" id="f-time" onchange="applyFilters()">
+          <option value="">Tous</option>
+          <option value="30">≤ 30 min</option>
+          <option value="60">≤ 1 heure</option>
+          <option value="90">≤ 1h30</option>
+          <option value="120">≤ 2 heures</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Personnes</span>
+        <select class="filter-select" id="f-persons" onchange="applyFilters()">
+          <option value="">Tous</option>
+          <option value="2">≤ 2 pers.</option>
+          <option value="4">≤ 4 pers.</option>
+          <option value="6">≤ 6 pers.</option>
+          <option value="8">≤ 8 pers.</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Ingrédient</span>
+        <div class="ingredient-wrap">
+          <input type="text" class="ingredient-input" id="f-ingredient"
+                 placeholder="ex : poulet, citron…" autocomplete="off"
+                 oninput="applyFilters()">
+        </div>
+      </div>
+
+      <button class="clear-btn" onclick="clearFilters()">✕ Effacer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVE FILTER TAGS -->
+<div class="active-filters" id="active-filters"></div>
+
+<!-- RESULTS BAR -->
+<div class="results-bar">
+  <span class="results-count" id="results-count">Chargement…</span>
+  <div class="sort-wrap">
+    <span>Trier par</span>
+    <select class="sort-select" id="sort-select" onchange="renderRecipes()">
+      <option value="title">Nom A→Z</option>
+      <option value="title-desc">Nom Z→A</option>
+      <option value="time">Temps croissant</option>
+      <option value="newest">Plus récentes</option>
+    </select>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="page-body">
+  <!-- Loading skeletons -->
+  <div class="loading-grid" id="loading-state">
+    <div class="skeleton-card"><div class="skel skel-line" style="width:40%"></div><div class="skel skel-title"></div><div class="skel skel-line" style="width:80%"></div><div class="skel skel-line" style="width:55%"></div></div>
+    <div class="skeleton-card"><div class="skel skel-line" style="width:35%"></div><div class="skel skel-title" style="width:60%"></div><div class="skel skel-line" style="width:75%"></div><div class="skel skel-line" style="width:50%"></div></div>
+    <div class="skeleton-card"><div class="skel skel-line" style="width:45%"></div><div class="skel skel-title" style="width:80%"></div><div class="skel skel-line" style="width:65%"></div><div class="skel skel-line" style="width:40%"></div></div>
+    <div class="skeleton-card"><div class="skel skel-line" style="width:30%"></div><div class="skel skel-title" style="width:55%"></div><div class="skel skel-line" style="width:70%"></div><div class="skel skel-line" style="width:45%"></div></div>
+    <div class="skeleton-card"><div class="skel skel-line" style="width:42%"></div><div class="skel skel-title" style="width:75%"></div><div class="skel skel-line" style="width:60%"></div><div class="skel skel-line" style="width:35%"></div></div>
+    <div class="skeleton-card"><div class="skel skel-line" style="width:38%"></div><div class="skel skel-title"></div><div class="skel skel-line" style="width:85%"></div><div class="skel skel-line" style="width:50%"></div></div>
+  </div>
+
+  <!-- Error state -->
+  <div class="state-box" id="error-state" style="display:none">
+    <div class="state-icon">⚠️</div>
+    <div class="state-title">Connexion impossible</div>
+    <p class="state-msg">Vérifiez les paramètres Supabase en haut du fichier HTML (<code>SUPABASE_URL</code> et <code>SUPABASE_ANON_KEY</code>).</p>
+  </div>
+
+  <!-- Empty state (no recipes yet) -->
+  <div class="state-box" id="empty-state" style="display:none">
+    <div class="state-icon">📭</div>
+    <div class="state-title">Aucune recette pour l'instant</div>
+    <p class="state-msg">Commencez par analyser votre première recette avec le Parseur.</p>
+    <a href="recipe-parser.html" class="state-btn">Aller au Parseur →</a>
+  </div>
+
+  <!-- No results state (filters) -->
+  <div class="state-box" id="no-results-state" style="display:none">
+    <div class="state-icon">🔍</div>
+    <div class="state-title">Aucun résultat</div>
+    <p class="state-msg">Aucune recette ne correspond à ces critères. Essayez d'élargir vos filtres.</p>
+    <button class="state-btn" onclick="clearFilters()">Effacer les filtres</button>
+  </div>
+
+  <!-- Grid view -->
+  <div class="recipes-grid" id="recipes-grid" style="display:none"></div>
+
+  <!-- List view -->
+  <div class="recipes-list" id="recipes-list" style="display:none"></div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   INIT SUPABASE
+════════════════════════════════════════ */
+let supabase = null;
+try {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch(e) {
+  console.warn('Supabase init failed', e);
+}
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let allRecipes   = [];
+let filtered     = [];
+let currentView  = 'grid';
+
+/* ════════════════════════════════════════
+   CATEGORY HELPERS
+════════════════════════════════════════ */
+const CAT_COLORS = {
+  'Plat':            '#1a4a8a',
+  'Entrée':          '#1a7a4a',
+  'Dessert':         '#b8860b',
+  'Apéritif':        '#7a1a5a',
+  'Poisson':         '#1a6a7a',
+  'Viande':          '#8a2020',
+  'Accompagnement':  '#4a6a1a',
+  'Boissons':        '#2a4a8a',
+};
+const CAT_CLASS = {
+  'Plat':           'cat-plat',
+  'Entrée':         'cat-entree',
+  'Dessert':        'cat-dessert',
+  'Apéritif':       'cat-aperitif',
+  'Poisson':        'cat-poisson',
+  'Viande':         'cat-viande',
+  'Accompagnement': 'cat-accompagnement',
+  'Boissons':       'cat-boissons',
+};
+function catColor(cat) { return CAT_COLORS[cat] || '#5a6a8a'; }
+function catClass(cat) { return CAT_CLASS[cat] || 'cat-default'; }
+
+/* ════════════════════════════════════════
+   TIME PARSING
+   Converts "1h20" / "45 min" / "1h" → minutes
+════════════════════════════════════════ */
+function parseMinutes(str) {
+  if (!str) return null;
+  const s = String(str).toLowerCase().replace(/\s/g,'');
+  const hmatch = s.match(/(\d+)h(\d*)/);
+  if (hmatch) {
+    const h = parseInt(hmatch[1]) || 0;
+    const m = parseInt(hmatch[2]) || 0;
+    return h * 60 + m;
+  }
+  const mmatch = s.match(/(\d+)(?:min|m)/);
+  if (mmatch) return parseInt(mmatch[1]);
+  const num = parseInt(s);
+  return isNaN(num) ? null : num;
+}
+
+function formatTime(str) {
+  if (!str) return '—';
+  return str;
+}
+
+/* ════════════════════════════════════════
+   LOAD RECIPES FROM SUPABASE
+════════════════════════════════════════ */
+async function loadRecipes() {
+  if (!supabase || SUPABASE_URL === 'VOTRE_URL_SUPABASE') {
+    showError();
+    return;
+  }
+  try {
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .select('*')
+      .order('title', { ascending: true });
+
+    if (error) throw error;
+
+    allRecipes = data || [];
+    updateStats();
+    applyFilters();
+    hideLoading();
+
+  } catch(e) {
+    console.error('Load error:', e);
+    showError();
+  }
+}
+
+/* ════════════════════════════════════════
+   STATS
+════════════════════════════════════════ */
+function updateStats() {
+  document.getElementById('stat-total').textContent = allRecipes.length;
+  const cats = new Set(allRecipes.map(r => r.category).filter(Boolean));
+  document.getElementById('stat-cats').textContent = cats.size;
+}
+
+/* ════════════════════════════════════════
+   FILTERS
+════════════════════════════════════════ */
+function getFilters() {
+  return {
+    search:     document.getElementById('search-input').value.trim().toLowerCase(),
+    category:   document.getElementById('f-category').value,
+    time:       document.getElementById('f-time').value,
+    persons:    document.getElementById('f-persons').value,
+    ingredient: document.getElementById('f-ingredient').value.trim().toLowerCase(),
+  };
+}
+
+function applyFilters() {
+  const f = getFilters();
+
+  filtered = allRecipes.filter(r => {
+    // Text search (title)
+    if (f.search && !r.title.toLowerCase().includes(f.search)) return false;
+
+    // Category
+    if (f.category && r.category !== f.category) return false;
+
+    // Time (total)
+    if (f.time) {
+      const maxMin = parseInt(f.time);
+      const totalStr = r.times?.total || r.times?.Total || '';
+      const mins = parseMinutes(totalStr);
+      if (mins === null || mins > maxMin) return false;
+    }
+
+    // Persons
+    if (f.persons) {
+      const max = parseInt(f.persons);
+      if ((r.basePortions || 99) > max) return false;
+    }
+
+    // Ingredient
+    if (f.ingredient) {
+      const ingrs = (r.ingredients || []).map(i =>
+        (i.name || '').toLowerCase()
+      );
+      if (!ingrs.some(n => n.includes(f.ingredient))) return false;
+    }
+
+    return true;
+  });
+
+  renderFilterTags(f);
+  renderRecipes();
+}
+
+function clearFilters() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('f-category').value = '';
+  document.getElementById('f-time').value = '';
+  document.getElementById('f-persons').value = '';
+  document.getElementById('f-ingredient').value = '';
+  applyFilters();
+}
+
+function renderFilterTags(f) {
+  const el = document.getElementById('active-filters');
+  const tags = [];
+  if (f.search)     tags.push({ label: `"${f.search}"`, key: 'search' });
+  if (f.category)   tags.push({ label: f.category, key: 'category' });
+  if (f.time)       tags.push({ label: `≤ ${f.time} min`, key: 'time' });
+  if (f.persons)    tags.push({ label: `≤ ${f.persons} pers.`, key: 'persons' });
+  if (f.ingredient) tags.push({ label: `Ingrédient : ${f.ingredient}`, key: 'ingredient' });
+
+  el.innerHTML = tags.map(t => `
+    <span class="filter-tag">
+      ${t.label}
+      <button class="filter-tag-remove" onclick="clearOneFilter('${t.key}')" title="Retirer">✕</button>
+    </span>
+  `).join('');
+}
+
+function clearOneFilter(key) {
+  const map = {
+    search:     'search-input',
+    category:   'f-category',
+    time:       'f-time',
+    persons:    'f-persons',
+    ingredient: 'f-ingredient',
+  };
+  const el = document.getElementById(map[key]);
+  if (el) el.value = '';
+  applyFilters();
+}
+
+/* ════════════════════════════════════════
+   SORT
+════════════════════════════════════════ */
+function getSorted() {
+  const sort = document.getElementById('sort-select').value;
+  const arr  = [...filtered];
+  if (sort === 'title')      return arr.sort((a,b) => a.title.localeCompare(b.title,'fr'));
+  if (sort === 'title-desc') return arr.sort((a,b) => b.title.localeCompare(a.title,'fr'));
+  if (sort === 'time')       return arr.sort((a,b) => {
+    const ta = parseMinutes(a.times?.total || a.times?.Total || '') || 9999;
+    const tb = parseMinutes(b.times?.total || b.times?.Total || '') || 9999;
+    return ta - tb;
+  });
+  if (sort === 'newest')     return arr.sort((a,b) =>
+    new Date(b.created_at||0) - new Date(a.created_at||0)
+  );
+  return arr;
+}
+
+/* ════════════════════════════════════════
+   RENDER
+════════════════════════════════════════ */
+function renderRecipes() {
+  const sorted = getSorted();
+  const count  = sorted.length;
+
+  // Results count
+  const total = allRecipes.length;
+  const countEl = document.getElementById('results-count');
+  if (count === total) {
+    countEl.innerHTML = `<strong>${total}</strong> recette${total>1?'s':''}`;
+  } else {
+    countEl.innerHTML = `<strong>${count}</strong> résultat${count>1?'s':''} sur ${total}`;
+  }
+
+  // States
+  document.getElementById('recipes-grid').style.display     = 'none';
+  document.getElementById('recipes-list').style.display     = 'none';
+  document.getElementById('empty-state').style.display      = 'none';
+  document.getElementById('no-results-state').style.display = 'none';
+
+  if (total === 0) {
+    document.getElementById('empty-state').style.display = 'block';
+    return;
+  }
+  if (count === 0) {
+    document.getElementById('no-results-state').style.display = 'block';
+    return;
+  }
+
+  renderGrid(sorted);
+  renderList(sorted);
+
+  if (currentView === 'list') {
+    document.getElementById('recipes-list').style.display = 'flex';
+  } else {
+    document.getElementById('recipes-grid').style.display = 'grid';
+  }
+}
+
+function recipeUrl(r) {
+  return `recette.html?id=${encodeURIComponent(r.id)}`;
+}
+
+function renderGrid(recipes) {
+  document.getElementById('recipes-grid').innerHTML = recipes.map(r => {
+    const color    = catColor(r.category);
+    const total    = r.times?.total || r.times?.Total || '';
+    const prep     = r.times?.prep  || r.times?.Préparation || '';
+    const portions = r.basePortions || '—';
+    const phases   = (r.phases || []).length;
+    return `
+    <a href="${recipeUrl(r)}" class="recipe-card ${catClass(r.category)}">
+      <div class="card-category-bar" style="background:${color}"></div>
+      <div class="card-body">
+        <div class="card-cat-tag" style="color:${color}">${r.category || 'Recette'}</div>
+        <div class="card-title">${r.title}</div>
+        <div class="card-meta">
+          ${total ? `<div class="card-meta-item"><span class="card-meta-icon">⏱</span>${formatTime(total)}</div>` : ''}
+          ${prep  ? `<div class="card-meta-item"><span class="card-meta-icon">🔪</span>${formatTime(prep)}</div>` : ''}
+          <div class="card-meta-item"><span class="card-meta-icon">👤</span>${portions} pers.</div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-phases">${phases} phase${phases>1?'s':''} · ${(r.ingredients||[]).length} ingr.</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+function renderList(recipes) {
+  document.getElementById('recipes-list').innerHTML = recipes.map(r => {
+    const color   = catColor(r.category);
+    const total   = r.times?.total || r.times?.Total || '—';
+    const portions = r.basePortions || '—';
+    return `
+    <a href="${recipeUrl(r)}" class="recipe-row">
+      <div class="row-cat-dot" style="background:${color}"></div>
+      <div class="row-title">${r.title}</div>
+      <div class="row-cat" style="color:${color}">${r.category || '—'}</div>
+      <div class="row-meta">
+        <div class="row-meta-item"><span>⏱</span> ${formatTime(total)}</div>
+        <div class="row-meta-item"><span>👤</span> ${portions} pers.</div>
+      </div>
+      <span class="row-arrow">→</span>
+    </a>`;
+  }).join('');
+}
+
+/* ════════════════════════════════════════
+   VIEW TOGGLE
+════════════════════════════════════════ */
+function setView(v) {
+  currentView = v;
+  document.body.className = `view-${v}`;
+  document.getElementById('btn-grid').classList.toggle('active', v === 'grid');
+  document.getElementById('btn-list').classList.toggle('active', v === 'list');
+
+  if (filtered.length) {
+    document.getElementById('recipes-grid').style.display = v === 'grid' ? 'grid' : 'none';
+    document.getElementById('recipes-list').style.display = v === 'list' ? 'flex' : 'none';
+  }
+}
+
+/* ════════════════════════════════════════
+   UI HELPERS
+════════════════════════════════════════ */
+function hideLoading() {
+  document.getElementById('loading-state').style.display = 'none';
+}
+function showError() {
+  document.getElementById('loading-state').style.display = 'none';
+  document.getElementById('error-state').style.display   = 'block';
+}
+
+/* ════════════════════════════════════════
+   SEARCH DEBOUNCE
+════════════════════════════════════════ */
+let searchTimer = null;
+document.getElementById('search-input').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(applyFilters, 200);
+});
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+loadRecipes();
+</script>
+</body>
+</html>

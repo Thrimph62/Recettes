@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planificateur de Préparation — Étape 3</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f2d5a;--navy2:#1a4a8a;--navy3:#5a86c4;
+  --ice:#e8f0fb;--ice2:#f5f8fe;--border:#c8d9f0;
+  --text:#1a1a2e;--muted:#5a6a8a;
+  --bg:#f0f2f7;--white:#fff;
+  --green:#1a7a4a;--red:#a02020;--amber:#a06000;
+  --pd:#f59e0b;--dj:#3b82f6;--di:#6366f1;
+  --ap:#22c55e;--de:#ec4899;--bo:#06b6d4;--sp:#f97316;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.app-header{background:var(--navy);padding:1.5rem 2.5rem;display:flex;align-items:center;gap:1.25rem;}
+.header-icon{width:44px;height:44px;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.header-title{color:#fff;}
+.header-title h1{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:2px;}
+.header-title p{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;}
+.header-actions{margin-left:auto;display:flex;gap:8px;}
+
+.btn{padding:8px 18px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn-white{background:rgba(255,255,255,.12);color:#fff;border:0.5px solid rgba(255,255,255,.2);}
+.btn-white:hover{background:rgba(255,255,255,.22);}
+.btn-primary{background:var(--navy);color:#fff;}
+.btn-primary:hover{background:var(--navy2);}
+.btn-ghost{background:var(--ice);color:var(--navy2);border:0.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--navy3);}
+.btn-sm{padding:5px 12px;font-size:11px;}
+.ml-auto{margin-left:auto;}
+
+.app-body{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;}
+
+/* DAY SELECTOR */
+.day-strip{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:1.5rem;display:flex;gap:6px;overflow-x:auto;box-shadow:0 1px 6px rgba(15,45,90,.05);}
+.day-pill{padding:6px 14px;border-radius:20px;border:0.5px solid var(--border);background:var(--ice2);cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.day-pill:hover{border-color:var(--navy3);color:var(--navy2);}
+.day-pill.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.day-pill .dp-date{font-size:10px;opacity:.7;display:block;font-family:'DM Mono',monospace;}
+
+/* SETUP PANEL */
+.setup-card{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:20px;margin-bottom:1.5rem;box-shadow:0 1px 6px rgba(15,45,90,.05);}
+.setup-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.meal-setup-grid{display:flex;flex-direction:column;gap:8px;}
+.meal-setup-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border:0.5px solid var(--border);border-radius:8px;background:var(--ice2);}
+.meal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.meal-setup-label{font-size:13px;font-weight:500;min-width:90px;}
+.recipe-chips{display:flex;flex-wrap:wrap;gap:5px;flex:1;}
+.recipe-chip{font-size:11px;padding:3px 10px;border-radius:10px;background:var(--white);border:0.5px solid var(--border);color:var(--navy2);}
+.recipe-chip.no-recipe{color:var(--muted);font-style:italic;}
+.time-picker{padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;color:var(--text);background:var(--white);outline:none;width:90px;}
+.time-picker:focus{border-color:var(--navy3);}
+.no-meal-row{font-size:13px;color:var(--muted);font-style:italic;padding:8px;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;}
+.tab{padding:9px 20px;border-radius:8px 8px 0 0;border:0.5px solid var(--border);background:var(--ice2);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .15s;border-bottom:none;}
+.tab.active{background:var(--white);color:var(--navy2);border-color:var(--border);}
+.tab-content{background:var(--white);border:0.5px solid var(--border);border-radius:0 12px 12px 12px;padding:24px;box-shadow:0 2px 12px rgba(15,45,90,.06);}
+
+/* TIMELINE (JOUR J) */
+.timeline-wrap{position:relative;}
+.timeline-hour-row{display:flex;align-items:flex-start;gap:0;margin-bottom:0;}
+.timeline-hour-label{
+  width:56px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:11px;
+  color:var(--muted);padding-top:8px;text-align:right;padding-right:12px;
+}
+.timeline-hour-track{
+  flex:1;border-top:0.5px solid var(--border);min-height:40px;position:relative;
+  padding:4px 0;
+}
+.timeline-hour-track.half-hour{border-top-style:dashed;opacity:.5;min-height:20px;}
+
+/* PHASE BLOCK on timeline */
+.phase-block{
+  position:relative;border-radius:6px;padding:5px 10px;
+  margin:2px 4px 2px 0;display:inline-flex;flex-direction:column;
+  cursor:default;border:0.5px solid rgba(0,0,0,.1);
+  min-width:120px;
+}
+.phase-block.advance{opacity:.35;pointer-events:none;}
+.pb-recipe{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;opacity:.75;margin-bottom:2px;}
+.pb-phase{font-size:12px;font-weight:500;line-height:1.3;}
+.pb-time{font-family:'DM Mono',monospace;font-size:10px;opacity:.75;margin-top:2px;}
+.pb-badge{font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.3);display:inline-flex;align-items:center;gap:3px;width:fit-content;margin-top:2px;}
+
+/* ADVANCE PREP */
+.advance-section{margin-bottom:2rem;}
+.advance-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  padding-bottom:8px;border-bottom:2px solid var(--ice);
+}
+.advance-day-badge{
+  padding:3px 14px;border-radius:12px;font-size:12px;font-weight:600;
+  background:var(--navy);color:#fff;
+}
+.advance-items{display:flex;flex-direction:column;gap:6px;}
+.advance-item{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;
+  border:0.5px solid var(--border);border-radius:8px;
+  background:var(--ice2);
+}
+.adv-recipe{font-size:11px;font-weight:600;color:var(--navy2);min-width:120px;text-transform:uppercase;letter-spacing:.04em;}
+.adv-phase{font-size:13px;flex:1;}
+.adv-duration{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);}
+.adv-type{font-size:11px;padding:2px 8px;border-radius:8px;background:var(--ice);color:var(--navy3);border:0.5px solid var(--border);}
+.adv-toggle{
+  padding:3px 8px;border-radius:6px;border:0.5px solid var(--border);
+  background:var(--white);font-size:11px;cursor:pointer;color:var(--muted);
+}
+.adv-toggle:hover{border-color:var(--navy3);color:var(--navy2);}
+.adv-toggle.day-j{background:var(--ice);color:var(--navy2);border-color:var(--navy3);}
+
+.empty-plan{text-align:center;padding:3rem 2rem;color:var(--muted);}
+.empty-plan .em{font-size:36px;margin-bottom:10px;}
+.empty-plan p{font-size:13px;}
+
+.status-bar{padding:9px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.status-bar.success{background:#edfaf3;color:var(--green);border:0.5px solid #a0ddc0;}
+.status-bar.error{background:#fef0f0;color:var(--red);border:0.5px solid #f0c0c0;}
+.status-bar.info{background:var(--ice);color:var(--navy2);border:0.5px solid var(--border);}
+.hidden{display:none!important;}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+.legend-dot{width:12px;height:12px;border-radius:3px;}
+
+@media print{
+  .app-header,.day-strip,.setup-card,.tabs,.btn{display:none!important;}
+  .tab-content{border:none;box-shadow:none;padding:0;}
+  body{background:#fff;}
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-icon">⏱️</div>
+  <div class="header-title">
+    <h1>Planificateur de Préparation</h1>
+    <p>J-1 / J-2 + Timing Jour J · Étape 3 sur 5</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-white" onclick="loadData()">🔗 Charger depuis menu</button>
+    <button class="btn btn-white btn-sm" onclick="window.print()">🖨️ Imprimer</button>
+  </div>
+</header>
+
+<main class="app-body">
+  <div id="status" class="hidden"></div>
+
+  <!-- DAY STRIP -->
+  <div class="day-strip" id="day-strip">
+    <span style="font-size:13px;color:var(--muted);align-self:center;">Chargez le menu pour sélectionner un jour →</span>
+  </div>
+
+  <!-- SETUP -->
+  <div class="setup-card">
+    <div class="setup-title">⚙️ Horaires de service — <span id="setup-day-label" style="text-transform:none;font-weight:400;color:var(--navy2);">sélectionnez un jour</span></div>
+    <div class="meal-setup-grid" id="meal-setup-grid">
+      <p class="no-meal-row">Aucune donnée chargée.</p>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-primary btn-sm" onclick="buildPlan()">▶ Calculer le planning</button>
+      <button class="btn btn-ghost btn-sm" onclick="saveTimings()">💾 Sauvegarder les horaires</button>
+    </div>
+  </div>
+
+  <!-- TABS + CONTENT -->
+  <div class="tabs">
+    <div class="tab active" id="tab-dayj" onclick="switchTab('dayj')">⏰ Jour J</div>
+    <div class="tab" id="tab-advance" onclick="switchTab('advance')">📅 Préparation à l'avance</div>
+  </div>
+
+  <div class="tab-content">
+    <div id="panel-dayj">
+      <div class="empty-plan"><div class="em">🗓️</div><p>Définissez les horaires puis cliquez sur « Calculer le planning ».</p></div>
+    </div>
+    <div id="panel-advance" class="hidden">
+      <div class="empty-plan"><div class="em">📋</div><p>Les étapes à préparer à l'avance apparaîtront ici.</p></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* ═══════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════ */
+const MEAL_COLORS = { pd:'#f59e0b',dj:'#3b82f6',ap:'#22c55e',di:'#6366f1',de:'#ec4899',bo:'#06b6d4',sp:'#f97316' };
+const MEAL_LABELS = { pd:'Petit-déj.',dj:'Déjeuner',ap:'Apéritif',di:'Dîner',de:'Dessert',bo:'Boisson',sp:'Spécial' };
+const MEAL_ICONS  = { pd:'🌅',dj:'🍽️',ap:'🥂',di:'🌙',de:'🍮',bo:'🥤',sp:'⭐' };
+const MEAL_ORDER  = ['pd','dj','ap','di','de','bo','sp'];
+const DAYS_FR = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const DEFAULT_TIMES = { pd:'08:00',dj:'12:30',ap:'18:30',di:'19:30',de:'20:30',bo:'12:30',sp:'20:00' };
+
+/* ═══════════════════════════════════════
+   STATE
+═══════════════════════════════════════ */
+let recipes  = [];
+let menu     = {};
+let numDays  = 7;
+let selectedDay = 0;
+let mealTimings = {}; // [day][mealId][slotIdx] = "HH:MM"
+// phaseOverrides[recipeId+phaseIdx] = 'advance' | 'dayj'
+let phaseOverrides = {};
+let planData = null; // computed plan
+
+/* ═══════════════════════════════════════
+   LOAD DATA
+═══════════════════════════════════════ */
+function loadData(){
+  const rRaw = localStorage.getItem('recipe-library');
+  const mRaw = localStorage.getItem('weekly-menu');
+  if(!rRaw||!mRaw){ showStatus('error','❌ Bibliothèque ou menu introuvable. Ouvrez d\'abord le Parseur puis le Menu Builder.'); return; }
+  try{
+    recipes = JSON.parse(rRaw);
+    const ms = JSON.parse(mRaw);
+    menu = ms.menu||{}; numDays = ms.numDays||7;
+    const saved = JSON.parse(localStorage.getItem('meal-timings')||'{}');
+    mealTimings = saved;
+    buildDayStrip();
+    selectDay(0);
+    showStatus('success','✓ Données chargées — sélectionnez un jour et définissez les horaires.');
+  }catch(e){ showStatus('error','❌ Erreur de lecture : '+e.message); }
+}
+
+/* ═══════════════════════════════════════
+   DAY STRIP
+═══════════════════════════════════════ */
+function buildDayStrip(){
+  const strip = document.getElementById('day-strip');
+  const today = new Date();
+  let html='';
+  for(let d=0;d<numDays;d++){
+    const dt=new Date(today); dt.setDate(today.getDate()+d);
+    const dayIdx=dt.getDay()===0?6:dt.getDay()-1;
+    const meals = getMealsForDay(d);
+    const hasMeals = meals.length>0;
+    html+=`<div class="day-pill ${d===selectedDay?'active':''} ${!hasMeals?'':''}\" onclick="selectDay(${d})">
+      ${DAYS_FR[dayIdx]}
+      <span class="dp-date">${dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</span>
+    </div>`;
+  }
+  strip.innerHTML=html;
+}
+
+function selectDay(d){
+  selectedDay=d;
+  buildDayStrip();
+  buildSetupPanel(d);
+  planData=null;
+  document.getElementById('panel-dayj').innerHTML='<div class="empty-plan"><div class="em">🗓️</div><p>Cliquez sur « Calculer le planning ».</p></div>';
+  document.getElementById('panel-advance').innerHTML='<div class="empty-plan"><div class="em">📋</div><p>Cliquez sur « Calculer le planning ».</p></div>';
+}
+
+/* ═══════════════════════════════════════
+   SETUP PANEL
+═══════════════════════════════════════ */
+function getMealsForDay(day){
+  if(!menu[day]) return [];
+  const result=[];
+  for(const mealId of MEAL_ORDER){
+    const slots = menu[day][mealId];
+    if(!slots) continue;
+    const arr = Array.isArray(slots)?slots:[slots];
+    const active = arr.filter(s=>s&&s.recipeId);
+    if(active.length) result.push({mealId, slots:active});
+  }
+  return result;
+}
+
+function buildSetupPanel(day){
+  const today=new Date(); const dt=new Date(today); dt.setDate(today.getDate()+day);
+  const dayIdx=dt.getDay()===0?6:dt.getDay()-1;
+  document.getElementById('setup-day-label').textContent=
+    DAYS_FR[dayIdx]+' '+dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+
+  const meals=getMealsForDay(day);
+  const grid=document.getElementById('meal-setup-grid');
+  if(!meals.length){
+    grid.innerHTML='<p class="no-meal-row">Aucune recette planifiée ce jour-là.</p>'; return;
+  }
+  let html='';
+  for(const {mealId,slots} of meals){
+    const color=MEAL_COLORS[mealId]||'#888';
+    const savedTime = (mealTimings[day]&&mealTimings[day][mealId]) || DEFAULT_TIMES[mealId]||'12:00';
+    const recipeNames = slots.map(s=>{
+      const r=recipes.find(r=>r.id===s.recipeId);
+      return r?r.title:'?';
+    });
+    html+=`<div class="meal-setup-row">
+      <div class="meal-dot" style="background:${color}"></div>
+      <div class="meal-setup-label">${MEAL_ICONS[mealId]||''} ${MEAL_LABELS[mealId]||mealId}</div>
+      <div class="recipe-chips">${recipeNames.map(n=>`<span class="recipe-chip">${n}</span>`).join('')}</div>
+      <label style="font-size:11px;color:var(--muted);margin-right:4px;">Service :</label>
+      <input type="time" class="time-picker" value="${savedTime}"
+        onchange="onTimingChange(${day},'${mealId}',this.value)" id="tp-${day}-${mealId}">
+    </div>`;
+  }
+  grid.innerHTML=html;
+}
+
+function onTimingChange(day,mealId,val){
+  if(!mealTimings[day]) mealTimings[day]={};
+  mealTimings[day][mealId]=val;
+}
+
+function saveTimings(){
+  localStorage.setItem('meal-timings',JSON.stringify(mealTimings));
+  showStatus('success','✓ Horaires sauvegardés.');
+}
+
+/* ═══════════════════════════════════════
+   DURATION PARSING
+═══════════════════════════════════════ */
+function parseDuration(str){
+  if(!str) return 0;
+  // Strip emojis (broad unicode range)
+  const s=str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27FF}]/gu,'').trim();
+  const hm = s.match(/(\d+)\s*h\s*(\d+)?\s*(?:min)?/i);
+  if(hm) return parseInt(hm[1])*60+(parseInt(hm[2])||0);
+  const h = s.match(/(\d+)\s*h/i);
+  if(h) return parseInt(h[1])*60;
+  const m = s.match(/(\d+)\s*min/i);
+  if(m) return parseInt(m[1]);
+  const n = parseInt(s);
+  return isNaN(n)?0:n;
+}
+
+function isRestPhase(phase){
+  const t=(phase.title||'').toLowerCase();
+  return t.includes('repos')   || t.includes('marinade') ||
+         t.includes('réfrigér')|| t.includes('congel')   ||
+         t.includes('macér')   || t.includes('nuit')     ||
+         t.includes('rest')    || t.includes('levée')    ||
+         t.includes('refroid') ||
+         (phase.timeBadges||[]).some(b=>b.includes('💤')||b.includes('😴'));
+}
+
+function getPhaseDuration(phase){
+  let total=0;
+  for(const badge of (phase.timeBadges||[])){
+    const d=parseDuration(badge);
+    total=Math.max(total,d); // take the max badge (avoid summing e.g. knife+fire)
+  }
+  return total||15; // default 15 min
+}
+
+/* ═══════════════════════════════════════
+   PLAN BUILDER
+═══════════════════════════════════════ */
+function timeToMin(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function minToTime(m){ const h=Math.floor(m/60)%24; const mm=m%60; return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
+function fmtDuration(min){
+  if(min<60) return min+'min';
+  const h=Math.floor(min/60); const m=min%60;
+  return m?`${h}h${String(m).padStart(2,'0')}`:`${h}h`;
+}
+
+function buildPlan(){
+  const day=selectedDay;
+  const meals=getMealsForDay(day);
+  if(!meals.length){ showStatus('error','❌ Aucun repas ce jour.'); return; }
+
+  const dayJPhases=[];   // {recipe, phase, phaseIdx, startMin, endMin, mealId, color}
+  const advancePhases=[]; // {recipe, phase, phaseIdx, daysBeforeMin, daysBeforeLabel, mealId, color, slotPersons}
+
+  for(const {mealId,slots} of meals){
+    const serviceTime=(mealTimings[day]&&mealTimings[day][mealId])||DEFAULT_TIMES[mealId]||'12:00';
+    const serviceMin=timeToMin(serviceTime);
+    const color=MEAL_COLORS[mealId];
+
+    for(const slot of slots){
+      const recipe=recipes.find(r=>r.id===slot.recipeId);
+      if(!recipe) continue;
+
+      const phases=(recipe.phases||[]).slice(); // forward order
+      let cursor=serviceMin; // work backwards
+
+      for(let pi=phases.length-1;pi>=0;pi--){
+        const phase=phases[pi];
+        const overKey=recipe.id+'-'+pi;
+        const override=phaseOverrides[overKey]; // 'advance'|'dayj'|undefined
+        const dur=getPhaseDuration(phase);
+        const isRest=override==='advance'||(override!=='dayj'&&isRestPhase(phase));
+
+        if(isRest){
+          // advance prep — estimate how far before service
+          let daysBack=1;
+          if(dur>=720) daysBack=2;      // ≥12h → J-2
+          else if(dur>=360) daysBack=1; // ≥6h  → J-1
+          advancePhases.push({ recipe, phase, phaseIdx:pi, daysBack, dur, mealId, color, override:overKey });
+        } else {
+          const endMin=cursor;
+          const startMin=cursor-dur;
+          dayJPhases.push({ recipe, phase, phaseIdx:pi, startMin, endMin, dur, mealId, color, override:overKey });
+          cursor=startMin;
+        }
+      }
+    }
+  }
+
+  planData={dayJPhases,advancePhases,day};
+  renderDayJ(dayJPhases);
+  renderAdvance(advancePhases);
+  showStatus('success','✓ Planning calculé.');
+}
+
+/* ═══════════════════════════════════════
+   RENDER — JOUR J
+═══════════════════════════════════════ */
+function renderDayJ(phases){
+  const panel=document.getElementById('panel-dayj');
+  if(!phases.length){
+    panel.innerHTML='<div class="empty-plan"><div class="em">☀️</div><p>Toutes les étapes sont en préparation à l\'avance.</p></div>';
+    return;
+  }
+
+  // Find time range
+  const minStart=Math.min(...phases.map(p=>p.startMin));
+  const maxEnd  =Math.max(...phases.map(p=>p.endMin));
+  const startHour=Math.max(0,Math.floor(minStart/60)-1);
+  const endHour  =Math.min(23,Math.ceil(maxEnd/60)+1);
+
+  // Legend
+  const seen=new Set();
+  let legendHtml='<div class="legend">';
+  for(const p of phases){
+    const key=p.mealId;
+    if(!seen.has(key)){
+      seen.add(key);
+      legendHtml+=`<div class="legend-item"><div class="legend-dot" style="background:${p.color}"></div>${MEAL_ICONS[p.mealId]} ${MEAL_LABELS[p.mealId]}</div>`;
+    }
+  }
+  legendHtml+='</div>';
+
+  // Build hour slots
+  let timelineHtml='<div class="timeline-wrap">';
+  for(let h=startHour;h<=endHour;h++){
+    for(let half=0;half<2;half++){
+      const slotMin=h*60+half*30;
+      const isHour=half===0;
+      const label=isHour?`${String(h).padStart(2,'0')}:00`:'';
+      // Find phases that START in this 30-min slot
+      const slotPhases=phases.filter(p=>p.startMin>=slotMin&&p.startMin<slotMin+30);
+      let blocksHtml='';
+      for(const p of slotPhases){
+        const c=p.color;
+        const light=hexLighten(c,0.88);
+        blocksHtml+=`<div class="phase-block" style="background:${light};border-color:${c};" 
+          title="${p.recipe.title} — ${p.phase.title}">
+          <div class="pb-recipe" style="color:${c}">${p.recipe.title}</div>
+          <div class="pb-phase">${p.phase.letter?p.phase.letter+'. ':''} ${p.phase.title}</div>
+          <div class="pb-time">${minToTime(p.startMin)} → ${minToTime(p.endMin)}</div>
+          <div class="pb-badge" style="background:${hexLighten(c,0.7)};color:${c}">⏱ ${fmtDuration(p.dur)}</div>
+          <button onclick="togglePhaseToAdvance('${p.override}')" 
+            style="margin-top:4px;font-size:10px;padding:2px 6px;border-radius:5px;border:0.5px solid ${c};background:${light};color:${c};cursor:pointer;">
+            ⇄ Déplacer en J-1
+          </button>
+        </div>`;
+      }
+      timelineHtml+=`<div class="timeline-hour-row">
+        <div class="timeline-hour-label">${label}</div>
+        <div class="timeline-hour-track ${isHour?'':'half-hour'}">${blocksHtml}</div>
+      </div>`;
+    }
+  }
+  timelineHtml+='</div>';
+
+  panel.innerHTML=legendHtml+timelineHtml;
+}
+
+/* ═══════════════════════════════════════
+   RENDER — ADVANCE PREP
+═══════════════════════════════════════ */
+function renderAdvance(phases){
+  const panel=document.getElementById('panel-advance');
+  if(!phases.length){
+    panel.innerHTML='<div class="empty-plan"><div class="em">✅</div><p>Aucune préparation à l\'avance nécessaire.</p></div>';
+    return;
+  }
+
+  // Group by daysBack
+  const groups={};
+  for(const p of phases){
+    const k=p.daysBack;
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(p);
+  }
+
+  let html='';
+  for(const daysBack of Object.keys(groups).sort((a,b)=>b-a)){
+    const label=daysBack==1?'J − 1 (veille)':daysBack==2?'J − 2 (avant-veille)':`J − ${daysBack}`;
+    html+=`<div class="advance-section">
+      <div class="advance-header">
+        <span class="advance-day-badge">${label}</span>
+      </div>
+      <div class="advance-items">`;
+    for(const p of groups[daysBack]){
+      const c=p.color;
+      html+=`<div class="advance-item">
+        <div class="adv-recipe" style="color:${c}">${MEAL_ICONS[p.mealId]||''} ${p.recipe.title}</div>
+        <div class="adv-phase">${p.phase.letter?p.phase.letter+'. ':''} ${p.phase.title}</div>
+        <div class="adv-duration">${fmtDuration(p.dur)}</div>
+        <div class="adv-type">${isRestPhase(p.phase)?'💤 Repos':'🔪 Prep'}</div>
+        <button class="adv-toggle" onclick="togglePhaseToAdvance('${p.override}')">⇄ Déplacer en Jour J</button>
+      </div>`;
+    }
+    html+='</div></div>';
+  }
+
+  panel.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════
+   TOGGLE PHASE
+═══════════════════════════════════════ */
+function togglePhaseToAdvance(key){
+  const current=phaseOverrides[key];
+  if(current==='advance') phaseOverrides[key]='dayj';
+  else if(current==='dayj') delete phaseOverrides[key];
+  else phaseOverrides[key]='advance';
+  buildPlan();
+}
+
+/* ═══════════════════════════════════════
+   TABS
+═══════════════════════════════════════ */
+function switchTab(t){
+  ['dayj','advance'].forEach(id=>{
+    document.getElementById('tab-'+id).classList.toggle('active',id===t);
+    document.getElementById('panel-'+id).classList.toggle('hidden',id!==t);
+  });
+}
+
+/* ═══════════════════════════════════════
+   COLOR HELPER
+═══════════════════════════════════════ */
+function hexLighten(hex,amount){
+  const num=parseInt(hex.replace('#',''),16);
+  const r=Math.round(((num>>16)&0xff)*(1-amount)+255*amount);
+  const g=Math.round(((num>>8)&0xff)*(1-amount)+255*amount);
+  const b=Math.round((num&0xff)*(1-amount)+255*amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+/* ═══════════════════════════════════════
+   STATUS
+═══════════════════════════════════════ */
+function showStatus(type,msg){
+  const el=document.getElementById('status');
+  el.className='status-bar '+type; el.textContent=msg;
+  el.classList.remove('hidden');
+  if(type==='success') setTimeout(()=>el.classList.add('hidden'),4000);
+}
+
+/* ═══════════════════════════════════════
+   INIT
+═══════════════════════════════════════ */
+(function(){
+  const rRaw=localStorage.getItem('recipe-library');
+  const mRaw=localStorage.getItem('weekly-menu');
+  if(rRaw&&mRaw){
+    try{
+      recipes=JSON.parse(rRaw);
+      const ms=JSON.parse(mRaw); menu=ms.menu||{}; numDays=ms.numDays||7;
+      mealTimings=JSON.parse(localStorage.getItem('meal-timings')||'{}');
+      buildDayStrip(); selectDay(0);
+      showStatus('info','ℹ️ Données chargées automatiquement. Définissez les horaires de service et cliquez sur « Calculer ».');
+    }catch(_){}
+  }
+})();
+</script>
+</body>
+</html>

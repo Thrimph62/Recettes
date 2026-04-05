@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parseur de Recettes — Étape 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:   #0f2d5a;
+  --navy2:  #1a4a8a;
+  --navy3:  #5a86c4;
+  --ice:    #e8f0fb;
+  --ice2:   #f5f8fe;
+  --border: #c8d9f0;
+  --text:   #1a1a2e;
+  --muted:  #5a6a8a;
+  --gold:   #b8860b;
+  --green:  #1a7a4a;
+  --bg:     #f0f2f7;
+  --white:  #ffffff;
+  --red:    #a02020;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.app-header {
+  background: var(--navy);
+  padding: 2rem 3rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+.header-icon {
+  width: 48px; height: 48px;
+  background: rgba(255,255,255,0.1);
+  border: 0.5px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.header-title { color: #fff; }
+.header-title h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px; font-weight: 400; margin-bottom: 2px;
+}
+.header-title p { font-size: 12px; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; text-transform: uppercase; }
+.header-badge {
+  margin-left: auto;
+  padding: 4px 14px;
+  background: rgba(255,255,255,0.08);
+  border: 0.5px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  font-size: 11px; color: rgba(255,255,255,0.5);
+  font-family: 'DM Mono', monospace; letter-spacing: 0.04em;
+}
+
+/* ── LAYOUT ── */
+.app-body { max-width: 960px; margin: 0 auto; padding: 2.5rem 2rem; }
+
+/* ── INPUT SECTION ── */
+.input-card {
+  background: var(--white);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 12px rgba(15,45,90,0.06);
+}
+.input-card-header {
+  background: var(--ice);
+  padding: 14px 22px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.input-card-header span {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--navy2);
+}
+.input-body { padding: 22px; }
+
+/* URL row */
+.url-row { display: flex; gap: 10px; margin-bottom: 16px; }
+.url-row input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px; color: var(--text);
+  background: var(--ice2);
+  outline: none; transition: border-color .2s;
+}
+.url-row input:focus { border-color: var(--navy3); background: var(--white); }
+.url-row input::placeholder { color: var(--muted); }
+
+/* Divider */
+.or-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 16px; color: var(--muted); font-size: 12px;
+}
+.or-divider::before, .or-divider::after {
+  content: ''; flex: 1; height: 0.5px; background: var(--border);
+}
+
+/* Drop zone */
+.drop-zone {
+  border: 1.5px dashed var(--border);
+  border-radius: 10px;
+  padding: 32px 22px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--ice2);
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--navy3);
+  background: var(--ice);
+}
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon { font-size: 28px; margin-bottom: 8px; }
+.drop-text { font-size: 14px; color: var(--navy2); font-weight: 500; margin-bottom: 4px; }
+.drop-sub { font-size: 12px; color: var(--muted); }
+.drop-filename {
+  margin-top: 10px; padding: 6px 14px; border-radius: 20px;
+  background: var(--navy); color: rgba(255,255,255,0.8);
+  font-size: 12px; font-family: 'DM Mono', monospace;
+  display: inline-block;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 22px; border-radius: 8px; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500;
+  cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 7px;
+}
+.btn-primary {
+  background: var(--navy); color: #fff;
+}
+.btn-primary:hover { background: var(--navy2); }
+.btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.btn-secondary {
+  background: var(--ice); color: var(--navy2);
+  border: 0.5px solid var(--border);
+}
+.btn-secondary:hover { background: var(--ice); border-color: var(--navy3); }
+.btn-success {
+  background: var(--green); color: #fff;
+}
+.btn-success:hover { opacity: 0.9; }
+
+.action-row {
+  margin-top: 18px; display: flex; align-items: center; gap: 10px;
+}
+
+/* ── STATUS ── */
+.status-bar {
+  padding: 10px 16px; border-radius: 8px; font-size: 13px;
+  margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;
+}
+.status-bar.info { background: var(--ice); color: var(--navy2); border: 0.5px solid var(--border); }
+.status-bar.error { background: #fef0f0; color: var(--red); border: 0.5px solid #f0c0c0; }
+.status-bar.success { background: #edfaf3; color: var(--green); border: 0.5px solid #a0ddc0; }
+.status-bar.loading { background: var(--ice); color: var(--navy2); border: 0.5px solid var(--border); }
+.spin {
+  width: 14px; height: 14px; border: 2px solid var(--border);
+  border-top-color: var(--navy3); border-radius: 50%;
+  animation: spin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESULT ── */
+.result-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 680px) { .result-grid { grid-template-columns: 1fr; } }
+
+.result-card {
+  background: var(--white);
+  border: 0.5px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 2px 10px rgba(15,45,90,0.05);
+}
+.result-card.full { grid-column: 1 / -1; }
+
+.rc-header {
+  background: var(--ice); padding: 10px 18px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.rc-header .rc-label {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--navy2);
+}
+.rc-header .rc-count {
+  margin-left: auto; font-size: 11px; color: var(--navy3);
+  font-family: 'DM Mono', monospace;
+}
+.rc-body { padding: 16px 18px; }
+
+/* Recipe identity */
+.recipe-id-block { display: flex; flex-direction: column; gap: 6px; }
+.recipe-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px; color: var(--navy); line-height: 1.2;
+}
+.category-pill {
+  display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 12px;
+  background: var(--ice); border: 0.5px solid var(--border);
+  font-size: 11px; font-weight: 600; color: var(--navy2);
+  letter-spacing: 0.06em; text-transform: uppercase; width: fit-content;
+}
+.portions-info {
+  font-size: 13px; color: var(--muted); margin-top: 4px;
+}
+
+/* Times */
+.times-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.time-item { padding: 10px 12px; background: var(--ice2); border-radius: 8px; border: 0.5px solid var(--border); }
+.time-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 3px; }
+.time-value { font-size: 15px; font-weight: 500; color: var(--navy2); }
+.time-item.total { background: var(--ice); }
+.time-item.total .time-value { color: var(--navy); }
+
+/* Ingredients */
+.ingr-category { margin-bottom: 12px; }
+.ingr-cat-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.ingr-list { display: flex; flex-direction: column; gap: 4px; }
+.ingr-item {
+  display: flex; gap: 8px; font-size: 13px; padding: 5px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.ingr-item:last-child { border-bottom: none; }
+.ingr-qty-cell {
+  min-width: 90px; font-family: 'DM Mono', monospace;
+  font-size: 12px; color: var(--navy3); flex-shrink: 0;
+}
+.ingr-name-cell { flex: 1; }
+.ingr-opt-cell { font-size: 11px; color: var(--muted); font-style: italic; }
+
+/* Phases */
+.phase-item { margin-bottom: 14px; border: 0.5px solid var(--border); border-radius: 8px; overflow: hidden; }
+.phase-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--ice); border-bottom: 0.5px solid var(--border);
+}
+.phase-letter {
+  width: 26px; height: 26px; background: var(--navy); color: #fff;
+  border-radius: 6px; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
+}
+.phase-title-text { font-size: 13px; font-weight: 500; color: var(--navy); flex: 1; }
+.phase-times { display: flex; gap: 6px; }
+.phase-time-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: var(--white); color: var(--navy2); border: 0.5px solid var(--border);
+}
+.phase-steps-list { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
+.phase-step { font-size: 13px; line-height: 1.6; display: flex; gap: 8px; }
+.phase-step-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--navy3); flex-shrink: 0; margin-top: 7px; }
+
+/* Notes */
+.note-item { background: var(--ice2); border-left: 3px solid var(--navy); border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; }
+.note-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy2); margin-bottom: 4px; }
+
+/* Equipment */
+.equip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.equip-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 0.5px solid var(--border); border-radius: 8px; }
+.equip-icon-box { width: 28px; height: 28px; background: var(--ice); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.equip-info { }
+.equip-name { font-size: 13px; }
+.equip-note { font-size: 11px; color: var(--muted); }
+
+/* JSON output */
+.json-block {
+  background: #0d1b2e;
+  border-radius: 10px; overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.json-block-header {
+  padding: 10px 18px; background: rgba(255,255,255,0.05);
+  border-bottom: 0.5px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.json-block-header span { font-family: 'DM Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.4); }
+.json-pre {
+  padding: 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px; line-height: 1.7;
+  color: #a8d4f0;
+  overflow-x: auto;
+  max-height: 380px;
+  overflow-y: auto;
+  white-space: pre;
+}
+.json-pre .jk { color: #7ec8e3; }
+.json-pre .js { color: #f0c870; }
+.json-pre .jn { color: #a0d8b0; }
+.json-pre .jb { color: #f09878; }
+
+/* Library */
+.library-section { margin-top: 2rem; }
+.library-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.library-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--navy); }
+.library-list { display: flex; flex-direction: column; gap: 8px; }
+.library-item {
+  background: var(--white); border: 0.5px solid var(--border); border-radius: 10px;
+  padding: 14px 18px; display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 1px 6px rgba(15,45,90,0.04);
+}
+.lib-cat {
+  padding: 3px 10px; border-radius: 10px; background: var(--ice);
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--navy2); flex-shrink: 0;
+}
+.lib-name { font-size: 14px; font-weight: 500; flex: 1; }
+.lib-meta { font-size: 12px; color: var(--muted); }
+.lib-remove { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; padding: 4px; border-radius: 4px; }
+.lib-remove:hover { color: var(--red); background: #fef0f0; }
+
+.empty-library {
+  text-align: center; padding: 3rem 2rem;
+  background: var(--white); border: 1.5px dashed var(--border);
+  border-radius: 12px; color: var(--muted);
+}
+.empty-library .em-icon { font-size: 32px; margin-bottom: 8px; }
+.empty-library p { font-size: 13px; }
+
+.lib-cat-group { margin-bottom: 16px; }
+.lib-cat-group-title {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--navy3);
+  padding: 6px 4px 4px; border-bottom: 1.5px solid var(--ice);
+  margin-bottom: 6px;
+}
+
+/* Footer */
+.app-footer {
+  text-align: center; padding: 2rem;
+  font-size: 12px; color: var(--muted);
+}
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-icon">🍽️</div>
+  <div class="header-title">
+    <h1>Parseur de Recettes</h1>
+    <p>HTML → JSON · Étape 1 sur 5</p>
+  </div>
+  <div class="header-badge">v1.0 · standalone</div>
+</header>
+
+<main class="app-body">
+
+  <!-- INPUT CARD -->
+  <div class="input-card">
+    <div class="input-card-header">
+      <span>📥</span>
+      <span>Source de la recette</span>
+    </div>
+    <div class="input-body">
+      <!-- URL -->
+      <div class="url-row">
+        <input type="url" id="url-input" placeholder="https://… coller l'URL d'un fichier HTML de recette" />
+      </div>
+      <div class="or-divider">ou</div>
+      <!-- Drop zone -->
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept=".html,.htm" />
+        <div class="drop-icon">📂</div>
+        <div class="drop-text">Glisser-déposer un fichier HTML</div>
+        <div class="drop-sub">ou cliquer pour parcourir · .html uniquement</div>
+        <div class="drop-filename hidden" id="drop-filename"></div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-primary" id="parse-btn" disabled>
+          <span>⚙️</span> Analyser la recette
+        </button>
+        <button class="btn btn-secondary" id="clear-btn">
+          Effacer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div id="status" class="hidden"></div>
+
+  <!-- RESULTS -->
+  <div id="results" class="hidden">
+
+    <div class="result-grid">
+      <!-- Identity -->
+      <div class="result-card">
+        <div class="rc-header"><span class="rc-label">🏷️ Identité</span></div>
+        <div class="rc-body">
+          <div class="recipe-id-block">
+            <div class="recipe-name" id="r-title">—</div>
+            <div class="category-pill" id="r-category">—</div>
+            <div class="portions-info" id="r-portions">—</div>
+            <div class="portions-info" id="r-serve">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Times -->
+      <div class="result-card">
+        <div class="rc-header"><span class="rc-label">⏱️ Temps</span></div>
+        <div class="rc-body">
+          <div class="times-grid" id="r-times"></div>
+        </div>
+      </div>
+
+      <!-- Equipment -->
+      <div class="result-card">
+        <div class="rc-header">
+          <span class="rc-label">🔧 Matériel</span>
+          <span class="rc-count" id="r-equip-count">0</span>
+        </div>
+        <div class="rc-body">
+          <div class="equip-grid" id="r-equip"></div>
+        </div>
+      </div>
+
+      <!-- Ingredients -->
+      <div class="result-card">
+        <div class="rc-header">
+          <span class="rc-label">🥬 Ingrédients</span>
+          <span class="rc-count" id="r-ingr-count">0</span>
+        </div>
+        <div class="rc-body" id="r-ingredients"></div>
+      </div>
+
+      <!-- Phases -->
+      <div class="result-card full">
+        <div class="rc-header">
+          <span class="rc-label">👨‍🍳 Phases de préparation</span>
+          <span class="rc-count" id="r-phase-count">0</span>
+        </div>
+        <div class="rc-body" id="r-phases"></div>
+      </div>
+
+      <!-- Notes -->
+      <div class="result-card full">
+        <div class="rc-header"><span class="rc-label">📝 Notes & Astuces</span></div>
+        <div class="rc-body" id="r-notes"></div>
+      </div>
+    </div>
+
+    <!-- JSON -->
+    <div class="json-block">
+      <div class="json-block-header">
+        <span id="json-filename">recipe.json</span>
+        <button class="btn btn-secondary" onclick="downloadCurrentJSON()" style="padding:5px 14px;font-size:12px;">⬇️ Télécharger JSON</button>
+      </div>
+      <pre class="json-pre" id="json-output"></pre>
+    </div>
+
+    <!-- Add to library -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:2rem;">
+      <button class="btn btn-success" id="add-lib-btn">
+        📚 Ajouter à la bibliothèque
+      </button>
+      <span id="add-status" style="font-size:13px;color:var(--green);"></span>
+    </div>
+
+  </div>
+
+  <!-- LIBRARY -->
+  <div class="library-section">
+    <div class="library-header">
+      <div class="library-title">📚 Bibliothèque de recettes</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span id="lib-count-badge" style="font-size:12px;color:var(--muted);"></span>
+        <input type="search" id="lib-search" placeholder="🔍 Rechercher…"
+          style="padding:5px 12px;border:1px solid var(--border);border-radius:20px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;width:180px;background:var(--ice2);"
+          oninput="renderLibrary()">
+        <button class="btn btn-secondary" id="export-lib-btn" style="font-size:12px;padding:7px 14px;">⬇️ Exporter recipes.json</button>
+        <button class="btn btn-secondary" id="clear-lib-btn" style="font-size:12px;padding:7px 14px;color:var(--red);">🗑️ Vider</button>
+      </div>
+    </div>
+    <div id="library-container"></div>
+  </div>
+
+</main>
+
+<footer class="app-footer">
+  Parseur de Recettes · Outil autonome · v1.0
+</footer>
+
+<script>
+/* ════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════ */
+let currentRecipe = null;
+let library = JSON.parse(localStorage.getItem('recipe-library') || '[]');
+
+/* ════════════════════════════════════════
+   DOM REFS
+   ════════════════════════════════════════ */
+const urlInput    = document.getElementById('url-input');
+const fileInput   = document.getElementById('file-input');
+const dropZone    = document.getElementById('drop-zone');
+const dropFilename= document.getElementById('drop-filename');
+const parseBtn    = document.getElementById('parse-btn');
+const clearBtn    = document.getElementById('clear-btn');
+const statusEl    = document.getElementById('status');
+const resultsEl   = document.getElementById('results');
+const addLibBtn   = document.getElementById('add-lib-btn');
+const addStatus   = document.getElementById('add-status');
+const exportLibBtn= document.getElementById('export-lib-btn');
+const clearLibBtn = document.getElementById('clear-lib-btn');
+
+let selectedFile = null;
+
+/* ════════════════════════════════════════
+   INPUT HANDLERS
+   ════════════════════════════════════════ */
+urlInput.addEventListener('input', () => {
+  const v = urlInput.value.trim();
+  if (v) { selectedFile = null; clearDropzone(); }
+  parseBtn.disabled = !v && !selectedFile;
+});
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files[0]) setFile(e.target.files[0]);
+});
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && (f.name.endsWith('.html') || f.name.endsWith('.htm'))) setFile(f);
+  else showStatus('error', '⚠️ Seuls les fichiers .html sont acceptés.');
+});
+
+function setFile(f) {
+  selectedFile = f; urlInput.value = '';
+  dropFilename.textContent = f.name;
+  dropFilename.classList.remove('hidden');
+  parseBtn.disabled = false;
+}
+function clearDropzone() {
+  selectedFile = null; fileInput.value = '';
+  dropFilename.classList.add('hidden');
+}
+
+clearBtn.addEventListener('click', () => {
+  urlInput.value = ''; clearDropzone();
+  parseBtn.disabled = true;
+  statusEl.className = 'hidden'; resultsEl.className = 'hidden';
+  currentRecipe = null;
+});
+
+/* ════════════════════════════════════════
+   PARSE
+   ════════════════════════════════════════ */
+parseBtn.addEventListener('click', async () => {
+  parseBtn.disabled = true;
+  showStatus('loading', 'Analyse en cours…');
+  resultsEl.classList.add('hidden');
+
+  try {
+    let html = '';
+    if (selectedFile) {
+      html = await readFile(selectedFile);
+    } else {
+      const url = urlInput.value.trim();
+      html = await fetchURL(url);
+    }
+    const recipe = parseRecipeHTML(html);
+    currentRecipe = recipe;
+    renderResults(recipe);
+    showStatus('success', `✓ Recette analysée : « ${recipe.title} » — ${countIngredients(recipe)} ingrédients, ${recipe.phases.length} phases`);
+    resultsEl.classList.remove('hidden');
+  } catch (err) {
+    showStatus('error', '❌ ' + err.message);
+  } finally {
+    parseBtn.disabled = false;
+  }
+});
+
+function readFile(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = () => rej(new Error('Impossible de lire le fichier.'));
+    r.readAsText(file, 'utf-8');
+  });
+}
+
+async function fetchURL(url) {
+  // Try direct fetch first
+  try {
+    const resp = await fetch(url);
+    if (resp.ok) return await resp.text();
+  } catch (_) {}
+  // Fallback: CORS proxy
+  try {
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const resp = await fetch(proxy);
+    if (!resp.ok) throw new Error('Proxy inaccessible.');
+    const data = await resp.json();
+    return data.contents;
+  } catch (_) {
+    throw new Error('Impossible de charger l\'URL. Vérifiez l\'adresse ou utilisez l\'upload de fichier.');
+  }
+}
+
+/* ════════════════════════════════════════
+   PARSER CORE
+   ════════════════════════════════════════ */
+function parseRecipeHTML(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+
+  const title    = text(doc, '.recipe-title') || 'Sans titre';
+  const category = text(doc, '.recipe-category-tag') || '';
+
+  // Base portions — from JS constant or display element
+  let basePortions = 4;
+  const scriptContent = doc.querySelector('script')?.textContent || '';
+  const bpMatch = scriptContent.match(/BASE_PORTIONS\s*=\s*(\d+)/);
+  if (bpMatch) basePortions = parseInt(bpMatch[1]);
+
+  // Servir avec
+  const serveWith = text(doc, '.servir-value.filled') || '';
+
+  // Times
+  const times = {};
+  doc.querySelectorAll('.meta-pill').forEach(pill => {
+    const label = text(pill, '.mlabel');
+    const value = text(pill, '.mvalue');
+    if (label && value) times[label.toLowerCase().replace(/é/g,'e').replace(/\s+/g,'_')] = value;
+  });
+
+  // Equipment
+  const equipment = [];
+  doc.querySelectorAll('.equip-item').forEach(el => {
+    const icon = text(el, '.equip-icon') || '';
+    const name = text(el, '.equip-name') || '';
+    const note = text(el, '.equip-note') || '';
+    if (name && !name.startsWith('[')) equipment.push({ icon, name, note });
+  });
+
+  // Ingredients
+  const ingredients = [];
+  let totalIngr = 0;
+  doc.querySelectorAll('.ingr-cat-block').forEach(block => {
+    const catIcon = text(block, '.ingr-cat-icon') || '';
+    const catName = text(block, '.ingr-cat-name') || '';
+    const items = [];
+    block.querySelectorAll('.ingr-row').forEach(row => {
+      const qtyEl = row.querySelector('.ingr-qty');
+      const nameEl = row.querySelector('.ingr-name');
+      const optEl  = row.querySelector('.ingr-opt');
+      if (!nameEl) return;
+      const name = nameEl.textContent.trim();
+      if (!name || name.startsWith('[')) return;
+      const qty  = qtyEl ? (parseFloat(qtyEl.dataset.base) || 0) : 0;
+      const unit = qtyEl ? (qtyEl.dataset.unit || '') : '';
+      const opt  = optEl ? optEl.textContent.trim() : '';
+      items.push({ qty, unit, name, optional: opt.toLowerCase().includes('option') || false, note: opt });
+      totalIngr++;
+    });
+    if (items.length) ingredients.push({ category: catName, icon: catIcon, items });
+  });
+
+  // Phases
+  const phases = [];
+  doc.querySelectorAll('.phase').forEach(phase => {
+    const letter = text(phase, '.phase-badge') || '';
+    const title  = text(phase, '.phase-title') || '';
+    if (!title || title.startsWith('[')) return;
+
+    const timeBadges = [];
+    phase.querySelectorAll('.phase-badge-time').forEach(b => {
+      timeBadges.push(b.textContent.trim());
+    });
+
+    const phaseIngr = [];
+    phase.querySelectorAll('.ingr-chip').forEach(chip => {
+      const qtyEl = chip.querySelector('.chip-qty');
+      const qty   = qtyEl ? (parseFloat(qtyEl.dataset.base) || 0) : 0;
+      const unit  = qtyEl ? (qtyEl.dataset.unit || '') : '';
+      const nameNode = Array.from(chip.childNodes).find(n => n.nodeType === 3 && n.textContent.trim());
+      const name = nameNode ? nameNode.textContent.trim() : chip.textContent.replace(qtyEl?.textContent||'','').trim();
+      if (name && !name.startsWith('[')) phaseIngr.push({ qty, unit, name });
+    });
+
+    const steps = [];
+    phase.querySelectorAll('.substep-text').forEach(s => {
+      const t = s.textContent.trim();
+      if (t && !t.startsWith('[')) steps.push(t);
+    });
+
+    if (steps.length || phaseIngr.length) {
+      phases.push({ letter, title, timeBadges, ingredients: phaseIngr, steps });
+    }
+  });
+
+  // Notes
+  const notes = [];
+  doc.querySelectorAll('.note-box').forEach(nb => {
+    const titleEl = nb.querySelector('strong');
+    const noteTitle = titleEl ? titleEl.textContent.trim() : '';
+    const noteText  = nb.textContent.replace(noteTitle, '').trim();
+    if (noteText && !noteText.startsWith('[')) notes.push({ title: noteTitle, text: noteText });
+  });
+
+  return {
+    id: slugify(title) + '-' + Date.now(),
+    title, category: category.trim(), basePortions,
+    serveWith, times, equipment, ingredients, phases, notes,
+    _totalIngredients: totalIngr,
+    addedAt: new Date().toISOString()
+  };
+}
+
+function slugify(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+function text(el, sel) {
+  return sel ? el?.querySelector(sel)?.textContent?.trim() : el?.textContent?.trim();
+}
+function countIngredients(r) {
+  return r._totalIngredients || r.ingredients.reduce((a,c) => a + c.items.length, 0);
+}
+
+/* ════════════════════════════════════════
+   RENDER RESULTS
+   ════════════════════════════════════════ */
+function renderResults(r) {
+  // Identity
+  document.getElementById('r-title').textContent = r.title;
+  document.getElementById('r-category').textContent = r.category || 'Non spécifiée';
+  document.getElementById('r-portions').textContent = `Base : ${r.basePortions} personne${r.basePortions > 1 ? 's' : ''}`;
+  document.getElementById('r-serve').textContent = r.serveWith ? `À servir avec : ${r.serveWith}` : '';
+
+  // Times
+  const timesEl = document.getElementById('r-times');
+  timesEl.innerHTML = '';
+  const timeLabels = { preparation: 'Préparation', repos: 'Repos', cuisson: 'Cuisson', total: 'Total' };
+  Object.entries(r.times).forEach(([k, v]) => {
+    const label = timeLabels[k] || k;
+    const isTotal = k === 'total';
+    timesEl.innerHTML += `<div class="time-item ${isTotal ? 'total' : ''}">
+      <div class="time-label">${label}</div>
+      <div class="time-value">${v}</div>
+    </div>`;
+  });
+
+  // Equipment
+  const equipEl = document.getElementById('r-equip');
+  document.getElementById('r-equip-count').textContent = r.equipment.length + ' éléments';
+  equipEl.innerHTML = r.equipment.length
+    ? r.equipment.map(e => `<div class="equip-item">
+        <div class="equip-icon-box">${e.icon || '🔧'}</div>
+        <div class="equip-info">
+          <div class="equip-name">${e.name}</div>
+          ${e.note ? `<div class="equip-note">${e.note}</div>` : ''}
+        </div>
+      </div>`).join('')
+    : '<p style="color:var(--muted);font-size:13px;">Aucun matériel spécifique</p>';
+
+  // Ingredients
+  const ingrEl = document.getElementById('r-ingredients');
+  const ic = countIngredients(r);
+  document.getElementById('r-ingr-count').textContent = ic + ' ingrédient' + (ic > 1 ? 's' : '');
+  ingrEl.innerHTML = r.ingredients.map(cat => `
+    <div class="ingr-category">
+      <div class="ingr-cat-title">${cat.icon || ''} ${cat.category}</div>
+      <div class="ingr-list">
+        ${cat.items.map(i => `<div class="ingr-item">
+          <div class="ingr-qty-cell">${i.qty ? i.qty + (i.unit ? ' ' + i.unit : '') : '—'}</div>
+          <div class="ingr-name-cell">${i.name}${i.optional ? ' <em style="color:var(--muted);font-size:11px;">(opt.)</em>' : ''}</div>
+          ${i.note && !i.optional ? `<div class="ingr-opt-cell">${i.note}</div>` : ''}
+        </div>`).join('')}
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:13px;">Aucun ingrédient trouvé</p>';
+
+  // Phases
+  const phasesEl = document.getElementById('r-phases');
+  document.getElementById('r-phase-count').textContent = r.phases.length + ' phase' + (r.phases.length > 1 ? 's' : '');
+  phasesEl.innerHTML = r.phases.map(p => `
+    <div class="phase-item">
+      <div class="phase-head">
+        <div class="phase-letter">${p.letter}</div>
+        <div class="phase-title-text">${p.title}</div>
+        <div class="phase-times">${p.timeBadges.map(t => `<span class="phase-time-tag">${t}</span>`).join('')}</div>
+      </div>
+      <div class="phase-steps-list">
+        ${p.steps.map(s => `<div class="phase-step"><div class="phase-step-dot"></div><div>${s}</div></div>`).join('')}
+      </div>
+    </div>`).join('') || '<p style="color:var(--muted);font-size:13px;">Aucune phase trouvée</p>';
+
+  // Notes
+  const notesEl = document.getElementById('r-notes');
+  notesEl.innerHTML = r.notes.map(n => `
+    <div class="note-item">
+      ${n.title ? `<div class="note-title">${n.title}</div>` : ''}
+      ${n.text}
+    </div>`).join('') || '<p style="color:var(--muted);font-size:13px;">Aucune note</p>';
+
+  // JSON
+  const clean = JSON.parse(JSON.stringify(r));
+  delete clean._totalIngredients;
+  const jsonStr = JSON.stringify(clean, null, 2);
+  document.getElementById('json-output').innerHTML = syntaxHighlight(jsonStr);
+  document.getElementById('json-filename').textContent = slugify(r.title) + '.json';
+
+  addStatus.textContent = '';
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+      let cls = 'jn';
+      if (/^"/.test(m)) cls = /:$/.test(m) ? 'jk' : 'js';
+      else if (/true|false/.test(m)) cls = 'jb';
+      return `<span class="${cls}">${m}</span>`;
+    });
+}
+
+/* ════════════════════════════════════════
+   DOWNLOAD
+   ════════════════════════════════════════ */
+function downloadCurrentJSON() {
+  if (!currentRecipe) return;
+  const clean = JSON.parse(JSON.stringify(currentRecipe));
+  delete clean._totalIngredients;
+  downloadJSON(clean, slugify(currentRecipe.title) + '.json');
+}
+
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ════════════════════════════════════════
+   LIBRARY
+   ════════════════════════════════════════ */
+addLibBtn.addEventListener('click', () => {
+  if (!currentRecipe) return;
+  const clean = JSON.parse(JSON.stringify(currentRecipe));
+  delete clean._totalIngredients;
+  const exists = library.findIndex(r => r.id === clean.id);
+  if (exists >= 0) { library[exists] = clean; addStatus.textContent = '✓ Recette mise à jour'; }
+  else { library.push(clean); addStatus.textContent = `✓ Ajouté — ${library.length} recette(s) dans la bibliothèque`; }
+  saveLibrary(); renderLibrary();
+});
+
+exportLibBtn.addEventListener('click', () => {
+  if (!library.length) return;
+  downloadJSON({ recipes: library, exportedAt: new Date().toISOString(), count: library.length }, 'recipes.json');
+});
+
+clearLibBtn.addEventListener('click', () => {
+  if (!library.length) return;
+  if (confirm(`Vider la bibliothèque ? (${library.length} recette(s) seront supprimées)`)) {
+    library = []; saveLibrary(); renderLibrary();
+  }
+});
+
+function saveLibrary() {
+  localStorage.setItem('recipe-library', JSON.stringify(library));
+}
+
+function renderLibrary() {
+  const container = document.getElementById('library-container');
+  const badge     = document.getElementById('lib-count-badge');
+  const q = (document.getElementById('lib-search')?.value || '').toLowerCase().trim();
+  badge.textContent = library.length ? `${library.length} recette(s)` : '';
+  exportLibBtn.disabled = !library.length;
+
+  if (!library.length) {
+    container.innerHTML = `<div class="empty-library">
+      <div class="em-icon">📭</div>
+      <p>Aucune recette dans la bibliothèque.<br>Analysez et ajoutez vos recettes ici.</p>
+    </div>`;
+    return;
+  }
+
+  // Filter
+  const filtered = q
+    ? library.filter(r =>
+        r.title.toLowerCase().includes(q) ||
+        (r.category || '').toLowerCase().includes(q))
+    : library;
+
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty-library">
+      <div class="em-icon">🔍</div>
+      <p>Aucune recette ne correspond à « ${q} ».</p>
+    </div>`;
+    return;
+  }
+
+  // Group by category, sort categories then names
+  const groups = {};
+  for (const r of filtered) {
+    const cat = r.category || 'Autres';
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(r);
+  }
+  const sortedCats = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'fr'));
+  for (const cat of sortedCats) {
+    groups[cat].sort((a, b) => a.title.localeCompare(b.title, 'fr'));
+  }
+
+  let html = '';
+  for (const cat of sortedCats) {
+    html += `<div class="lib-cat-group">
+      <div class="lib-cat-group-title">${cat}</div>
+      <div class="library-list">`;
+    for (const r of groups[cat]) {
+      const i = library.indexOf(r);
+      html += `<div class="library-item">
+        <span class="lib-cat">${r.category || '?'}</span>
+        <div class="lib-name">${r.title}</div>
+        <div class="lib-meta">${r.basePortions} pers. · ${r.phases.length} phases · ${r.times.total || r.times.Total || '—'}</div>
+        <button class="lib-remove" onclick="removeFromLibrary(${i})" title="Supprimer">✕</button>
+      </div>`;
+    }
+    html += '</div></div>';
+  }
+  container.innerHTML = html;
+}
+
+function removeFromLibrary(i) {
+  library.splice(i, 1);
+  saveLibrary(); renderLibrary();
+}
+
+/* ════════════════════════════════════════
+   STATUS
+   ════════════════════════════════════════ */
+function showStatus(type, msg) {
+  const icons = { loading: '<div class="spin"></div>', success: '', error: '', info: 'ℹ️' };
+  statusEl.className = `status-bar ${type}`;
+  statusEl.innerHTML = (icons[type] || '') + `<span>${msg}</span>`;
+}
+
+/* ════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════ */
+renderLibrary();
+</script>
+</body>
+</html>
