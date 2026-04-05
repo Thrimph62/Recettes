@@ -6,6 +6,7 @@
 <title>Parseur de Recettes — Étape 1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --navy:   #0f2d5a;
@@ -374,6 +375,16 @@ body {
     <a href="prep-planner.html"  class="nav-link">Planning</a>
   </div>
 </nav>
+
+<!-- ══ CONFIG SUPABASE ══════════════════════ -->
+<script>
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
+const TABLE_NAME        = 'recettes';
+let sbClient = null;
+try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+</script>
+<!-- ══════════════════════════════════════════ -->
 
 <header class="app-header">
   <div class="header-icon">🍽️</div>
@@ -878,16 +889,40 @@ function downloadJSON(data, filename) {
 }
 
 /* ════════════════════════════════════════
-   LIBRARY
+   LIBRARY — Supabase + localStorage fallback
    ════════════════════════════════════════ */
-addLibBtn.addEventListener('click', () => {
+const useSupabase = () => sbClient && SUPABASE_URL !== 'VOTRE_URL_SUPABASE';
+
+addLibBtn.addEventListener('click', async () => {
   if (!currentRecipe) return;
   const clean = JSON.parse(JSON.stringify(currentRecipe));
   delete clean._totalIngredients;
-  const exists = library.findIndex(r => r.id === clean.id);
-  if (exists >= 0) { library[exists] = clean; addStatus.textContent = '✓ Recette mise à jour'; }
-  else { library.push(clean); addStatus.textContent = `✓ Ajouté — ${library.length} recette(s) dans la bibliothèque`; }
-  saveLibrary(); renderLibrary();
+
+  addStatus.textContent = '⏳ Enregistrement…';
+  addStatus.style.color = 'var(--muted)';
+
+  if (useSupabase()) {
+    const { error } = await sbClient
+      .from(TABLE_NAME)
+      .upsert(clean, { onConflict: 'id' });
+    if (error) {
+      addStatus.textContent = '✗ Erreur : ' + error.message;
+      addStatus.style.color = 'var(--red)';
+      return;
+    }
+    addStatus.textContent = '✓ Enregistré dans la bibliothèque';
+    addStatus.style.color = 'var(--green)';
+  } else {
+    /* fallback localStorage */
+    const exists = library.findIndex(r => r.id === clean.id);
+    if (exists >= 0) { library[exists] = clean; }
+    else { library.push(clean); }
+    localStorage.setItem('recipe-library', JSON.stringify(library));
+    addStatus.textContent = `✓ Ajouté localement — ${library.length} recette(s)`;
+    addStatus.style.color = 'var(--green)';
+  }
+
+  await loadLibrary();
 });
 
 exportLibBtn.addEventListener('click', () => {
@@ -895,15 +930,31 @@ exportLibBtn.addEventListener('click', () => {
   downloadJSON({ recipes: library, exportedAt: new Date().toISOString(), count: library.length }, 'recipes.json');
 });
 
-clearLibBtn.addEventListener('click', () => {
+clearLibBtn.addEventListener('click', async () => {
   if (!library.length) return;
-  if (confirm(`Vider la bibliothèque ? (${library.length} recette(s) seront supprimées)`)) {
-    library = []; saveLibrary(); renderLibrary();
+  if (!confirm(`Vider la bibliothèque ? (${library.length} recette(s) seront supprimées)`)) return;
+  if (useSupabase()) {
+    const ids = library.map(r => r.id);
+    await sbClient.from(TABLE_NAME).delete().in('id', ids);
+  } else {
+    localStorage.removeItem('recipe-library');
   }
+  library = [];
+  renderLibrary();
 });
 
-function saveLibrary() {
-  localStorage.setItem('recipe-library', JSON.stringify(library));
+async function loadLibrary() {
+  if (useSupabase()) {
+    const { data, error } = await sbClient
+      .from(TABLE_NAME)
+      .select('id, title, category, basePortions, phases, times')
+      .order('title', { ascending: true });
+    if (!error && data) {
+      library = data;
+      localStorage.setItem('recipe-library', JSON.stringify(library));
+    }
+  }
+  renderLibrary();
 }
 
 function renderLibrary() {
@@ -921,7 +972,6 @@ function renderLibrary() {
     return;
   }
 
-  // Filter
   const filtered = q
     ? library.filter(r =>
         r.title.toLowerCase().includes(q) ||
@@ -936,7 +986,6 @@ function renderLibrary() {
     return;
   }
 
-  // Group by category, sort categories then names
   const groups = {};
   for (const r of filtered) {
     const cat = r.category || 'Autres';
@@ -954,12 +1003,11 @@ function renderLibrary() {
       <div class="lib-cat-group-title">${cat}</div>
       <div class="library-list">`;
     for (const r of groups[cat]) {
-      const i = library.indexOf(r);
       html += `<div class="library-item">
         <span class="lib-cat">${r.category || '?'}</span>
         <div class="lib-name">${r.title}</div>
-        <div class="lib-meta">${r.basePortions} pers. · ${r.phases.length} phases · ${r.times.total || r.times.Total || '—'}</div>
-        <button class="lib-remove" onclick="removeFromLibrary(${i})" title="Supprimer">✕</button>
+        <div class="lib-meta">${r.basePortions} pers. · ${(r.phases||[]).length} phases · ${(r.times||{}).total || (r.times||{}).Total || '—'}</div>
+        <button class="lib-remove" onclick="removeFromLibrary('${r.id}')" title="Supprimer">✕</button>
       </div>`;
     }
     html += '</div></div>';
@@ -967,9 +1015,13 @@ function renderLibrary() {
   container.innerHTML = html;
 }
 
-function removeFromLibrary(i) {
-  library.splice(i, 1);
-  saveLibrary(); renderLibrary();
+async function removeFromLibrary(id) {
+  if (useSupabase()) {
+    await sbClient.from(TABLE_NAME).delete().eq('id', id);
+  }
+  library = library.filter(r => r.id !== id);
+  localStorage.setItem('recipe-library', JSON.stringify(library));
+  renderLibrary();
 }
 
 /* ════════════════════════════════════════
@@ -984,7 +1036,7 @@ function showStatus(type, msg) {
 /* ════════════════════════════════════════
    INIT
    ════════════════════════════════════════ */
-renderLibrary();
+loadLibrary();
 </script>
 </body>
 </html>
