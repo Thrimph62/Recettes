@@ -140,10 +140,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </nav>
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
-const TABLE_NAME        = 'recettes';
-let sbClient = null;
+const SUPABASE_URL='VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY='VOTRE_CLE_ANON';
+const TABLE_NAME='recettes';
+let sbClient=null;
 try{sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){}
 </script>
 <header class="app-header">
@@ -195,6 +195,18 @@ const DEFAULT_TIMES={pd:'08:00',dj:'12:30',ap:'18:30',di:'19:30',de:'20:30',bo:'
 let recipes=[],menu={},numDays=7,startDate=null,dateKeys=[],mealTimings={},phaseOverrides={};
 
 function localDateKey(dt){const y=dt.getFullYear();const m=String(dt.getMonth()+1).padStart(2,'0');const d=String(dt.getDate()).padStart(2,'0');return y+'-'+m+'-'+d;}
+
+/* Given a dateKey index, return the correct LOCAL display date */
+function displayDateForIndex(i){
+  if(!startDate) return parseLocalDate(dateKeys[i]||'2000-01-01');
+  const sd=parseLocalDate(startDate);
+  const dt=new Date(sd); dt.setDate(sd.getDate()+i);
+  return dt;
+}
+function displayDateForKey(key){
+  const i=dateKeys.indexOf(key);
+  return displayDateForIndex(i>=0?i:0);
+}
 function parseLocalDate(key) {
   const [y,m,d] = key.split('-').map(Number);
   return new Date(y, m-1, d);
@@ -220,12 +232,12 @@ async function loadData(){
       return;
     }
     if(startDate){
-      /* Build keys from startDate + numDays — same logic as Menu Builder */
+      /* Recreate UTC-shifted keys exactly as Menu Builder does (toISOString) */
       dateKeys=[];
       const sd=parseLocalDate(startDate);
       for(let d=0;d<numDays;d++){
         const dt=new Date(sd); dt.setDate(sd.getDate()+d);
-        dateKeys.push(localDateKey(dt));
+        dateKeys.push(dt.toISOString().split('T')[0]);
       }
     } else {
       dateKeys=Object.keys(menu).filter(k=>k.includes('-')).sort().slice(0,numDays);
@@ -237,8 +249,8 @@ async function loadData(){
 
 function renderGrid(){
   if(!dateKeys.length) return;
-  const first=parseLocalDate(dateKeys[0]);
-  const last=parseLocalDate(dateKeys[dateKeys.length-1]);
+  const first=displayDateForIndex(0);
+  const last=displayDateForIndex(dateKeys.length-1);
   document.getElementById('grid-title').textContent='Semaine du '
     +first.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})
     +' au '+last.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
@@ -246,11 +258,12 @@ function renderGrid(){
   const today=localDateKey(new Date());
   let html='';
   for(const key of dateKeys){
-    const dt=parseLocalDate(key);
+    const idx=dateKeys.indexOf(key);
+    const dt=displayDateForIndex(idx>=0?idx:0);
     const di=dt.getDay()===0?6:dt.getDay()-1;
     const meals=getMeals(key);
     const hasMeals=meals.length>0;
-    const isToday=key===today;
+    const isToday=localDateKey(dt)===today;
     html+=`<div class="day-card"><div class="day-card-head ${hasMeals?'has-meals':'empty'} ${isToday?'is-today':''}">
       <div class="day-name">${DAYS_FR[di]}</div>
       <div class="day-date">${dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div>
@@ -328,10 +341,10 @@ function generateAgenda(){
   let html='<div class="gcal-wrap">';
   html+='<div class="gcal-header"><div class="gcal-gutter"></div>';
   for(const key of dateKeys){
-    const dt=parseLocalDate(key);
+    const dt=displayDateForKey(key);
     const di=dt.getDay()===0?6:dt.getDay()-1;
     const hasMeals=getMeals(key).length>0;
-    const isToday=key===today;
+    const isToday=localDateKey(dt)===today;
     html+=`<div class="gcal-day-header ${isToday?'is-today':''} ${!hasMeals?'empty':''}">
       <div class="gcal-day-name">${DAYS_FR[di]}</div>
       <div class="gcal-day-date">${dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div>
@@ -381,7 +394,7 @@ function generateAgenda(){
     html+='<div style="margin-top:1.5rem;">';
     html+='<div class="section-title" style="margin-bottom:1rem;">Pr\u00e9parations \u00e0 l\u2019avance</div>';
     for(const key of advDays){
-      const dt=parseLocalDate(key);
+      const dt=displayDateForKey(key);
       const di=dt.getDay()===0?6:dt.getDay()-1;
       const did='d'+key.replace(/-/g,'');
       html+=`<div class="plan-day-section">
