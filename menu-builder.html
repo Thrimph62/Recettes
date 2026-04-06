@@ -268,8 +268,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   body.print-list .week-grid,
   body.print-list .generate-bar,
   body.print-list .shopping-footer{display:none!important;}
-  body.print-list .shopping-section > *:not(#final-list-container){display:none!important;}
-  body.print-list .shopping-section{box-shadow:none;border:none;background:none;padding:0;}
+  body.print-list .shopping-section{display:none!important;}
+  body.print-list #final-list-wrapper{display:block!important;}
   body.print-list #final-list-container{display:block!important;margin:0;border-radius:0;}
   body.print-list #final-list-container > div:last-child{display:none!important;}
   .ingr-check-item input{display:none;}
@@ -290,8 +290,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -374,6 +374,7 @@ try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
       <button class="btn btn-ghost btn-sm" onclick="exportShoppingList()">⬇️ Exporter TXT</button>
     </div>
   </div>
+  <div id="final-list-wrapper"></div>
 </main>
 
 <!-- Autocomplete dropdown portal -->
@@ -1057,7 +1058,7 @@ function renderShoppingList(agg, pairs) {
   document.getElementById('shopping-body').innerHTML = html;
   /* shopping-footer always visible */
   // Remove any old final list
-  document.getElementById('final-list-container')?.remove();
+  document.getElementById('final-list-wrapper').innerHTML = '';
   showStatus('success',`✓ ${totalItems} ingrédients. Renseignez vos stocks puis cliquez sur « Générer la liste définitive ».`);
 }
 
@@ -1123,7 +1124,7 @@ function generateFinalList(){
   const totalFinal = Object.values(bycat).reduce((a,c)=>a+c.items.length,0);
 
   // Remove previous
-  document.getElementById('final-list-container')?.remove();
+  document.getElementById('final-list-wrapper').innerHTML = '';
 
   if(!totalFinal){
     const div=document.createElement('div');
@@ -1162,8 +1163,8 @@ function generateFinalList(){
   </div></div>`;
 
   const tmp=document.createElement('div'); tmp.innerHTML=html;
-  const shoppingSection = document.getElementById('shopping-section');
-  shoppingSection.appendChild(tmp.firstElementChild);
+  document.getElementById('final-list-wrapper').innerHTML = '';
+  document.getElementById('final-list-wrapper').appendChild(tmp.firstElementChild);
   document.getElementById('final-list-container').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
