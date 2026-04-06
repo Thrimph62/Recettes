@@ -111,10 +111,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </nav>
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
-const TABLE_NAME        = 'recettes';
-let sbClient = null;
+const SUPABASE_URL='VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY='VOTRE_CLE_ANON';
+const TABLE_NAME='recettes';
+let sbClient=null;
 try{sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){}
 </script>
 <header class="app-header">
@@ -163,8 +163,13 @@ const MEAL_ICONS={pd:'🌅',dj:'🍽️',ap:'🥂',di:'🌙',de:'🍮',bo:'🥤'
 const MEAL_ORDER=['pd','dj','ap','di','de','bo','sp'];
 const DAYS_FR=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 const DEFAULT_TIMES={pd:'08:00',dj:'12:30',ap:'18:30',di:'19:30',de:'20:30',bo:'12:30',sp:'20:00'};
-let recipes=[],menu={},numDays=7,dateKeys=[],mealTimings={},phaseOverrides={};
+let recipes=[],menu={},numDays=7,startDate=null,dateKeys=[],mealTimings={},phaseOverrides={};
 
+function localDateKey(dt){const y=dt.getFullYear();const m=String(dt.getMonth()+1).padStart(2,'0');const d=String(dt.getDate()).padStart(2,'0');return y+'-'+m+'-'+d;}
+function parseLocalDate(key) {
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
 function nrm(r){if(r.baseportions!==undefined&&r.basePortions===undefined)r.basePortions=r.baseportions;return r;}
 
 async function loadData(){
@@ -174,17 +179,27 @@ async function loadData(){
       const{data:rd,error:re}=await sbClient.from(TABLE_NAME).select('*');
       if(!re&&rd&&rd.length){recipes=rd.map(nrm);localStorage.setItem('recipe-library',JSON.stringify(recipes));}
       const{data:md,error:me}=await sbClient.from('menus').select('menu').eq('id','menu-principal').single();
-      if(!me&&md&&md.menu){const ms=md.menu;menu=ms.menu||{};numDays=ms.numDays||7;localStorage.setItem('weekly-menu',JSON.stringify(ms));}
+      if(!me&&md&&md.menu){const ms=md.menu;menu=ms.menu||{};numDays=ms.numDays||7;startDate=ms.startDate||null;localStorage.setItem('weekly-menu',JSON.stringify(ms));}
     }
     if(!recipes.length){const r=localStorage.getItem('recipe-library');if(r)recipes=JSON.parse(r).map(nrm);}
-    if(!Object.keys(menu).length){const m=localStorage.getItem('weekly-menu');if(m){const ms=JSON.parse(m);menu=ms.menu||{};numDays=ms.numDays||7;}}
+    if(!Object.keys(menu).length){const m=localStorage.getItem('weekly-menu');if(m){const ms=JSON.parse(m);menu=ms.menu||{};numDays=ms.numDays||7;startDate=ms.startDate||null;}}
     mealTimings=JSON.parse(localStorage.getItem('meal-timings')||'{}');
     if(!Object.keys(menu).length){
       showStatus('error','❌ Aucun menu. Créez d\'abord un menu dans le Menu Builder.');
       document.getElementById('days-grid').innerHTML='<div style="grid-column:span 3;padding:3rem;text-align:center;font-size:13px;color:var(--muted)">Aucun menu — <a href="menu-builder.html" style="color:var(--navy2)">ouvrir le Menu Builder</a></div>';
       return;
     }
-    dateKeys=Object.keys(menu).filter(k=>k.includes('-')).sort().slice(0,numDays);
+    if(startDate){
+      /* Build keys from startDate + numDays — same logic as Menu Builder */
+      dateKeys=[];
+      const sd=parseLocalDate(startDate);
+      for(let d=0;d<numDays;d++){
+        const dt=new Date(sd); dt.setDate(sd.getDate()+d);
+        dateKeys.push(localDateKey(dt));
+      }
+    } else {
+      dateKeys=Object.keys(menu).filter(k=>k.includes('-')).sort().slice(0,numDays);
+    }
     renderGrid();
     showStatus('success','✓ Menu chargé — ajustez les horaires puis cliquez « Générer le planning ».');
   }catch(e){showStatus('error','❌ '+e.message);}
@@ -192,16 +207,16 @@ async function loadData(){
 
 function renderGrid(){
   if(!dateKeys.length) return;
-  const first=new Date(dateKeys[0]+'T00:00:00');
-  const last=new Date(dateKeys[dateKeys.length-1]+'T00:00:00');
+  const first=parseLocalDate(dateKeys[0]);
+  const last=parseLocalDate(dateKeys[dateKeys.length-1]);
   document.getElementById('grid-title').textContent='Semaine du '
     +first.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})
     +' au '+last.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
   document.getElementById('grid-sub').textContent=dateKeys.length+' jours · '+dateKeys.filter(k=>getMeals(k).length>0).length+' jours avec recettes';
-  const today=new Date().toISOString().split('T')[0];
+  const today=localDateKey(new Date());
   let html='';
   for(const key of dateKeys){
-    const dt=new Date(key+'T00:00:00');
+    const dt=parseLocalDate(key);
     const di=dt.getDay()===0?6:dt.getDay()-1;
     const meals=getMeals(key);
     const hasMeals=meals.length>0;
@@ -254,7 +269,7 @@ function generateAgenda(){
   if(!daysWithMeals.length){showStatus('error','❌ Aucune recette planifiée.');return;}
   let html='';
   for(const key of daysWithMeals){
-    const dt=new Date(key+'T00:00:00');
+    const dt=parseLocalDate(key);
     const di=dt.getDay()===0?6:dt.getDay()-1;
     const dayLabel=DAYS_FR[di]+' '+dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
     const{dayJ,adv}=computeDay(key);
