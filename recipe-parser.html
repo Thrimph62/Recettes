@@ -891,7 +891,7 @@ function downloadJSON(data, filename) {
 /* ════════════════════════════════════════
    LIBRARY — Supabase + localStorage fallback
    ════════════════════════════════════════ */
-const useSupabase = () => sbClient && SUPABASE_URL !== 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
+const useSupabase = () => sbClient && SUPABASE_URL !== 'VOTRE_URL_SUPABASE';
 
 addLibBtn.addEventListener('click', async () => {
   if (!currentRecipe) return;
