@@ -555,8 +555,8 @@ body.view-list .recipes-list { display: flex; }
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 </script>
 <!-- ══════════════════════════════════════════════ -->
@@ -672,7 +672,7 @@ const TABLE_NAME        = 'recettes';
   <div class="sort-wrap">
     <span>Trier par</span>
     <select class="sort-select" id="sort-select" onchange="renderRecipes()">
-      <option value="title">Nom A→Z</option>
+      <option value="title">Catégorie + nom</option>
       <option value="title-desc">Nom Z→A</option>
       <option value="time">Temps croissant</option>
       <option value="newest">Plus récentes</option>
@@ -935,7 +935,11 @@ function clearOneFilter(key) {
 function getSorted() {
   const sort = document.getElementById('sort-select').value;
   const arr  = [...filtered];
-  if (sort === 'title')      return arr.sort((a,b) => a.title.localeCompare(b.title,'fr'));
+  const byCatTitle = (a, b) => {
+    const catCmp = (a.category||'').localeCompare(b.category||'', 'fr');
+    return catCmp !== 0 ? catCmp : a.title.localeCompare(b.title, 'fr');
+  };
+  if (sort === 'title')      return arr.sort(byCatTitle);
   if (sort === 'title-desc') return arr.sort((a,b) => b.title.localeCompare(a.title,'fr'));
   if (sort === 'time')       return arr.sort((a,b) => {
     const ta = parseMinutes(a.times?.total || a.times?.Total || '') || 9999;
@@ -945,7 +949,7 @@ function getSorted() {
   if (sort === 'newest')     return arr.sort((a,b) =>
     new Date(b.created_at||0) - new Date(a.created_at||0)
   );
-  return arr;
+  return arr.sort(byCatTitle);
 }
 
 /* ════════════════════════════════════════
@@ -993,13 +997,30 @@ function recipeUrl(r) {
   return `recette.html?id=${encodeURIComponent(r.id)}`;
 }
 
+function countIngredients(r) {
+  const raw = r.ingredients || [];
+  if (!raw.length) return 0;
+  if (Array.isArray(raw[0].items)) {
+    return raw.reduce((s, g) => s + (g.items || []).length, 0);
+  }
+  return raw.length;
+}
+
 function renderGrid(recipes) {
   document.getElementById('recipes-grid').innerHTML = recipes.map(r => {
     const color    = catColor(r.category);
-    const total    = r.times?.total || r.times?.Total || '';
-    const prep     = r.times?.prep  || r.times?.Préparation || '';
+    const times    = r.times || {};
+    const total    = times.total    || times.Total         || '';
+    const prep     = times.prep     || times['Préparation']|| times.Préparation || '';
+    const cook     = times.cook     || times['Cuisson']    || times.Cuisson     || '';
+    const rest     = times.rest     || times['Repos']      || times.Repos       || '';
     const portions = r.basePortions || r.baseportions || '—';
-    const phases   = (r.phases || []).length;
+    const nIngr    = countIngredients(r);
+    const timeLine = [
+      prep ? `<div class="card-meta-item"><span class="card-meta-icon">🔪</span>${formatTime(prep)}</div>` : '',
+      cook ? `<div class="card-meta-item"><span class="card-meta-icon">🔥</span>${formatTime(cook)}</div>` : '',
+      rest ? `<div class="card-meta-item"><span class="card-meta-icon">💤</span>${formatTime(rest)}</div>` : '',
+    ].filter(Boolean).join('');
     return `
     <a href="${recipeUrl(r)}" class="recipe-card ${catClass(r.category)}">
       <div class="card-category-bar" style="background:${color}"></div>
@@ -1008,13 +1029,10 @@ function renderGrid(recipes) {
         <div class="card-title">${r.title}</div>
         <div class="card-meta">
           ${total ? `<div class="card-meta-item"><span class="card-meta-icon">⏱</span>${formatTime(total)}</div>` : ''}
-          ${prep  ? `<div class="card-meta-item"><span class="card-meta-icon">🔪</span>${formatTime(prep)}</div>` : ''}
           <div class="card-meta-item"><span class="card-meta-icon">👤</span>${portions} pers.</div>
+          ${nIngr ? `<div class="card-meta-item"><span class="card-meta-icon">🛒</span>${nIngr} ingr.</div>` : ''}
         </div>
-      </div>
-      <div class="card-footer">
-        <span class="card-phases">${phases} phase${phases>1?'s':''} · ${(r.ingredients||[]).length} ingr.</span>
-        <span class="card-arrow">→</span>
+        ${timeLine ? `<div class="card-meta" style="margin-top:6px">${timeLine}</div>` : ''}
       </div>
     </a>`;
   }).join('');
