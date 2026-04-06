@@ -378,8 +378,8 @@ body {
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -726,17 +726,19 @@ function parseRecipeHTML(html) {
 
     const phaseIngr = [];
     phase.querySelectorAll('.ingr-chip').forEach(chip => {
-      const qtyEl = chip.querySelector('.chip-qty');
-      const qty   = qtyEl ? (parseFloat(qtyEl.dataset.base) || 0) : 0;
-      const unit  = qtyEl ? (qtyEl.dataset.unit || '') : '';
+      const qtyEl   = chip.querySelector('.chip-qty');
+      const rawBase = qtyEl ? qtyEl.dataset.base : '';
+      const qty     = parseFloat(rawBase) || 0;
+      const qtyLabel = rawBase && isNaN(parseFloat(rawBase)) ? rawBase : null; /* preserve "PM" etc. */
+      const unit    = qtyEl ? (qtyEl.dataset.unit || '') : '';
       const nameNode = Array.from(chip.childNodes).find(n => n.nodeType === 3 && n.textContent.trim());
       const name = nameNode ? nameNode.textContent.trim() : chip.textContent.replace(qtyEl?.textContent||'','').trim();
-      if (name && !name.startsWith('[')) phaseIngr.push({ qty, unit, name });
+      if (name && !name.startsWith('[')) phaseIngr.push({ qty, unit, name, ...(qtyLabel ? {qtyLabel} : {}) });
     });
 
     const steps = [];
     phase.querySelectorAll('.substep-text').forEach(s => {
-      const t = s.textContent.trim();
+      const t = s.innerHTML.trim(); /* innerHTML preserves <b> tags */
       if (t && !t.startsWith('[')) steps.push(t);
     });
 
