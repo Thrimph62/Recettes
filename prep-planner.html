@@ -140,10 +140,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </nav>
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
-const TABLE_NAME        = 'recettes';
-let sbClient = null;
+const SUPABASE_URL='VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY='VOTRE_CLE_ANON';
+const TABLE_NAME='recettes';
+let sbClient=null;
 try{sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){}
 </script>
 <header class="app-header">
@@ -163,7 +163,6 @@ try{sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch
         <div class="section-sub" id="grid-sub">Chargement…</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-ghost btn-sm" onclick="saveTimings()">💾 Sauvegarder les horaires</button>
         <button class="btn btn-success" onclick="generateAgenda()">▶ Générer le planning</button>
       </div>
     </div>
@@ -290,7 +289,6 @@ function renderGrid(){
             <div class="meal-type">${MEAL_ICONS[mealId]} ${MEAL_LABELS[mealId]}</div>
             <div class="meal-recipes" title="${names}">${names}</div>
           </div>
-          <input type="time" class="meal-time-input" value="${saved}" onchange="onTC('${key}','${mealId}',this.value)">
         </div>`;
       }
     }
@@ -366,8 +364,7 @@ const VIEW_DAYS=3;
 
 function renderAgendaView(){
   if(!savedPlanning) return;
-  const{allDayJ,allAdv,h0,h1}=savedPlanning;
-  const totalHours=h1-h0+1;
+  const{allDayJ,allAdv}=savedPlanning;
   const today=localDateKey(new Date());
   const visibleKeys=dateKeys.slice(viewStart,viewStart+VIEW_DAYS);
 
@@ -386,58 +383,93 @@ function renderAgendaView(){
     <button class="btn btn-ghost btn-sm" ${canNext?'':'disabled style="opacity:.3;cursor:default"'} onclick="navAgenda(1)">Suivant →</button>
   </div>`;
 
-  /* Calendar */
-  html+='<div class="gcal-wrap">';
-  html+='<div class="gcal-header"><div class="gcal-gutter"></div>';
+  /* Visual list: day → meal → step */
   for(const key of visibleKeys){
     const dt=displayDateForKey(key);
     const di=dt.getDay()===0?6:dt.getDay()-1;
-    const hasMeals=getMeals(key).length>0;
     const isToday=localDateKey(dt)===today;
-    html+=`<div class="gcal-day-header ${isToday?'is-today':''} ${!hasMeals?'empty':''}">
-      <div class="gcal-day-name">${DAYS_FR[di]}</div>
-      <div class="gcal-day-date">${dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div>
-    </div>`;
-  }
-  html+='</div>';
+    const dayMeals=getMeals(key);
+    if(!dayMeals.length&&!(allAdv[key]||[]).length) continue;
 
-  html+='<div class="gcal-body"><div class="gcal-time-col">';
-  for(let h=h0;h<=h1;h++) html+=`<div class="gcal-hour-label">${String(h).padStart(2,'0')}:00</div>`;
-  html+='</div><div class="gcal-days-area">';
-
-  for(const key of visibleKeys){
-    const height=totalHours*60;
-    let gridLines='';
-    for(let h=h0;h<=h1;h++) gridLines+=`<div class="gcal-hour-row" style="height:60px;position:absolute;top:${(h-h0)*60}px;left:0;right:0;"></div>`;
-    let events='';
+    /* Group dayJ phases by mealId then by recipe */
+    const mealMap={};
     for(const ph of (allDayJ[key]||[])){
-      const top=(ph.startMin-h0*60);
-      const ht=Math.max(24,(ph.endMin-ph.startMin));
-      const col=ph.color, lt=lighten(col,.85);
-      events+=`<div class="gcal-event" style="background:${lt};border-color:${col};top:${top}px;height:${ht}px;color:${col}">
-        <div class="gcal-event-recipe" style="font-weight:700">${ph.recipe.title}</div>
-        <div class="gcal-event-phase">${ph.phase.letter?ph.phase.letter+'. ':''}${ph.phase.title}</div>
-        ${ht>36?'<div class="gcal-event-time">'+m2t(ph.startMin)+' → '+m2t(ph.endMin)+'</div>':''}
-      </div>`;
+      if(!mealMap[ph.mealId]) mealMap[ph.mealId]={};
+      if(!mealMap[ph.mealId][ph.recipe.id]) mealMap[ph.mealId][ph.recipe.id]={recipe:ph.recipe,phases:[]};
+      mealMap[ph.mealId][ph.recipe.id].phases.push(ph);
     }
-    html+=`<div class="gcal-day-col" style="height:${height}px;position:relative;">${gridLines}${events}</div>`;
-  }
-  html+='</div></div></div>';
+    /* Also group advance phases by mealId/recipe */
+    const advMap={};
+    for(const ph of (allAdv[key]||[])){
+      if(!advMap[ph.mealId]) advMap[ph.mealId]={};
+      if(!advMap[ph.mealId][ph.recipe.id]) advMap[ph.mealId][ph.recipe.id]={recipe:ph.recipe,phases:[]};
+      advMap[ph.mealId][ph.recipe.id].phases.push(ph);
+    }
 
-  /* Advance prep for visible days */
-  const visibleAdv=visibleKeys.filter(k=>(allAdv[k]||[]).length>0);
-  if(visibleAdv.length){
-    html+='<div style="margin-top:1.5rem;">';
-    html+='<div class="section-title" style="margin-bottom:1rem;">Préparations à l’avance</div>';
-    for(const key of visibleAdv){
-      const dt=displayDateForKey(key);
-      const di=dt.getDay()===0?6:dt.getDay()-1;
-      const did='d'+key.replace(/-/g,'');
-      html+=`<div class="plan-day-section">
-        <div class="plan-day-title">${DAYS_FR[di]} ${dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})}<span class="plan-day-date">${key}</span></div>
-        <div class="plan-tab-content">${rAdv(allAdv[key],did,key)}</div>
+    html+=`<div class="plan-day-section">
+      <div class="plan-day-title ${isToday?'is-today-title':''}">
+        ${DAYS_FR[di]}
+        <span style="font-size:14px;opacity:.7;font-family:'DM Sans',sans-serif;font-weight:400;">${dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})}</span>
+        ${isToday?'<span class="plan-today-pip">Auj.</span>':''}
       </div>`;
+
+    /* Jour J meals */
+    for(const mealId of MEAL_ORDER){
+      const combined={...mealMap[mealId]||{}};
+      if(!Object.keys(combined).length) continue;
+      const color=MEAL_COLORS[mealId];
+      html+=`<div class="plan-meal-block">
+        <div class="plan-meal-head" style="border-left:3px solid ${color}">
+          <span class="plan-meal-icon">${MEAL_ICONS[mealId]}</span>
+          <span class="plan-meal-label" style="color:${color}">${MEAL_LABELS[mealId]}</span>
+          <span class="plan-meal-badge">Jour J</span>
+        </div>`;
+      for(const{recipe,phases} of Object.values(combined)){
+        /* Sort phases by start time */
+        const sorted=[...phases].sort((a,b)=>a.startMin-b.startMin);
+        html+=`<div class="plan-recipe-block">
+          <div class="plan-recipe-name">${recipe.title}</div>`;
+        for(const ph of sorted){
+          html+=`<div class="plan-step">
+            <div class="plan-step-dot" style="background:${color}"></div>
+            <div class="plan-step-body">
+              <div class="plan-step-title">${ph.phase.letter?ph.phase.letter+'. ':''}${ph.phase.title}</div>
+              <div class="plan-step-dur">⏱ ${fmtDur(ph.dur)}</div>
+            </div>
+          </div>`;
+        }
+        html+='</div>';
+      }
+      html+='</div>';
     }
+
+    /* J-1/J-2 meals */
+    const hasAdv=Object.keys(advMap).length>0;
+    if(hasAdv){
+      html+='<div class="plan-adv-section">';
+      html+='<div class="plan-adv-header">📅 Préparations à l’avance</div>';
+      for(const mealId of MEAL_ORDER){
+        if(!advMap[mealId]) continue;
+        const color=MEAL_COLORS[mealId];
+        for(const{recipe,phases} of Object.values(advMap[mealId])){
+          html+=`<div class="plan-recipe-block" style="margin-left:0">
+            <div class="plan-recipe-name">${MEAL_ICONS[mealId]} ${MEAL_LABELS[mealId]} — ${recipe.title}</div>`;
+          for(const ph of phases){
+            const label=ph.daysBack==1?'J-1':'J-2';
+            html+=`<div class="plan-step">
+              <div class="plan-step-dot" style="background:#888"></div>
+              <div class="plan-step-body">
+                <div class="plan-step-title">${ph.phase.letter?ph.phase.letter+'. ':''}${ph.phase.title} <span class="plan-step-jlabel">${label}</span></div>
+                <div class="plan-step-dur">⏱ ${fmtDur(ph.dur)}</div>
+              </div>
+            </div>`;
+          }
+          html+='</div>';
+        }
+      }
+      html+='</div>';
+    }
+
     html+='</div>';
   }
 
