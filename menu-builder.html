@@ -290,8 +290,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -1176,47 +1176,50 @@ function printMenu() {
   setTimeout(() => document.body.classList.remove('print-menu'), 500);
 }
 
-function openFinalListPrintWindow() {
+function downloadFinalListHTML(autoprint) {
   const container = document.getElementById('final-list-container');
   if (!container) return;
   const content = container.cloneNode(true);
-  /* Remove the buttons row */
   const lastDiv = content.querySelector('div:last-child');
   if (lastDiv && lastDiv.querySelector('button')) lastDiv.remove();
 
-  const win = window.open('', '_blank');
-  win.document.write(`<!DOCTYPE html><html lang="fr"><head>
+  const html = `<!DOCTYPE html><html lang="fr"><head>
     <meta charset="UTF-8">
     <title>Liste définitive de courses</title>
     <style>
-      body { font-family: Arial, sans-serif; background: #fff; color: #1a1a1a; padding: 2rem; }
-      .final-list-section { max-width: 600px; margin: 0 auto; }
-      .final-list-header { background: #0f2d5a; color: #fff; padding: 14px 20px; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: space-between; }
-      .final-list-header h3 { font-size: 16px; font-weight: 400; }
-      .final-list-header span { font-size: 12px; opacity: .7; }
-      .final-list-body { padding: 16px 0; }
-      .final-cat-block { margin-bottom: 1rem; }
-      .final-cat-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #5a6a8a; margin-bottom: .5rem; padding-bottom: 4px; border-bottom: 0.5px solid #c8d9f0; }
-      .final-item { display: flex; align-items: baseline; gap: 8px; padding: 5px 0; border-bottom: 0.5px solid #f0f2f7; font-size: 13px; }
-      .final-item-check { color: #5a6a8a; flex-shrink: 0; }
-      .final-item-name { flex: 1; }
-      .final-item-qty { font-family: monospace; font-size: 12px; color: #1a7a4a; font-weight: 600; white-space: nowrap; }
-      @media print { body { padding: .5rem; } }
+      body{font-family:Arial,sans-serif;background:#fff;color:#1a1a1a;padding:2rem;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+      .final-list-section{max-width:600px;margin:0 auto;}
+      .final-list-header{background:#0f2d5a;color:#fff;padding:14px 20px;border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between;}
+      .final-list-header h3{font-size:16px;font-weight:400;}
+      .final-list-header span{font-size:12px;opacity:.7;}
+      .final-list-body{padding:16px 0;}
+      .final-cat-block{margin-bottom:1rem;}
+      .final-cat-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a6a8a;margin-bottom:.5rem;padding-bottom:4px;border-bottom:0.5px solid #c8d9f0;}
+      .final-item{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:0.5px solid #f0f2f7;font-size:13px;}
+      .final-item-check{color:#5a6a8a;flex-shrink:0;}
+      .final-item-name{flex:1;}
+      .final-item-qty{font-family:monospace;font-size:12px;color:#1a7a4a;font-weight:600;white-space:nowrap;}
+      ${autoprint ? '@media screen{.print-btn{margin-top:1rem;padding:8px 20px;background:#0f2d5a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;}}' : ''}
     </style>
-  </head><body>`);
-  win.document.write(content.outerHTML);
-  win.document.write('</body></html>');
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 300);
+  </head><body>
+  ${content.outerHTML}
+  ${autoprint ? '<div class="print-btn-wrap" style="margin-top:1rem"><button class="print-btn" onclick="window.print()">🖨️ Imprimer / Sauvegarder en PDF</button></div>' : ''}
+  </body></html>`;
+
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'liste-courses-' + new Date().toISOString().split('T')[0] + '.html';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 function printFinalList() {
-  openFinalListPrintWindow();
+  downloadFinalListHTML(true);
 }
 
 function saveFinalListPDF() {
-  openFinalListPrintWindow();
+  downloadFinalListHTML(true);
 }
 
 function exportFinalList(){
