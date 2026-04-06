@@ -289,8 +289,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -476,15 +476,7 @@ async function loadSavedShoppingList() {
       }
       const pairs = [];
       renderShoppingList(shoppingList, pairs);
-      /* Re-apply checked state after render */
-      checkedItems.forEach(key => {
-        const row = document.getElementById('row-' + key);
-        if (row) {
-          row.classList.add('checked');
-          const cb = row.querySelector('input[type=checkbox]');
-          if (cb) cb.checked = true;
-        }
-      });
+      /* checked state applied inline during render */
     }
   } catch(_) {}
 }
@@ -973,10 +965,10 @@ function fmtN(n){
 }
 
 /* ── checked items (excluded from final list) ── */
-let checkedItems = new Set(JSON.parse(localStorage.getItem('shopping-checked') || '[]'));
+let checkedItems = new Set(); /* loaded from Supabase in loadSavedShoppingList */
 
 /* ── stock: persisted by normalized ingredient name ── */
-let stockData = JSON.parse(localStorage.getItem('shopping-stock') || '{}');
+let stockData = {}; /* loaded from Supabase in loadSavedShoppingList */
 function saveStock(){ localStorage.setItem('shopping-stock', JSON.stringify(stockData)); }
 
 async function saveStockToSupabase() {
@@ -1035,13 +1027,14 @@ function renderShoppingList(agg, pairs) {
       const toBuy = Math.max(0, needed - stockVal);
       const neededStr = needed ? fmtQty(needed, item.unit) : (item.unit || '—');
       const toBuyStr  = needed ? fmtQty(toBuy, item.unit) : '—';
-      html+=`<div class="ingr-row ${toBuy===0&&needed>0?'zero-needed':''}" id="row-${key}" data-key="${key}" data-needed="${needed}" data-unit="${item.unit||''}">
-        <input type="checkbox" onchange="onRowCheck(this,'${key}')">
+      const isChecked = checkedItems.has(key);
+      html+=`<div class="ingr-row ${toBuy===0&&needed>0?'zero-needed':''} ${isChecked?'checked':''}" id="row-${key}" data-key="${key}" data-needed="${needed}" data-unit="${item.unit||''}">
+        <input type="checkbox" ${isChecked?'checked':''} onchange="onRowCheck(this,'${key}')">
         <div class="ingr-name-cell">${item.name}${item.optional?'<span class="ingr-opt-tag">(opt.)</span>':''}</div>
         <div class="qty-badge needed" id="needed-${key}">${neededStr}</div>
         <div class="stock-cell">
           <input class="stock-input" type="number" min="0" step="any"
-            value="${stockVal||''}" placeholder="0"
+            value="${stockData[key]||''}" placeholder="0"
             data-key="${key}"
             oninput="onStockInput(this)">
           <span class="stock-unit">${item.unit||''}</span>
