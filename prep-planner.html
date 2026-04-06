@@ -140,10 +140,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </nav>
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
-const TABLE_NAME        = 'recettes';
-let sbClient = null;
+const SUPABASE_URL='VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY='VOTRE_CLE_ANON';
+const TABLE_NAME='recettes';
+let sbClient=null;
 try{sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){}
 </script>
 <header class="app-header">
@@ -193,6 +193,8 @@ const MEAL_ORDER=['pd','dj','ap','di','de','bo','sp'];
 const DAYS_FR=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 const DEFAULT_TIMES={pd:'08:00',dj:'12:30',ap:'18:30',di:'19:30',de:'20:30',bo:'12:30',sp:'20:00'};
 let recipes=[],menu={},numDays=7,startDate=null,dateKeys=[],mealTimings={},phaseOverrides={};
+let savedPlanning=null;
+let viewStart=0; /* index of first visible day in agenda */
 
 function localDateKey(dt){const y=dt.getFullYear();const m=String(dt.getMonth()+1).padStart(2,'0');const d=String(dt.getDate()).padStart(2,'0');return y+'-'+m+'-'+d;}
 
@@ -219,9 +221,10 @@ async function loadData(){
     if(sbClient){
       const{data:rd,error:re}=await sbClient.from(TABLE_NAME).select('*');
       if(!re&&rd&&rd.length){recipes=rd.map(nrm);localStorage.setItem('recipe-library',JSON.stringify(recipes));}
-      const{data:md,error:me}=await sbClient.from('menus').select('menu,meal_timings').eq('id','menu-principal').single();
+      const{data:md,error:me}=await sbClient.from('menus').select('menu,meal_timings,planning').eq('id','menu-principal').single();
       if(!me&&md&&md.menu){const ms=md.menu;menu=ms.menu||{};numDays=ms.numDays||7;startDate=ms.startDate||null;localStorage.setItem('weekly-menu',JSON.stringify(ms));}
       if(!me&&md&&md.meal_timings){mealTimings=md.meal_timings;localStorage.setItem('meal-timings',JSON.stringify(mealTimings));}
+      if(!me&&md&&md.planning){savedPlanning=md.planning;}
     }
     if(!recipes.length){const r=localStorage.getItem('recipe-library');if(r)recipes=JSON.parse(r).map(nrm);}
     if(!Object.keys(menu).length){const m=localStorage.getItem('weekly-menu');if(m){const ms=JSON.parse(m);menu=ms.menu||{};numDays=ms.numDays||7;startDate=ms.startDate||null;}}
@@ -243,7 +246,12 @@ async function loadData(){
       dateKeys=Object.keys(menu).filter(k=>k.includes('-')).sort().slice(0,numDays);
     }
     renderGrid();
-    showStatus('success','✓ Menu chargé — ajustez les horaires puis cliquez « Générer le planning ».');
+    if(savedPlanning){
+      restoreAgenda(savedPlanning);
+      showStatus('success','✓ Menu et planning chargés.');
+    } else {
+      showStatus('success','✓ Menu chargé — ajustez les horaires puis cliquez « Générer le planning ».');
+    }
   }catch(e){showStatus('error','❌ '+e.message);}
 }
 
@@ -316,14 +324,13 @@ async function saveTimings(){
   }
 }
 
-function generateAgenda(){
+async function generateAgenda(){
   if(!dateKeys.length){showStatus('error','❌ Aucune recette planifiée.');return;}
+  showStatus('info','⏳ Calcul du planning…');
 
-  /* Collect all plans */
+  /* Compute all days */
   const allDayJ={}, allAdv={};
   let globalMin=23*60, globalMax=6*60;
-  const today=localDateKey(new Date());
-
   for(const key of dateKeys){
     const{dayJ,adv}=computeDay(key);
     allDayJ[key]=dayJ; allAdv[key]=adv;
@@ -334,13 +341,55 @@ function generateAgenda(){
   }
   const h0=Math.max(6,Math.floor(globalMin/60)-1);
   const h1=Math.min(23,Math.ceil(globalMax/60)+1);
-  const totalHours=h1-h0+1;
-  const PX_PER_MIN=1; /* 1px per minute = 60px per hour */
 
-  /* Header */
-  let html='<div class="gcal-wrap">';
+  /* Save planning data (serializable) */
+  savedPlanning={allDayJ,allAdv,h0,h1,generatedAt:new Date().toISOString()};
+  if(sbClient){
+    await sbClient.from('menus').update({planning:savedPlanning}).eq('id','menu-principal');
+  }
+
+  viewStart=0;
+  renderAgendaView();
+  document.getElementById('agenda-plan').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('agenda-plan').scrollIntoView({behavior:'smooth',block:'start'}),50);
+  showStatus('success','✓ Planning généré et sauvegardé.');
+}
+
+function restoreAgenda(plan){
+  savedPlanning=plan;
+  viewStart=0;
+  renderAgendaView();
+  document.getElementById('agenda-plan').classList.remove('hidden');
+}
+
+const VIEW_DAYS=3;
+
+function renderAgendaView(){
+  if(!savedPlanning) return;
+  const{allDayJ,allAdv,h0,h1}=savedPlanning;
+  const totalHours=h1-h0+1;
+  const today=localDateKey(new Date());
+  const visibleKeys=dateKeys.slice(viewStart,viewStart+VIEW_DAYS);
+
+  /* Nav bar */
+  const canPrev=viewStart>0;
+  const canNext=viewStart+VIEW_DAYS<dateKeys.length;
+  const firstDt=displayDateForIndex(viewStart);
+  const lastDt=displayDateForIndex(Math.min(viewStart+VIEW_DAYS-1,dateKeys.length-1));
+  const rangeLabel=firstDt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})+
+    ' — '+lastDt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
+
+  let html=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+    <button class="btn btn-ghost btn-sm" ${canPrev?'':'disabled style="opacity:.3;cursor:default"'} onclick="navAgenda(-1)">← Précédent</button>
+    <span style="flex:1;text-align:center;font-size:13px;font-weight:500;color:var(--navy2)">${rangeLabel}</span>
+    <span style="font-size:11px;color:var(--muted)">${viewStart+1}–${Math.min(viewStart+VIEW_DAYS,dateKeys.length)} / ${dateKeys.length}</span>
+    <button class="btn btn-ghost btn-sm" ${canNext?'':'disabled style="opacity:.3;cursor:default"'} onclick="navAgenda(1)">Suivant →</button>
+  </div>`;
+
+  /* Calendar */
+  html+='<div class="gcal-wrap">';
   html+='<div class="gcal-header"><div class="gcal-gutter"></div>';
-  for(const key of dateKeys){
+  for(const key of visibleKeys){
     const dt=displayDateForKey(key);
     const di=dt.getDay()===0?6:dt.getDay()-1;
     const hasMeals=getMeals(key).length>0;
@@ -350,50 +399,37 @@ function generateAgenda(){
       <div class="gcal-day-date">${dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div>
     </div>`;
   }
-  html+='</div>'; /* end header */
-
-  /* Body */
-  html+='<div class="gcal-body">';
-  /* Time column */
-  html+='<div class="gcal-time-col">';
-  for(let h=h0;h<=h1;h++){
-    html+=`<div class="gcal-hour-label">${String(h).padStart(2,'0')}:00</div>`;
-  }
   html+='</div>';
 
-  /* Days area */
-  html+='<div class="gcal-days-area">';
-  for(const key of dateKeys){
+  html+='<div class="gcal-body"><div class="gcal-time-col">';
+  for(let h=h0;h<=h1;h++) html+=`<div class="gcal-hour-label">${String(h).padStart(2,'0')}:00</div>`;
+  html+='</div><div class="gcal-days-area">';
+
+  for(const key of visibleKeys){
     const height=totalHours*60;
-    /* Draw hour grid lines */
     let gridLines='';
-    for(let h=h0;h<=h1;h++){
-      gridLines+=`<div class="gcal-hour-row" style="height:60px;position:absolute;top:${(h-h0)*60}px;left:0;right:0;"></div>`;
-    }
-    /* Draw events */
+    for(let h=h0;h<=h1;h++) gridLines+=`<div class="gcal-hour-row" style="height:60px;position:absolute;top:${(h-h0)*60}px;left:0;right:0;"></div>`;
     let events='';
     for(const ph of (allDayJ[key]||[])){
-      const top=(ph.startMin-h0*60)*PX_PER_MIN;
-      const ht=Math.max(22,(ph.endMin-ph.startMin)*PX_PER_MIN);
-      const c=ph.color, lt=lighten(c,.85);
-      events+=`<div class="gcal-event" style="background:${lt};border-color:${c};top:${top}px;height:${ht}px;color:${c}">
-        <div class="gcal-event-recipe">${ph.recipe.title}</div>
+      const top=(ph.startMin-h0*60);
+      const ht=Math.max(24,(ph.endMin-ph.startMin));
+      const col=ph.color, lt=lighten(col,.85);
+      events+=`<div class="gcal-event" style="background:${lt};border-color:${col};top:${top}px;height:${ht}px;color:${col}">
+        <div class="gcal-event-recipe" style="font-weight:700">${ph.recipe.title}</div>
         <div class="gcal-event-phase">${ph.phase.letter?ph.phase.letter+'. ':''}${ph.phase.title}</div>
-        ${ht>36?`<div class="gcal-event-time">${m2t(ph.startMin)} → ${m2t(ph.endMin)}</div>`:''}
+        ${ht>36?'<div class="gcal-event-time">'+m2t(ph.startMin)+' → '+m2t(ph.endMin)+'</div>':''}
       </div>`;
     }
     html+=`<div class="gcal-day-col" style="height:${height}px;position:relative;">${gridLines}${events}</div>`;
   }
-  html+='</div>'; /* days area */
-  html+='</div>'; /* body */
-  html+='</div>'; /* gcal-wrap */
+  html+='</div></div></div>';
 
-  /* Advance prep panels per day */
-  const advDays=dateKeys.filter(k=>(allAdv[k]||[]).length>0);
-  if(advDays.length){
+  /* Advance prep for visible days */
+  const visibleAdv=visibleKeys.filter(k=>(allAdv[k]||[]).length>0);
+  if(visibleAdv.length){
     html+='<div style="margin-top:1.5rem;">';
-    html+='<div class="section-title" style="margin-bottom:1rem;">Pr\u00e9parations \u00e0 l\u2019avance</div>';
-    for(const key of advDays){
+    html+='<div class="section-title" style="margin-bottom:1rem;">Préparations à l’avance</div>';
+    for(const key of visibleAdv){
       const dt=displayDateForKey(key);
       const di=dt.getDay()===0?6:dt.getDay()-1;
       const did='d'+key.replace(/-/g,'');
@@ -406,8 +442,11 @@ function generateAgenda(){
   }
 
   document.getElementById('agenda-content').innerHTML=html;
-  document.getElementById('agenda-plan').classList.remove('hidden');
-  setTimeout(()=>document.getElementById('agenda-plan').scrollIntoView({behavior:'smooth',block:'start'}),50);
+}
+
+function navAgenda(dir){
+  viewStart=Math.max(0,Math.min(viewStart+dir*VIEW_DAYS,dateKeys.length-VIEW_DAYS));
+  renderAgendaView();
 }
 
 function computeDay(key){
