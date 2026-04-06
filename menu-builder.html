@@ -290,8 +290,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -1155,11 +1155,10 @@ function generateFinalList(){
     }
     html+='</div>';
   }
-  html+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+  html+=`</div><div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px;">
     <button class="btn btn-ghost btn-sm" onclick="exportFinalList()">⬇️ Exporter TXT</button>
     <button class="btn btn-ghost btn-sm" onclick="printFinalList()">🖨️ Imprimer la liste</button>
     <button class="btn btn-ghost btn-sm" onclick="saveFinalListPDF()">📄 Sauvegarder en PDF</button>
-  </div>
   </div></div>`;
 
   const tmp=document.createElement('div'); tmp.innerHTML=html;
