@@ -401,7 +401,7 @@ let currentPortions = 4;
 const recipeId = new URLSearchParams(location.search).get('id');
 
 async function init() {
-  if (SUPABASE_URL === 'https://tinxbmvtxmjwbvgjkrcf.supabase.co') {
+  if (SUPABASE_URL === 'VOTRE_URL_SUPABASE') {
     show('config-error-state'); return;
   }
   if (!recipeId) {
