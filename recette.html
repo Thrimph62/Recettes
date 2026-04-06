@@ -287,8 +287,8 @@ body {
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 </script>
 <!-- ══════════════════════════════════════════ -->
@@ -477,7 +477,11 @@ async function init() {
       .single();
     if (error || !data) throw error;
     recipe = data;
-    render(recipe);
+    if (data.html) {
+      renderRawHTML(data.html);
+    } else {
+      render(recipe);
+    }
     show('recipe-page');
   } catch(e) {
     console.error(e);
@@ -489,6 +493,49 @@ function show(id) {
   ['loading-state','error-state','config-error-state','recipe-page']
     .forEach(s => document.getElementById(s).style.display = s === id ? '' : 'none');
   if (id === 'recipe-page') document.getElementById(id).style.display = 'block';
+}
+
+/* ════════════════════════════════════════
+   RENDER RAW HTML
+════════════════════════════════════════ */
+function renderRawHTML(html) {
+  const page = document.getElementById('recipe-page');
+  page.innerHTML = `
+    <div class="back-bar">
+      <a href="index.html" class="back-link">← Bibliothèque</a>
+      <div class="action-btns">
+        <button class="action-btn" onclick="printFrame()">🖨 Imprimer</button>
+        <button class="action-btn" id="btn-copy-link" onclick="copyLink()">🔗 Copier le lien</button>
+      </div>
+    </div>
+    <div style="max-width:800px;margin:0 auto;">
+      <iframe id="recipe-frame" style="width:100%;border:none;border-radius:8px;min-height:600px;"
+              sandbox="allow-same-origin allow-scripts" scrolling="no"></iframe>
+    </div>`;
+
+  const frame = document.getElementById('recipe-frame');
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  doc.open();
+  doc.write(html);
+  doc.close();
+
+  /* auto-resize iframe to content height */
+  frame.onload = () => {
+    try {
+      const h = doc.body.scrollHeight;
+      frame.style.height = h + 'px';
+    } catch(e) {}
+  };
+  /* fallback resize */
+  setTimeout(() => {
+    try { frame.style.height = doc.body.scrollHeight + 'px'; } catch(e) {}
+  }, 500);
+}
+
+function printFrame() {
+  const frame = document.getElementById('recipe-frame');
+  if (frame) frame.contentWindow.print();
+  else window.print();
 }
 
 /* ════════════════════════════════════════
