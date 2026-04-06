@@ -288,8 +288,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -449,8 +449,7 @@ async function loadFromSupabase() {
 async function onRecipesLoaded(src) {
   document.getElementById('recipe-count-badge').textContent = recipes.length+' recette(s)';
   showStatus('success','✓ '+recipes.length+' recette(s) depuis '+src+'.');
-  await loadSavedMenu();
-  buildGrid(); /* build once: after menu AND date are loaded */
+  await loadSavedMenu(); /* sets date + menu + calls buildGrid() internally */
   updateGenInfo();
 }
 
@@ -809,7 +808,9 @@ async function loadSavedMenu() {
     }
     numDays = s.numDays || 7;
     document.getElementById('days-count').value = numDays;
-    if (s.startDate) document.getElementById('start-date').value = s.startDate;
+    if (s.startDate) {
+      document.getElementById('start-date').value = s.startDate;
+    }
     if (s.visibleMeals) {
       visibleMeals = new Set(s.visibleMeals);
       MEAL_TYPES.filter(m=>m.optional).forEach(m=>{
@@ -1160,12 +1161,9 @@ MEAL_TYPES.filter(m=>m.optional).forEach(m=>{
   if(p){p.classList.toggle('active',on);const cb=p.querySelector('input');if(cb)cb.checked=on;}
 });
 
-// Default start date = today (will be overridden by loadSavedMenu if saved menu exists)
-const todayStr = new Date().toISOString().split('T')[0];
-if (!document.getElementById('start-date').value) {
-  document.getElementById('start-date').value = todayStr;
-}
-loadFromSupabase(); /* onRecipesLoaded → loadSavedMenu → buildGrid → updateGenInfo */
+// Default start date = today (overridden by loadSavedMenu if a saved menu exists)
+document.getElementById('start-date').value = new Date().toISOString().split('T')[0];
+loadFromSupabase();
 </script>
 </body>
 </html>
