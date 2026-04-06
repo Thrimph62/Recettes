@@ -289,8 +289,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -470,8 +470,21 @@ async function loadSavedShoppingList() {
         stockData = data.stocks;
         localStorage.setItem('shopping-stock', JSON.stringify(stockData));
       }
+      if (data.checked_items && Array.isArray(data.checked_items)) {
+        checkedItems = new Set(data.checked_items);
+        localStorage.setItem('shopping-checked', JSON.stringify(data.checked_items));
+      }
       const pairs = [];
       renderShoppingList(shoppingList, pairs);
+      /* Re-apply checked state after render */
+      checkedItems.forEach(key => {
+        const row = document.getElementById('row-' + key);
+        if (row) {
+          row.classList.add('checked');
+          const cb = row.querySelector('input[type=checkbox]');
+          if (cb) cb.checked = true;
+        }
+      });
     }
   } catch(_) {}
 }
@@ -960,7 +973,7 @@ function fmtN(n){
 }
 
 /* ── checked items (excluded from final list) ── */
-let checkedItems = new Set();
+let checkedItems = new Set(JSON.parse(localStorage.getItem('shopping-checked') || '[]'));
 
 /* ── stock: persisted by normalized ingredient name ── */
 let stockData = JSON.parse(localStorage.getItem('shopping-stock') || '{}');
@@ -968,15 +981,17 @@ function saveStock(){ localStorage.setItem('shopping-stock', JSON.stringify(stoc
 
 async function saveStockToSupabase() {
   localStorage.setItem('shopping-stock', JSON.stringify(stockData));
+  localStorage.setItem('shopping-checked', JSON.stringify([...checkedItems]));
   if (!sbClient) { showStatus('success', '✓ Stocks sauvegardés localement.'); return; }
   const { error } = await sbClient.from('listes_courses').upsert({
     id: LIST_ID,
     shopping: shoppingList,
     stocks: stockData,
+    checked_items: [...checkedItems],
     generated_at: new Date().toISOString()
   }, { onConflict: 'id' });
   if (error) { showStatus('error', '❌ ' + error.message); return; }
-  showStatus('success', '✓ Stocks sauvegardés.');
+  showStatus('success', '✓ Stocks et cases cochées sauvegardés.');
 }
 function clearStock(){
   if(!confirm('Vider toutes les quantités en stock ?')) return;
@@ -1072,6 +1087,17 @@ function onRowCheck(cb, key){
   row.classList.toggle('checked', cb.checked);
   if(cb.checked) checkedItems.add(key);
   else checkedItems.delete(key);
+  /* Auto-save checked state */
+  localStorage.setItem('shopping-checked', JSON.stringify([...checkedItems]));
+  if (sbClient && shoppingList) {
+    sbClient.from('listes_courses').upsert({
+      id: LIST_ID,
+      shopping: shoppingList,
+      stocks: stockData,
+      checked_items: [...checkedItems],
+      generated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+  }
 }
 
 /* ── Final shopping list ── */
