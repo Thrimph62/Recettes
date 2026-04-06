@@ -250,15 +250,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .hidden{display:none!important;}
 
 @media print{
-  body{background:#fff;}
-  /* default: hide everything except the grid */
-  .app-nav,.shopping-section,.generate-bar,.shopping-footer{display:none!important;}
-  .app-header{box-shadow:none;}
-  /* print-menu mode: show grid only */
+  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  /* default: hide everything */
+  .app-nav,.app-header,.toolbar,.shopping-section,.generate-bar,.shopping-footer{display:none!important;}
+  /* print-menu mode: show only the grid */
   body.print-menu .app-nav,
+  body.print-menu .app-header,
+  body.print-menu .toolbar,
   body.print-menu .shopping-section,
   body.print-menu .generate-bar,
   body.print-menu .shopping-footer{display:none!important;}
+  body.print-menu .week-grid{display:block!important;}
   /* print-list mode: show only final list */
   body.print-list .app-nav,
   body.print-list .app-header,
@@ -288,8 +290,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -348,6 +350,7 @@ try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
       <button class="btn btn-ghost btn-sm" onclick="resetPersonsDialog()">👥 Personnes par défaut</button>
       <button class="btn btn-ghost btn-sm" onclick="clearMenu()">🗑️ Effacer</button>
       <button class="btn btn-ghost btn-sm" onclick="saveMenu()">💾 Sauvegarder</button>
+      <button class="btn btn-ghost btn-sm" onclick="printMenu()">🖨️ Imprimer le menu</button>
       <button class="btn btn-success" onclick="generateShoppingList()">🛒 Générer la liste de courses</button>
     </div>
   </div>
@@ -368,7 +371,6 @@ try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="clearStock()">🗑️ Vider les stocks</button>
       <button class="btn btn-ghost btn-sm" onclick="exportShoppingList()">⬇️ Exporter TXT</button>
-      <button class="btn btn-ghost btn-sm" onclick="printMenu()">🖨️ Imprimer le menu</button>
     </div>
   </div>
 </main>
