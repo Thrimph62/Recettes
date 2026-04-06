@@ -97,7 +97,36 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .empty-plan{text-align:center;padding:2rem;color:var(--muted);}
 .empty-plan .em{font-size:28px;margin-bottom:6px;}
 .empty-plan p{font-size:13px;}
-@media print{.app-nav,.app-header,.btn,.pb-btn,.adv-btn{display:none!important;}body{background:#fff;}.plan-tab-content{border:none;}.plan-day-section{page-break-inside:avoid;}}
+
+/* ── GOOGLE AGENDA VIEW ── */
+.gcal-wrap{background:var(--white);border:.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(15,45,90,.07);}
+.gcal-header{display:flex;border-bottom:.5px solid var(--border);}
+.gcal-gutter{width:56px;flex-shrink:0;border-right:.5px solid var(--border);background:var(--ice2);}
+.gcal-day-header{flex:1;text-align:center;padding:10px 4px 8px;border-right:.5px solid var(--border);background:var(--ice2);}
+.gcal-day-header:last-child{border-right:none;}
+.gcal-day-name{font-size:12px;font-weight:600;color:var(--navy2);}
+.gcal-day-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px;}
+.gcal-day-header.is-today .gcal-day-name{color:#fff;}
+.gcal-day-header.is-today .gcal-day-date{color:rgba(255,255,255,.7);}
+.gcal-day-header.is-today{background:var(--navy2);}
+.gcal-day-header.empty{opacity:.5;}
+.gcal-body{display:flex;overflow-y:auto;max-height:600px;}
+.gcal-time-col{width:56px;flex-shrink:0;border-right:.5px solid var(--border);}
+.gcal-hour-label{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:4px 8px 0 0;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+.gcal-days-area{flex:1;display:flex;position:relative;}
+.gcal-day-col{flex:1;border-right:.5px solid var(--border);position:relative;}
+.gcal-day-col:last-child{border-right:none;}
+.gcal-hour-row{height:60px;border-top:.5px solid var(--border);}
+.gcal-hour-row.half{border-top-style:dashed;opacity:.4;}
+.gcal-event{position:absolute;left:3px;right:3px;border-radius:5px;padding:3px 6px;font-size:11px;overflow:hidden;cursor:default;z-index:1;border:.5px solid rgba(0,0,0,.15);}
+.gcal-event-recipe{font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.03em;opacity:.8;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.gcal-event-phase{font-size:11px;font-weight:500;line-height:1.3;overflow:hidden;}
+.gcal-event-time{font-family:'DM Mono',monospace;font-size:10px;opacity:.65;margin-top:1px;}
+/* ADV panel below calendar */
+.adv-panel{padding:16px 20px;border-top:.5px solid var(--border);background:var(--ice2);}
+.adv-panel-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:12px;}
+
+@media print{.app-nav,.app-header,.btn,.pb-btn,.adv-btn{display:none!important;}body{background:#fff;}.gcal-body{max-height:none !important;}}
 </style>
 </head>
 <body>
@@ -111,10 +140,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </nav>
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
-const TABLE_NAME        = 'recettes';
-let sbClient = null;
+const SUPABASE_URL='VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY='VOTRE_CLE_ANON';
+const TABLE_NAME='recettes';
+let sbClient=null;
 try{sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){}
 </script>
 <header class="app-header">
@@ -178,8 +207,9 @@ async function loadData(){
     if(sbClient){
       const{data:rd,error:re}=await sbClient.from(TABLE_NAME).select('*');
       if(!re&&rd&&rd.length){recipes=rd.map(nrm);localStorage.setItem('recipe-library',JSON.stringify(recipes));}
-      const{data:md,error:me}=await sbClient.from('menus').select('menu').eq('id','menu-principal').single();
+      const{data:md,error:me}=await sbClient.from('menus').select('menu,meal_timings').eq('id','menu-principal').single();
       if(!me&&md&&md.menu){const ms=md.menu;menu=ms.menu||{};numDays=ms.numDays||7;startDate=ms.startDate||null;localStorage.setItem('weekly-menu',JSON.stringify(ms));}
+      if(!me&&md&&md.meal_timings){mealTimings=md.meal_timings;localStorage.setItem('meal-timings',JSON.stringify(mealTimings));}
     }
     if(!recipes.length){const r=localStorage.getItem('recipe-library');if(r)recipes=JSON.parse(r).map(nrm);}
     if(!Object.keys(menu).length){const m=localStorage.getItem('weekly-menu');if(m){const ms=JSON.parse(m);menu=ms.menu||{};numDays=ms.numDays||7;startDate=ms.startDate||null;}}
@@ -262,32 +292,107 @@ function getMeals(key){
 
 function onTC(key,mealId,val){if(!mealTimings[key])mealTimings[key]={};mealTimings[key][mealId]=val;}
 
-function saveTimings(){localStorage.setItem('meal-timings',JSON.stringify(mealTimings));showStatus('success','✓ Horaires sauvegardés.');}
+async function saveTimings(){
+  localStorage.setItem('meal-timings',JSON.stringify(mealTimings));
+  if(sbClient){
+    const{error}=await sbClient.from('menus').update({meal_timings:mealTimings}).eq('id','menu-principal');
+    if(error){showStatus('error','❌ '+error.message);return;}
+    showStatus('success','✓ Horaires sauvegardés dans Supabase.');
+  } else {
+    showStatus('success','✓ Horaires sauvegardés localement.');
+  }
+}
 
 function generateAgenda(){
-  const daysWithMeals=dateKeys.filter(k=>getMeals(k).length>0);
-  if(!daysWithMeals.length){showStatus('error','❌ Aucune recette planifiée.');return;}
-  let html='';
-  for(const key of daysWithMeals){
+  if(!dateKeys.length){showStatus('error','❌ Aucune recette planifiée.');return;}
+
+  /* Collect all plans */
+  const allDayJ={}, allAdv={};
+  let globalMin=23*60, globalMax=6*60;
+  const today=localDateKey(new Date());
+
+  for(const key of dateKeys){
+    const{dayJ,adv}=computeDay(key);
+    allDayJ[key]=dayJ; allAdv[key]=adv;
+    for(const ph of dayJ){
+      if(ph.startMin<globalMin) globalMin=ph.startMin;
+      if(ph.endMin>globalMax) globalMax=ph.endMin;
+    }
+  }
+  const h0=Math.max(6,Math.floor(globalMin/60)-1);
+  const h1=Math.min(23,Math.ceil(globalMax/60)+1);
+  const totalHours=h1-h0+1;
+  const PX_PER_MIN=1; /* 1px per minute = 60px per hour */
+
+  /* Header */
+  let html='<div class="gcal-wrap">';
+  html+='<div class="gcal-header"><div class="gcal-gutter"></div>';
+  for(const key of dateKeys){
     const dt=parseLocalDate(key);
     const di=dt.getDay()===0?6:dt.getDay()-1;
-    const dayLabel=DAYS_FR[di]+' '+dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'});
-    const{dayJ,adv}=computeDay(key);
-    if(!dayJ.length&&!adv.length) continue;
-    const did='d'+key.replace(/-/g,'');
-    html+=`<div class="plan-day-section">
-      <div class="plan-day-title">${dayLabel}<span class="plan-day-date">${key}</span></div>
-      <div class="plan-tabs">
-        <div class="plan-tab active" id="pt-dj-${did}" onclick="swTab('${did}','dj')">⏰ Jour J</div>
-        <div class="plan-tab" id="pt-av-${did}" onclick="swTab('${did}','av')">📅 J-1 / J-2</div>
-      </div>
-      <div class="plan-tab-content">
-        <div id="pp-dj-${did}">${rDayJ(dayJ,did,key)}</div>
-        <div id="pp-av-${did}" class="hidden">${rAdv(adv,did,key)}</div>
-      </div>
+    const hasMeals=getMeals(key).length>0;
+    const isToday=key===today;
+    html+=`<div class="gcal-day-header ${isToday?'is-today':''} ${!hasMeals?'empty':''}">
+      <div class="gcal-day-name">${DAYS_FR[di]}</div>
+      <div class="gcal-day-date">${dt.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</div>
     </div>`;
   }
-  document.getElementById('agenda-content').innerHTML=html||'<div class="empty-plan"><div class="em">📭</div><p>Aucune phase calculée.</p></div>';
+  html+='</div>'; /* end header */
+
+  /* Body */
+  html+='<div class="gcal-body">';
+  /* Time column */
+  html+='<div class="gcal-time-col">';
+  for(let h=h0;h<=h1;h++){
+    html+=`<div class="gcal-hour-label">${String(h).padStart(2,'0')}:00</div>`;
+  }
+  html+='</div>';
+
+  /* Days area */
+  html+='<div class="gcal-days-area">';
+  for(const key of dateKeys){
+    const height=totalHours*60;
+    /* Draw hour grid lines */
+    let gridLines='';
+    for(let h=h0;h<=h1;h++){
+      gridLines+=`<div class="gcal-hour-row" style="height:60px;position:absolute;top:${(h-h0)*60}px;left:0;right:0;"></div>`;
+    }
+    /* Draw events */
+    let events='';
+    for(const ph of (allDayJ[key]||[])){
+      const top=(ph.startMin-h0*60)*PX_PER_MIN;
+      const ht=Math.max(22,(ph.endMin-ph.startMin)*PX_PER_MIN);
+      const c=ph.color, lt=lighten(c,.85);
+      events+=`<div class="gcal-event" style="background:${lt};border-color:${c};top:${top}px;height:${ht}px;color:${c}">
+        <div class="gcal-event-recipe">${ph.recipe.title}</div>
+        <div class="gcal-event-phase">${ph.phase.letter?ph.phase.letter+'. ':''}${ph.phase.title}</div>
+        ${ht>36?`<div class="gcal-event-time">${m2t(ph.startMin)} → ${m2t(ph.endMin)}</div>`:''}
+      </div>`;
+    }
+    html+=`<div class="gcal-day-col" style="height:${height}px;position:relative;">${gridLines}${events}</div>`;
+  }
+  html+='</div>'; /* days area */
+  html+='</div>'; /* body */
+  html+='</div>'; /* gcal-wrap */
+
+  /* Advance prep panels per day */
+  const advDays=dateKeys.filter(k=>(allAdv[k]||[]).length>0);
+  if(advDays.length){
+    html+='<div style="margin-top:1.5rem;">';
+    html+='<div style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;color:var(--navy);margin-bottom:1rem;">Préparations à l'avance</div>';
+    for(const key of advDays){
+      const dt=parseLocalDate(key);
+      const di=dt.getDay()===0?6:dt.getDay()-1;
+      const did='d'+key.replace(/-/g,'');
+      html+=`<div class="plan-day-section">
+        <div class="plan-day-title">${DAYS_FR[di]} ${dt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})}<span class="plan-day-date">${key}</span></div>
+        <div class="plan-tab-content">${rAdv(allAdv[key],did,key)}</div>
+      </div>`;
+    }
+    html+='</div>';
+  }
+
+  document.getElementById('agenda-content').innerHTML=html;
   document.getElementById('agenda-plan').classList.remove('hidden');
   setTimeout(()=>document.getElementById('agenda-plan').scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
