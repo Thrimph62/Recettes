@@ -553,11 +553,11 @@ body.view-list .recipes-list { display: flex; }
 </head>
 <body class="view-grid">
 
-<!-- ══ CONFIG SUPABASE (à remplir) ══════════════════ -->
+<!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';      // ex: https://xxxx.supabase.co
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';     // clé publique anon
-const TABLE_NAME = 'recettes';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
+const TABLE_NAME        = 'recettes';
 </script>
 <!-- ══════════════════════════════════════════════ -->
 
@@ -724,9 +724,9 @@ const TABLE_NAME = 'recettes';
 /* ════════════════════════════════════════
    INIT SUPABASE
 ════════════════════════════════════════ */
-let supabase = null;
+let sbClient = null;
 try {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch(e) {
   console.warn('Supabase init failed', e);
 }
@@ -792,12 +792,12 @@ function formatTime(str) {
    LOAD RECIPES FROM SUPABASE
 ════════════════════════════════════════ */
 async function loadRecipes() {
-  if (!supabase || SUPABASE_URL === 'VOTRE_URL_SUPABASE) {
+  if (!sbClient) {
     showError();
     return;
   }
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sbClient
       .from(TABLE_NAME)
       .select('*')
       .order('title', { ascending: true });
