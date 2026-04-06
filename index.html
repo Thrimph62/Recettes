@@ -555,8 +555,8 @@ body.view-list .recipes-list { display: flex; }
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 </script>
 <!-- ══════════════════════════════════════════════ -->
@@ -633,6 +633,7 @@ const TABLE_NAME        = 'recettes';
           <option value="60">≤ 1 heure</option>
           <option value="90">≤ 1h30</option>
           <option value="120">≤ 2 heures</option>
+          <option value="9999">&gt; 2 heures</option>
         </select>
       </div>
 
@@ -644,6 +645,7 @@ const TABLE_NAME        = 'recettes';
           <option value="4">≤ 4 pers.</option>
           <option value="6">≤ 6 pers.</option>
           <option value="8">≤ 8 pers.</option>
+          <option value="9999">&gt; 8 pers.</option>
         </select>
       </div>
 
@@ -852,21 +854,33 @@ function applyFilters() {
       const maxMin = parseInt(f.time);
       const totalStr = r.times?.total || r.times?.Total || '';
       const mins = parseMinutes(totalStr);
-      if (mins === null || mins > maxMin) return false;
+      if (maxMin === 9999) {
+        if (mins === null || mins <= 120) return false;
+      } else {
+        if (mins === null || mins > maxMin) return false;
+      }
     }
 
     // Persons
     if (f.persons) {
       const max = parseInt(f.persons);
-      if ((r.basePortions || r.baseportions || 99) > max) return false;
+      const portions = r.basePortions || r.baseportions || 0;
+      if (max === 9999) {
+        if (portions <= 8) return false;
+      } else {
+        if (portions > max) return false;
+      }
     }
 
-    // Ingredient
+    // Ingredient — handle both flat [{name}] and grouped [{items:[{name}]}]
     if (f.ingredient) {
-      const ingrs = (r.ingredients || []).map(i =>
-        (i.name || '').toLowerCase()
+      const raw = r.ingredients || [];
+      const names = raw.flatMap(i =>
+        Array.isArray(i.items)
+          ? i.items.map(x => (x.name || '').toLowerCase())
+          : [(i.name || '').toLowerCase()]
       );
-      if (!ingrs.some(n => n.includes(f.ingredient))) return false;
+      if (!names.some(n => n.includes(f.ingredient))) return false;
     }
 
     return true;
