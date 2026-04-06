@@ -289,8 +289,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -450,8 +450,25 @@ async function loadFromSupabase() {
 async function onRecipesLoaded(src) {
   document.getElementById('recipe-count-badge').textContent = recipes.length+' recette(s)';
   showStatus('success','✓ '+recipes.length+' recette(s) depuis '+src+'.');
-  await loadSavedMenu(); /* sets date + menu + calls buildGrid() internally */
+  await loadSavedMenu();
+  await loadSavedShoppingList();
   updateGenInfo();
+}
+
+async function loadSavedShoppingList() {
+  if (!sbClient) return;
+  try {
+    const { data, error } = await sbClient
+      .from('listes_courses')
+      .select('shopping')
+      .eq('id', LIST_ID)
+      .single();
+    if (!error && data && data.shopping) {
+      shoppingList = data.shopping;
+      const pairs = []; /* pairs not needed for re-render from saved list */
+      renderShoppingList(shoppingList, pairs);
+    }
+  } catch(_) {}
 }
 
 /* ══════════════════════════════════════
@@ -749,6 +766,7 @@ document.getElementById('days-count').addEventListener('change', () => { buildGr
    SAVE / LOAD / CLEAR
 ══════════════════════════════════════ */
 const MENU_ID = 'menu-principal';
+const LIST_ID = 'liste-principale';
 
 async function saveMenu() {
   const startDate = document.getElementById('start-date').value;
@@ -912,6 +930,14 @@ function generateShoppingList() {
   }
   shoppingList = sortedAgg;
   renderShoppingList(sortedAgg, pairs);
+  /* Save to Supabase — replaces previous list */
+  if (sbClient) {
+    sbClient.from('listes_courses').upsert({
+      id: LIST_ID,
+      shopping: sortedAgg,
+      generated_at: new Date().toISOString()
+    }, { onConflict: 'id' });
+  }
 }
 
 function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
