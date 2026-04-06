@@ -288,8 +288,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -521,7 +521,7 @@ function renderCellSlots(day, meal, slots) {
     if (showNums) {
       html += `<div class="slot-num">
         <span>${['①','②','③'][s] || (s+1)}</span>
-        ${slots.length > 1 ? `<button class="slot-remove" onclick="removeSlot(${day},'${meal.id}',${s})" title="Supprimer">✕</button>` : ''}
+        ${slots.length > 1 ? `<button class="slot-remove" onclick="removeSlot('${day}','${meal.id}',${s})" title="Supprimer">✕</button>` : ''}
       </div>`;
     }
     const recipe = recipes.find(r => r.id === slot.recipeId);
@@ -532,15 +532,15 @@ function renderCellSlots(day, meal, slots) {
         value="${displayVal.replace(/"/g,'&quot;')}"
         placeholder="Rechercher…"
         autocomplete="off"
-        onfocus="acOpen('${sid}',${day},'${meal.id}',${s},this)"
-        oninput="acFilter('${sid}',${day},'${meal.id}',${s},this)"
+        onfocus="acOpen('${sid}','${day}','${meal.id}',${s},this)"
+        oninput="acFilter('${sid}','${day}','${meal.id}',${s},this)"
         onkeydown="acKey(event,'${sid}')">
-      <button class="ac-clear" onclick="acClear('${sid}',${day},'${meal.id}',${s})" tabindex="-1">✕</button>
+      <button class="ac-clear" onclick="acClear('${sid}','${day}','${meal.id}',${s})" tabindex="-1">✕</button>
     </div>`;
     html += `<div class="persons-row">
-      <button class="persons-btn" onclick="changePersons(${day},'${meal.id}',${s},-1)">−</button>
+      <button class="persons-btn" onclick="changePersons('${day}','${meal.id}',${s},-1)">−</button>
       <span class="persons-count" id="pc-${sid}">${fmtPersons(slot.persons || defaultPersons)}</span>
-      <button class="persons-btn" onclick="changePersons(${day},'${meal.id}',${s},1)">+</button>
+      <button class="persons-btn" onclick="changePersons('${day}','${meal.id}',${s},1)">+</button>
       <span class="persons-label">pers.</span>
     </div>`;
     html += `</div>`;
@@ -548,7 +548,7 @@ function renderCellSlots(day, meal, slots) {
 
   // Add slot button
   if (meal.maxSlots > 1 && slots.length < meal.maxSlots) {
-    html += `<button class="add-slot-btn" onclick="addSlot(${day},'${meal.id}')">+ Ajouter</button>`;
+    html += `<button class="add-slot-btn" onclick="addSlot('${day}','${meal.id}')">+ Ajouter</button>`;
   }
   return html;
 }
