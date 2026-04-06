@@ -378,8 +378,8 @@ body {
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -692,6 +692,15 @@ function parseRecipeHTML(html) {
   // Ingredients
   const ingredients = [];
   let totalIngr = 0;
+  /* Extract photo (base64 or URL) */
+  let photo = null;
+  const photoImg = doc.querySelector('.photo-zone img, .doc-header img');
+  if (photoImg && photoImg.src && photoImg.src.startsWith('data:image')) {
+    photo = photoImg.src;
+  } else if (photoImg && photoImg.src && !photoImg.src.startsWith('data:image/gif')) {
+    photo = photoImg.src;
+  }
+
   doc.querySelectorAll('.ingr-cat-block').forEach(block => {
     const catIcon = text(block, '.ingr-cat-icon') || '';
     const catName = text(block, '.ingr-cat-name') || '';
@@ -703,10 +712,12 @@ function parseRecipeHTML(html) {
       if (!nameEl) return;
       const name = nameEl.textContent.trim();
       if (!name || name.startsWith('[')) return;
-      const qty  = qtyEl ? (parseFloat(qtyEl.dataset.base) || 0) : 0;
+      const rawBase2 = qtyEl ? (qtyEl.dataset.base || '').trim() : '';
+      const qty  = parseFloat(rawBase2) || 0;
+      const qtyLabel2 = rawBase2 && isNaN(parseFloat(rawBase2)) ? rawBase2 : null;
       const unit = qtyEl ? (qtyEl.dataset.unit || '') : '';
       const opt  = optEl ? optEl.textContent.trim() : '';
-      items.push({ qty, unit, name, optional: opt.toLowerCase().includes('option') || false, note: opt });
+      items.push({ qty, unit, name, optional: opt.toLowerCase().includes('option') || false, note: opt, ...(qtyLabel2 ? {qtyLabel: qtyLabel2} : {}) });
       totalIngr++;
     });
     if (items.length) ingredients.push({ category: catName, icon: catIcon, items });
@@ -727,13 +738,19 @@ function parseRecipeHTML(html) {
     const phaseIngr = [];
     phase.querySelectorAll('.ingr-chip').forEach(chip => {
       const qtyEl   = chip.querySelector('.chip-qty');
-      const rawBase = qtyEl ? qtyEl.dataset.base : '';
+      const rawBase = qtyEl ? (qtyEl.dataset.base || '').trim() : '';
       const qty     = parseFloat(rawBase) || 0;
-      const qtyLabel = rawBase && isNaN(parseFloat(rawBase)) ? rawBase : null; /* preserve "PM" etc. */
+      const qtyLabel = rawBase && isNaN(parseFloat(rawBase)) && rawBase !== '·' ? rawBase : null;
       const unit    = qtyEl ? (qtyEl.dataset.unit || '') : '';
-      const nameNode = Array.from(chip.childNodes).find(n => n.nodeType === 3 && n.textContent.trim());
-      const name = nameNode ? nameNode.textContent.trim() : chip.textContent.replace(qtyEl?.textContent||'','').trim();
-      if (name && !name.startsWith('[')) phaseIngr.push({ qty, unit, name, ...(qtyLabel ? {qtyLabel} : {}) });
+      /* Extract name: all text nodes after the qty span, joined */
+      const nameNodes = Array.from(chip.childNodes).filter(n =>
+        n.nodeType === 3 && n.textContent.trim() && n.textContent.trim() !== '·'
+      );
+      const nameFromNodes = nameNodes.map(n => n.textContent.trim()).join(' ').trim();
+      const nameFromFull  = chip.textContent.replace(qtyEl?.textContent||'','').replace(/^[\s·]+/,'').trim();
+      const name = nameFromNodes || nameFromFull;
+      const isSeparator = !name || name === '·' || name === '•' || name.startsWith('[');
+      if (!isSeparator) phaseIngr.push({ qty, unit, name, ...(qtyLabel ? {qtyLabel} : {}) });
     });
 
     const steps = [];
@@ -758,7 +775,7 @@ function parseRecipeHTML(html) {
 
   return {
     id: slugify(title) + '-' + Date.now(),
-    title, category: category.trim(), basePortions,
+    title, category: category.trim(), basePortions, photo: photo || null,
     serveWith, times, equipment, ingredients, phases, notes,
     _totalIngredients: totalIngr,
     addedAt: new Date().toISOString()
@@ -915,6 +932,7 @@ addLibBtn.addEventListener('click', async () => {
       ingredients:  clean.ingredients  || null,
       phases:       clean.phases       || null,
       notes:        clean.notes        || null,
+      photo:        clean.photo        || null,
     };
     const { error } = await sbClient
       .from(TABLE_NAME)

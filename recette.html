@@ -280,8 +280,8 @@ body {
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 </script>
 <!-- ══════════════════════════════════════════ -->
@@ -440,6 +440,12 @@ function render(r) {
   document.title = r.title + ' — Mes Recettes';
 
   renderHeader(r);
+  if (r.photo) {
+    const zone = document.getElementById('photo-zone');
+    if (zone) {
+      zone.innerHTML = `<img src="${r.photo}" alt="${r.title}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`;
+    }
+  }
   renderEquipment(r.equipment || []);
   renderIngredients(r.ingredients || []);
   renderPhases(r.phases || []);
@@ -486,7 +492,7 @@ function renderHeader(r) {
         <div class="recipe-category-tag">${r.category || 'Recette'}</div>
         <div class="recipe-title">${r.title}</div>
       </div>
-      <div class="photo-zone">
+      <div class="photo-zone" id="photo-zone">
         <div class="photo-icon">📷</div>
         <div class="photo-note">Photo à ajouter</div>
       </div>
@@ -580,7 +586,7 @@ function renderIngredients(ingredients) {
         ${catItems.map(ing => {
           const qtyDisplay = ing.qty
             ? `${fmtQty(ing.qty)}\u00a0${ing.unit || ''}`.trim()
-            : (ing.qtyLabel || ing.unit || 'PM');
+            : (ing.qtyLabel || ing.unit || '');
           return `<div class="ingr-row">
             <span class="ingr-qty" data-base="${ing.qty || ''}" data-unit="${ing.unit || ''}">${qtyDisplay}</span>
             <span class="ingr-name">${ing.name}${ing.optional ? ' <span class="ingr-opt">(opt.)</span>' : ''}</span>
@@ -604,9 +610,9 @@ function renderPhases(phases) {
     const phaseIngrs = (p.ingredients || []).map(i => {
       const qDisplay = i.qty
         ? `${fmtQty(i.qty)}\u00a0${i.unit || ''}`.trim()
-        : (i.qtyLabel || i.unit || 'PM');
+        : (i.qtyLabel && i.qtyLabel !== 'PM' ? i.qtyLabel : '');
       return `<span class="ingr-chip">
-        <span class="chip-qty" data-base="${i.qty || ''}" data-unit="${i.unit || ''}">${qDisplay}</span>
+        ${qDisplay ? `<span class="chip-qty" data-base="${i.qty || ''}" data-unit="${i.unit || ''}">${qDisplay}</span>` : ''}
         ${i.name}
       </span>`;
     }).join('');
