@@ -271,8 +271,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -519,7 +519,7 @@ function renderCellSlots(day, meal, slots) {
     </div>`;
     html += `<div class="persons-row">
       <button class="persons-btn" onclick="changePersons(${day},'${meal.id}',${s},-1)">−</button>
-      <span class="persons-count" id="pc-${sid}">${slot.persons || defaultPersons}</span>
+      <span class="persons-count" id="pc-${sid}">${fmtPersons(slot.persons || defaultPersons)}</span>
       <button class="persons-btn" onclick="changePersons(${day},'${meal.id}',${s},1)">+</button>
       <span class="persons-label">pers.</span>
     </div>`;
@@ -683,13 +683,21 @@ window.addEventListener('resize', () => { if(acActive) acPositionDropdown(acActi
    SLOT INTERACTIONS
 ══════════════════════════════════════ */
 
+function fmtPersons(v) {
+  v = parseFloat(v);
+  if (isNaN(v)) return '?';
+  return v % 1 === 0 ? String(v) : v.toFixed(2).replace(/\.?0+$/, '');
+}
+
 function changePersons(day, mealId, slotIdx, delta) {
   const slots = getSlots(day, mealId);
   if (!slots[slotIdx]) return;
   const pcEl = document.getElementById(`pc-${day}-${mealId}-${slotIdx}`);
   if (!pcEl) return;
-  let val = Math.max(1, Math.min(50, (parseInt(pcEl.textContent)||defaultPersons) + delta));
-  pcEl.textContent = val;
+  const current = parseFloat(pcEl.textContent) || defaultPersons;
+  let val = Math.round((current + delta * 0.25) * 4) / 4;
+  val = Math.max(0.25, Math.min(50, val));
+  pcEl.textContent = val % 1 === 0 ? val : val.toFixed(2).replace(/\.?0+$/, '');
   slots[slotIdx].persons = val;
 }
 
@@ -762,8 +770,20 @@ function clearMenu() {
 }
 
 function resetPersonsDialog() {
-  const p = parseInt(prompt('Nombre de personnes par défaut pour tous les repas :', defaultPersons));
-  if (!isNaN(p) && p >= 1) { defaultPersons = p; buildGrid(); }
+  const input = prompt('Nombre de personnes par défaut pour tous les repas (ex: 4 ou 2.5) :', defaultPersons);
+  if (input === null) return;
+  const p = parseFloat(input);
+  if (isNaN(p) || p < 0.25) return;
+  defaultPersons = Math.round(p * 4) / 4;
+  /* Update all existing slots */
+  for (const day of Object.keys(menu)) {
+    for (const mealId of Object.keys(menu[day])) {
+      for (const slot of menu[day][mealId]) {
+        slot.persons = defaultPersons;
+      }
+    }
+  }
+  buildGrid();
 }
 
 /* ══════════════════════════════════════
