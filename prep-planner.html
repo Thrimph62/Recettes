@@ -160,8 +160,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -238,6 +238,8 @@ let mealTimings = {}; // [day][mealId][slotIdx] = "HH:MM"
 // phaseOverrides[recipeId+phaseIdx] = 'advance' | 'dayj'
 let phaseOverrides = {};
 let planData = null; // computed plan
+let startDate = new Date(); // start date from saved menu
+let dateKeys = []; // ordered array of ISO date strings
 
 /* ═══════════════════════════════════════
    LOAD DATA
@@ -247,44 +249,65 @@ function normalizeRecipe(r) {
   return r;
 }
 
+function buildDateKeys() {
+  /* Return ordered array of date keys that exist in menu, up to numDays */
+  const keys = Object.keys(menu).filter(k => k.includes('-')).sort();
+  return keys.slice(0, numDays);
+}
+
+function dateKeyForDay(d) {
+  return dateKeys[d] || null;
+}
+
 async function loadData(){
-  if (sbClient) {
-    try {
-      const { data, error } = await sbClient.from(TABLE_NAME).select('*');
-      if (!error && data && data.length) {
-        recipes = data.map(normalizeRecipe);
+  showStatus('info','⏳ Chargement depuis Supabase…');
+  try {
+    if (sbClient) {
+      const { data: rData, error: rErr } = await sbClient.from(TABLE_NAME).select('*');
+      if (!rErr && rData && rData.length) {
+        recipes = rData.map(normalizeRecipe);
         localStorage.setItem('recipe-library', JSON.stringify(recipes));
       }
-    } catch(e) {}
-  }
-  const rRaw = localStorage.getItem('recipe-library');
-  const mRaw = localStorage.getItem('weekly-menu');
-  if(!rRaw||!mRaw){ showStatus('error','❌ Bibliothèque ou menu introuvable. Ouvrez d\'abord le Parseur puis le Menu Builder.'); return; }
-  try{
-    recipes = JSON.parse(rRaw).map(normalizeRecipe);
-    const ms = JSON.parse(mRaw);
-    menu = ms.menu||{}; numDays = ms.numDays||7;
-    const saved = JSON.parse(localStorage.getItem('meal-timings')||'{}');
-    mealTimings = saved;
+      const { data: mData, error: mErr } = await sbClient.from('menus').select('menu').eq('id','menu-principal').single();
+      if (!mErr && mData && mData.menu) {
+        const ms = mData.menu;
+        menu = ms.menu || {};
+        numDays = ms.numDays || 7;
+        startDate = ms.startDate ? new Date(ms.startDate+'T00:00:00') : new Date();
+        localStorage.setItem('weekly-menu', JSON.stringify(ms));
+      }
+    }
+    if (!recipes.length) {
+      const rRaw = localStorage.getItem('recipe-library');
+      if (rRaw) recipes = JSON.parse(rRaw).map(normalizeRecipe);
+    }
+    if (!Object.keys(menu).length) {
+      const mRaw = localStorage.getItem('weekly-menu');
+      if (mRaw) { const ms=JSON.parse(mRaw); menu=ms.menu||{}; numDays=ms.numDays||7; startDate=ms.startDate?new Date(ms.startDate+'T00:00:00'):new Date(); }
+    }
+    mealTimings = JSON.parse(localStorage.getItem('meal-timings') || '{}');
+    if (!recipes.length || !Object.keys(menu).length) {
+      showStatus('error','❌ Aucune donnée. Créez d\'abord un menu dans le Menu Builder.');
+      return;
+    }
+    dateKeys = buildDateKeys();
     buildDayStrip();
     selectDay(0);
     showStatus('success','✓ Données chargées — sélectionnez un jour et définissez les horaires.');
-  }catch(e){ showStatus('error','❌ Erreur de lecture : '+e.message); }
+  } catch(e) { showStatus('error','❌ Erreur : '+e.message); }
 }
-
 /* ═══════════════════════════════════════
    DAY STRIP
 ═══════════════════════════════════════ */
 function buildDayStrip(){
   const strip = document.getElementById('day-strip');
-  const today = new Date();
   let html='';
-  for(let d=0;d<numDays;d++){
-    const dt=new Date(today); dt.setDate(today.getDate()+d);
-    const dayIdx=dt.getDay()===0?6:dt.getDay()-1;
+  for(let d=0;d<dateKeys.length;d++){
+    const dt = new Date(dateKeys[d]+'T00:00:00');
+    const dayIdx = dt.getDay()===0?6:dt.getDay()-1;
     const meals = getMealsForDay(d);
     const hasMeals = meals.length>0;
-    html+=`<div class="day-pill ${d===selectedDay?'active':''} ${!hasMeals?'':''}\" onclick="selectDay(${d})">
+    html+=`<div class="day-pill ${d===selectedDay?'active':''}" onclick="selectDay(${d})">
       ${DAYS_FR[dayIdx]}
       <span class="dp-date">${dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</span>
     </div>`;
@@ -305,10 +328,11 @@ function selectDay(d){
    SETUP PANEL
 ═══════════════════════════════════════ */
 function getMealsForDay(day){
-  if(!menu[day]) return [];
+  const key = dateKeyForDay(day);
+  if(!key || !menu[key]) return [];
   const result=[];
   for(const mealId of MEAL_ORDER){
-    const slots = menu[day][mealId];
+    const slots = menu[key][mealId];
     if(!slots) continue;
     const arr = Array.isArray(slots)?slots:[slots];
     const active = arr.filter(s=>s&&s.recipeId);
@@ -318,7 +342,8 @@ function getMealsForDay(day){
 }
 
 function buildSetupPanel(day){
-  const today=new Date(); const dt=new Date(today); dt.setDate(today.getDate()+day);
+  const key = dateKeyForDay(day);
+  const dt = key ? new Date(key+'T00:00:00') : new Date();
   const dayIdx=dt.getDay()===0?6:dt.getDay()-1;
   document.getElementById('setup-day-label').textContent=
     DAYS_FR[dayIdx]+' '+dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
@@ -331,7 +356,8 @@ function buildSetupPanel(day){
   let html='';
   for(const {mealId,slots} of meals){
     const color=MEAL_COLORS[mealId]||'#888';
-    const savedTime = (mealTimings[day]&&mealTimings[day][mealId]) || DEFAULT_TIMES[mealId]||'12:00';
+    const tk = dateKeyForDay(day)||day;
+    const savedTime = (mealTimings[tk]&&mealTimings[tk][mealId]) || DEFAULT_TIMES[mealId]||'12:00';
     const recipeNames = slots.map(s=>{
       const r=recipes.find(r=>r.id===s.recipeId);
       return r?r.title:'?';
@@ -342,15 +368,16 @@ function buildSetupPanel(day){
       <div class="recipe-chips">${recipeNames.map(n=>`<span class="recipe-chip">${n}</span>`).join('')}</div>
       <label style="font-size:11px;color:var(--muted);margin-right:4px;">Service :</label>
       <input type="time" class="time-picker" value="${savedTime}"
-        onchange="onTimingChange(${day},'${mealId}',this.value)" id="tp-${day}-${mealId}">
+        onchange="onTimingChange('${dateKeyForDay(day)||day}','${mealId}',this.value)" id="tp-${day}-${mealId}">
     </div>`;
   }
   grid.innerHTML=html;
 }
 
 function onTimingChange(day,mealId,val){
-  if(!mealTimings[day]) mealTimings[day]={};
-  mealTimings[day][mealId]=val;
+  const tk = dateKeyForDay(day) || day;
+  if(!mealTimings[tk]) mealTimings[tk]={};
+  mealTimings[tk][mealId]=val;
 }
 
 function saveTimings(){
@@ -414,7 +441,8 @@ function buildPlan(){
   const advancePhases=[]; // {recipe, phase, phaseIdx, daysBeforeMin, daysBeforeLabel, mealId, color, slotPersons}
 
   for(const {mealId,slots} of meals){
-    const serviceTime=(mealTimings[day]&&mealTimings[day][mealId])||DEFAULT_TIMES[mealId]||'12:00';
+    const ck = dateKeyForDay(day)||day;
+    const serviceTime=(mealTimings[ck]&&mealTimings[ck][mealId])||DEFAULT_TIMES[mealId]||'12:00';
     const serviceMin=timeToMin(serviceTime);
     const color=MEAL_COLORS[mealId];
 
@@ -605,19 +633,7 @@ function showStatus(type,msg){
 /* ═══════════════════════════════════════
    INIT
 ═══════════════════════════════════════ */
-(function(){
-  const rRaw=localStorage.getItem('recipe-library');
-  const mRaw=localStorage.getItem('weekly-menu');
-  if(rRaw&&mRaw){
-    try{
-      recipes=JSON.parse(rRaw);
-      const ms=JSON.parse(mRaw); menu=ms.menu||{}; numDays=ms.numDays||7;
-      mealTimings=JSON.parse(localStorage.getItem('meal-timings')||'{}');
-      buildDayStrip(); selectDay(0);
-      showStatus('info','ℹ️ Données chargées automatiquement. Définissez les horaires de service et cliquez sur « Calculer ».');
-    }catch(_){}
-  }
-})();
+loadData();
 </script>
 </body>
 </html>
