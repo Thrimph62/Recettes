@@ -289,8 +289,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -365,9 +365,10 @@ try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
         <p>Construisez votre menu puis cliquez sur « Générer la liste de courses »</p>
       </div>
     </div>
-    <div class="shopping-footer hidden" id="shopping-footer">
+    <div class="shopping-footer" id="shopping-footer">
       <button class="btn btn-success" onclick="generateFinalList()">✅ Générer la liste définitive</button>
       <div style="flex:1"></div>
+      <button class="btn btn-ghost btn-sm" onclick="saveStockToSupabase()">💾 Sauvegarder les stocks</button>
       <button class="btn btn-ghost btn-sm" onclick="clearStock()">🗑️ Vider les stocks</button>
       <button class="btn btn-ghost btn-sm" onclick="exportShoppingList()">⬇️ Exporter TXT</button>
     </div>
@@ -465,7 +466,11 @@ async function loadSavedShoppingList() {
       .single();
     if (!error && data && data.shopping) {
       shoppingList = data.shopping;
-      const pairs = []; /* pairs not needed for re-render from saved list */
+      if (data.stocks) {
+        stockData = data.stocks;
+        localStorage.setItem('shopping-stock', JSON.stringify(stockData));
+      }
+      const pairs = [];
       renderShoppingList(shoppingList, pairs);
     }
   } catch(_) {}
@@ -846,7 +851,7 @@ function clearMenu() {
   if (!confirm('Effacer tout le menu ?')) return;
   menu = {}; buildGrid();
   document.getElementById('shopping-body').innerHTML='<div class="empty-state"><div class="em">🧺</div><p>Menu effacé.</p></div>';
-  document.getElementById('shopping-footer').classList.add('hidden');
+  /* shopping-footer always visible */
   document.getElementById('sh-meta').textContent='—';
   updateGenInfo();
 }
@@ -960,6 +965,19 @@ let checkedItems = new Set();
 /* ── stock: persisted by normalized ingredient name ── */
 let stockData = JSON.parse(localStorage.getItem('shopping-stock') || '{}');
 function saveStock(){ localStorage.setItem('shopping-stock', JSON.stringify(stockData)); }
+
+async function saveStockToSupabase() {
+  localStorage.setItem('shopping-stock', JSON.stringify(stockData));
+  if (!sbClient) { showStatus('success', '✓ Stocks sauvegardés localement.'); return; }
+  const { error } = await sbClient.from('listes_courses').upsert({
+    id: LIST_ID,
+    shopping: shoppingList,
+    stocks: stockData,
+    generated_at: new Date().toISOString()
+  }, { onConflict: 'id' });
+  if (error) { showStatus('error', '❌ ' + error.message); return; }
+  showStatus('success', '✓ Stocks sauvegardés.');
+}
 function clearStock(){
   if(!confirm('Vider toutes les quantités en stock ?')) return;
   stockData = {}; saveStock();
@@ -1020,7 +1038,7 @@ function renderShoppingList(agg, pairs) {
   }
 
   document.getElementById('shopping-body').innerHTML = html;
-  document.getElementById('shopping-footer').classList.remove('hidden');
+  /* shopping-footer always visible */
   // Remove any old final list
   document.getElementById('final-list-container')?.remove();
   showStatus('success',`✓ ${totalItems} ingrédients. Renseignez vos stocks puis cliquez sur « Générer la liste définitive ».`);
