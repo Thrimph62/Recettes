@@ -280,8 +280,8 @@ body {
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 </script>
 <!-- ══════════════════════════════════════════ -->
@@ -537,33 +537,47 @@ function renderEquipment(items) {
 
 /* ── INGREDIENTS ── */
 function renderIngredients(ingredients) {
-  const total = ingredients.length;
-  document.getElementById('ingr-tag').textContent = 'pour ' + BASE_PORTIONS + ' personne' + (BASE_PORTIONS > 1 ? 's' : '');
-
-  /* group by category */
-  const groups = {};
+  /* Normalize: handle both flat [{qty,name,...}] and grouped [{category,icon,items:[...]}] */
   const CAT_ICONS = {
     'Viande': '🥩', 'Poisson': '🐟', 'Légumes': '🥦', 'Fruits': '🍊',
     'Épices': '🌿', 'Aromates': '🌿', 'Herbes': '🌿', 'Produits laitiers': '🧈',
     'Féculents': '🌾', 'Boulangerie': '🍞', 'Liquides': '🫙', 'Sauces': '🫙',
     'Autres': '🧂',
   };
-  for (const ing of ingredients) {
-    const cat = ing.category || 'Autres';
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(ing);
+
+  /* Detect format: grouped = has .items array */
+  const isGrouped = ingredients.length > 0 && Array.isArray(ingredients[0].items);
+
+  const groups = {};
+  if (isGrouped) {
+    /* Already grouped by category */
+    for (const grp of ingredients) {
+      const cat = grp.category || 'Autres';
+      groups[cat] = { icon: grp.icon || CAT_ICONS[cat] || '🧂', items: grp.items || [] };
+    }
+  } else {
+    /* Flat list — group by category field */
+    for (const ing of ingredients) {
+      const cat = ing.category || 'Autres';
+      if (!groups[cat]) groups[cat] = { icon: CAT_ICONS[cat] || '🧂', items: [] };
+      groups[cat].items.push(ing);
+    }
   }
 
+  document.getElementById('ingr-tag').textContent = 'pour ' + BASE_PORTIONS + ' personne' + (BASE_PORTIONS > 1 ? 's' : '');
+
   let html = '';
-  for (const [cat, items] of Object.entries(groups)) {
+  for (const [cat, grpData] of Object.entries(groups)) {
+    const catItems = Array.isArray(grpData) ? grpData : grpData.items;
+    const catIcon  = (grpData.icon) || CAT_ICONS[cat] || '🧂';
     html += `<div class="ingr-cat-block">
       <div class="ingr-cat-header">
-        <span class="ingr-cat-icon">${CAT_ICONS[cat] || '🧂'}</span>
+        <span class="ingr-cat-icon">${catIcon}</span>
         <span class="ingr-cat-name">${cat}</span>
-        <span class="ingr-cat-count">${items.length} ingr.</span>
+        <span class="ingr-cat-count">${catItems.length} ingr.</span>
       </div>
       <div class="ingr-cat-rows">
-        ${items.map(ing => {
+        ${catItems.map(ing => {
           const qtyDisplay = ing.qty ? `${fmtQty(ing.qty)}\u00a0${ing.unit || ''}`.trim() : (ing.unit || '');
           return `<div class="ingr-row">
             <span class="ingr-qty" data-base="${ing.qty || ''}" data-unit="${ing.unit || ''}">${qtyDisplay || '–'}</span>
