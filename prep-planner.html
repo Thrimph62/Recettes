@@ -140,10 +140,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </nav>
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
-const TABLE_NAME        = 'recettes';
-let sbClient = null;
+const SUPABASE_URL='VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY='VOTRE_CLE_ANON';
+const TABLE_NAME='recettes';
+let sbClient=null;
 try{sbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);}catch(e){}
 </script>
 <header class="app-header">
@@ -588,12 +588,15 @@ function getPDur(phase){
 }
 function parseDurStr(str){
   if(!str) return 0;
+  /* Ignore temperature badges (°C, °F, etc.) */
+  if(/°/.test(str)) return 0;
   const s=str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27FF}]/gu,'').trim();
   const hm=s.match(/(\d+)\s*h\s*(\d+)?\s*(?:min)?/i);
   if(hm) return parseInt(hm[1])*60+(parseInt(hm[2])||0);
   const h=s.match(/(\d+)\s*h/i);if(h) return parseInt(h[1])*60;
   const m=s.match(/(\d+)\s*min/i);if(m) return parseInt(m[1]);
-  const n=parseInt(s);return isNaN(n)?0:n;
+  /* Only return a plain number if it looks like a duration (followed by h or min) */
+  return 0;
 }
 function isRest(phase){const t=(phase.title||'').toLowerCase();return t.includes('repos')||t.includes('marinade')||t.includes('réfrigér')||t.includes('congel')||t.includes('nuit')||t.includes('levée')||t.includes('rest');}
 function t2m(str){if(!str)return 720;const[h,m]=str.split(':').map(Number);return h*60+(m||0);}
