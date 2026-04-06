@@ -378,8 +378,8 @@ body {
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -955,6 +955,13 @@ clearLibBtn.addEventListener('click', async () => {
   renderLibrary();
 });
 
+function normalizeRecipe(r) {
+  if (r.baseportions !== undefined && r.basePortions === undefined) {
+    r.basePortions = r.baseportions;
+  }
+  return r;
+}
+
 async function loadLibrary() {
   if (useSupabase()) {
     const { data, error } = await sbClient
@@ -1018,7 +1025,7 @@ function renderLibrary() {
       html += `<div class="library-item">
         <span class="lib-cat">${r.category || '?'}</span>
         <div class="lib-name">${r.title}</div>
-        <div class="lib-meta">${r.basePortions} pers. · ${(r.phases||[]).length} phases · ${(r.times||{}).total || (r.times||{}).Total || '—'}</div>
+        <div class="lib-meta">${r.basePortions || r.baseportions || "?"} pers. · ${(r.phases||[]).length} phases · ${(r.times||{}).total || (r.times||{}).Total || '—'}</div>
         <button class="lib-remove" onclick="removeFromLibrary('${r.id}')" title="Supprimer">✕</button>
       </div>`;
     }
