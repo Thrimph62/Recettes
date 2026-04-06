@@ -289,8 +289,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -461,11 +461,20 @@ async function loadSavedShoppingList() {
   try {
     const { data, error } = await sbClient
       .from('listes_courses')
-      .select('shopping')
+      .select('shopping, stocks, checked_items')
       .eq('id', LIST_ID)
       .single();
     if (!error && data && data.shopping) {
-      shoppingList = data.shopping;
+      /* Sort categories and items alphabetically */
+      const raw = data.shopping;
+      const sorted = {};
+      for (const cat of Object.keys(raw).sort((a,b) => a.localeCompare(b,'fr'))) {
+        sorted[cat] = raw[cat];
+        sorted[cat].items = Object.fromEntries(
+          Object.entries(raw[cat].items).sort(([,a],[,b]) => a.name.localeCompare(b.name,'fr'))
+        );
+      }
+      shoppingList = sorted;
       if (data.stocks) {
         stockData = data.stocks;
         localStorage.setItem('shopping-stock', JSON.stringify(stockData));
@@ -476,7 +485,6 @@ async function loadSavedShoppingList() {
       }
       const pairs = [];
       renderShoppingList(shoppingList, pairs);
-      /* checked state applied inline during render */
     }
   } catch(_) {}
 }
