@@ -274,14 +274,47 @@ body {
   .page { box-shadow: none; border: none; border-radius: 0; }
   body { background: #fff; }
 }
+
+/* ── CATEGORY COLOR VARS (overridden dynamically per recipe) ── */
+:root {
+  --cat-primary:  #0f2d5a;
+  --cat-secondary:#1a4a8a;
+  --cat-accent:   #5a86c4;
+  --cat-ice:      #e8f0fb;
+  --cat-ice2:     #f5f8fe;
+  --cat-border:   #c8d9f0;
+}
+.doc-header                          { background: var(--cat-primary); }
+.section-num                         { background: var(--cat-primary); }
+.phase-badge                         { background: var(--cat-primary); }
+.section-header                      { border-bottom-color: var(--cat-ice); }
+.ingr-cat-header, .phase-header      { background: var(--cat-ice); border-color: var(--cat-border); }
+.phase-ingr                          { background: var(--cat-ice2); border-color: var(--cat-border); }
+.ingr-cat-block, .phase, .equip-item { border-color: var(--cat-border); }
+.ingr-row                            { border-color: var(--cat-ice); }
+.substep                             { border-color: var(--cat-ice); }
+.ingr-cat-name                       { color: var(--cat-primary); }
+.section-title, .ingr-qty            { color: var(--cat-secondary); }
+.ingr-cat-count, .chip-qty,
+.phase-ingr-label, .equip-note,
+.substep-dot                         { color: var(--cat-accent); }
+.substep-dot                         { background: var(--cat-accent); }
+.note-box                            { border-left-color: var(--cat-primary); background: var(--cat-ice2); }
+.ingr-chip                           { border-color: var(--cat-border); }
+.ingr-chip .chip-qty                 { color: var(--cat-accent); }
+.section-tag                         { background: var(--cat-ice); color: var(--cat-secondary); border-color: var(--cat-border); }
+.phase-badge-time                    { color: var(--cat-secondary); border-color: var(--cat-border); }
+.doc-footer                          { background: var(--cat-ice2); border-color: var(--cat-border); }
+.substep-text b                      { font-weight: 600; color: var(--cat-primary); }
+
 </style>
 </head>
 <body>
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 </script>
 <!-- ══════════════════════════════════════════ -->
@@ -438,6 +471,7 @@ function render(r) {
   currentPortions  = BASE_PORTIONS;
 
   document.title = r.title + ' — Mes Recettes';
+  applyCategoryColors(r.category);
 
   renderHeader(r);
   if (r.photo) {
