@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Menu Hebdomadaire — Étape 2</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --navy:#0f2d5a;--navy2:#1a4a8a;--navy3:#5a86c4;
@@ -268,6 +269,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </nav>
 
+<!-- ══ CONFIG SUPABASE ══════════════════════ -->
+<script>
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
+const TABLE_NAME        = 'recettes';
+let sbClient = null;
+try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+</script>
+<!-- ══════════════════════════════════════════ -->
+
 <header class="app-header">
   <div class="header-title">
     <h1>Menu Hebdomadaire</h1>
@@ -278,7 +289,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       📂 Charger recipes.json
       <input type="file" id="json-file-input" accept=".json" style="display:none;">
     </label>
-    <button class="btn btn-white" onclick="loadFromStorage()">🔗 Depuis parseur</button>
+    <button class="btn btn-white" onclick="loadFromSupabase()">🔄 Actualiser</button>
   </div>
 </header>
 
@@ -1016,8 +1027,7 @@ MEAL_TYPES.filter(m=>m.optional).forEach(m=>{
   if(p){p.classList.toggle('active',on);const cb=p.querySelector('input');if(cb)cb.checked=on;}
 });
 
-const stored=localStorage.getItem('recipe-library');
-if(stored){try{recipes=JSON.parse(stored);document.getElementById('recipe-count-badge').textContent=recipes.length+' recette(s)';}catch(_){}}
+loadFromSupabase();
 
 // Default start date = today
 const todayStr = new Date().toISOString().split('T')[0];

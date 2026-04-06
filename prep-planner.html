@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planificateur de Préparation — Étape 3</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --navy:#0f2d5a;--navy2:#1a4a8a;--navy3:#5a86c4;
@@ -157,6 +158,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </nav>
 
+<!-- ══ CONFIG SUPABASE ══════════════════════ -->
+<script>
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
+const TABLE_NAME        = 'recettes';
+let sbClient = null;
+try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+</script>
+<!-- ══════════════════════════════════════════ -->
+
 <header class="app-header">
   <div class="header-title">
     <h1>Planificateur de Préparation</h1>
@@ -231,7 +242,16 @@ let planData = null; // computed plan
 /* ═══════════════════════════════════════
    LOAD DATA
 ═══════════════════════════════════════ */
-function loadData(){
+async function loadData(){
+  if (sbClient) {
+    try {
+      const { data, error } = await sbClient.from(TABLE_NAME).select('*');
+      if (!error && data && data.length) {
+        recipes = data;
+        localStorage.setItem('recipe-library', JSON.stringify(recipes));
+      }
+    } catch(e) {}
+  }
   const rRaw = localStorage.getItem('recipe-library');
   const mRaw = localStorage.getItem('weekly-menu');
   if(!rRaw||!mRaw){ showStatus('error','❌ Bibliothèque ou menu introuvable. Ouvrez d\'abord le Parseur puis le Menu Builder.'); return; }
