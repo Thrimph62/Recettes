@@ -250,10 +250,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .hidden{display:none!important;}
 
 @media print{
-  .app-header,.toolbar,.week-grid,.generate-bar,.shopping-footer{display:none!important;}
-  .shopping-section{box-shadow:none;border:none;}
-  .ingr-check-item input{display:none;}
   body{background:#fff;}
+  /* default: hide everything except the grid */
+  .app-nav,.shopping-section,.generate-bar,.shopping-footer{display:none!important;}
+  .app-header{box-shadow:none;}
+  /* print-menu mode: show grid only */
+  body.print-menu .app-nav,
+  body.print-menu .shopping-section,
+  body.print-menu .generate-bar,
+  body.print-menu .shopping-footer{display:none!important;}
+  /* print-list mode: show only final list */
+  body.print-list .app-nav,
+  body.print-list .app-header,
+  body.print-list .toolbar,
+  body.print-list .week-grid,
+  body.print-list .generate-bar,
+  body.print-list .shopping-section > *:not(#final-list-container),
+  body.print-list .shopping-footer{display:none!important;}
+  body.print-list .shopping-section{display:block!important;box-shadow:none;border:none;padding:0;}
+  body.print-list #final-list-container{display:block!important;}
+  body.print-list #final-list-container > div:last-child{display:none!important;}
+  .ingr-check-item input{display:none;}
 }
 </style>
 </head>
@@ -271,8 +288,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 let sbClient = null;
 try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
@@ -351,7 +368,7 @@ try { sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="clearStock()">🗑️ Vider les stocks</button>
       <button class="btn btn-ghost btn-sm" onclick="exportShoppingList()">⬇️ Exporter TXT</button>
-      <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Imprimer</button>
+      <button class="btn btn-ghost btn-sm" onclick="printMenu()">🖨️ Imprimer le menu</button>
     </div>
   </div>
 </main>
@@ -479,9 +496,11 @@ function buildGrid() {
   for (const meal of meals) {
     html += `<tr><td class="col-label"><span class="meal-icon">${meal.icon}</span>${meal.label}${meal.maxSlots>1?`<br><span style="font-size:9px;opacity:.5;">max ${meal.maxSlots}</span>`:''}</td>`;
     for (let d = 0; d < numDays; d++) {
-      const slots = getSlots(d, meal.id);
-      html += `<td class="meal-cell ${meal.cls}" id="cell-${d}-${meal.id}">`;
-      html += renderCellSlots(d, meal, slots);
+      const dt = new Date(startDate); dt.setDate(startDate.getDate() + d);
+      const dateKey = dt.toISOString().split('T')[0];
+      const slots = getSlots(dateKey, meal.id);
+      html += `<td class="meal-cell ${meal.cls}" id="cell-${dateKey}-${meal.id}">`;
+      html += renderCellSlots(dateKey, meal, slots);
       html += '</td>';
     }
     html += '</tr>';
@@ -808,9 +827,9 @@ function resetPersonsDialog() {
   if (isNaN(p) || p < 0.25) return;
   defaultPersons = Math.round(p * 4) / 4;
   /* Update all existing slots */
-  for (const day of Object.keys(menu)) {
-    for (const mealId of Object.keys(menu[day])) {
-      for (const slot of menu[day][mealId]) {
+  for (const dayKey of Object.keys(menu)) {
+    for (const mealId of Object.keys(menu[dayKey])) {
+      for (const slot of menu[dayKey][mealId]) {
         slot.persons = defaultPersons;
       }
     }
@@ -838,9 +857,13 @@ function updateGenInfo() {
 ══════════════════════════════════════ */
 function generateShoppingList() {
   const pairs = [];
+  const dateInput2 = document.getElementById('start-date').value;
+  const startDate2 = dateInput2 ? new Date(dateInput2+'T00:00:00') : new Date();
   for (let d = 0; d < numDays; d++) {
-    if (!menu[d]) continue;
-    for (const [mealId, slots] of Object.entries(menu[d])) {
+    const dt2 = new Date(startDate2); dt2.setDate(startDate2.getDate() + d);
+    const dateKey2 = dt2.toISOString().split('T')[0];
+    if (!menu[dateKey2]) continue;
+    for (const [mealId, slots] of Object.entries(menu[dateKey2])) {
       const arr = Array.isArray(slots) ? slots : [slots];
       for (const slot of arr) {
         if (!slot.recipeId) continue;
@@ -996,10 +1019,11 @@ function generateFinalList(){
       const needed = item.qty || 0;
       const stock  = stockData[key] || 0;
       const toBuy  = Math.max(0, needed - stock);
-      if(toBuy <= 0) continue;
+      const hasNoQty = needed === 0;
+      if(!hasNoQty && toBuy <= 0) continue;
       if(checkedItems.has(key)) continue;
       if(!bycat[catName]) bycat[catName]={ icon:catData.icon, items:[] };
-      bycat[catName].items.push({ name:item.name, toBuy, unit:item.unit||'', optional:item.optional });
+      bycat[catName].items.push({ name:item.name, toBuy: hasNoQty ? 0 : toBuy, unit:item.unit||'', optional:item.optional, noQty: hasNoQty });
     }
   }
 
@@ -1030,14 +1054,15 @@ function generateFinalList(){
       html+=`<div class="final-item">
         <span class="final-item-check">☐</span>
         <span class="final-item-name">${item.name}${item.optional?' <em style="font-size:11px;color:var(--muted)">(opt.)</em>':''}</span>
-        <span class="final-item-qty">${fmtQty(item.toBuy,item.unit)}</span>
+        <span class="final-item-qty">${item.noQty ? 'PM' : fmtQty(item.toBuy,item.unit)}</span>
       </div>`;
     }
     html+='</div>';
   }
-  html+=`<div style="margin-top:12px;display:flex;gap:8px;">
+  html+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
     <button class="btn btn-ghost btn-sm" onclick="exportFinalList()">⬇️ Exporter TXT</button>
-    <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Imprimer</button>
+    <button class="btn btn-ghost btn-sm" onclick="printFinalList()">🖨️ Imprimer la liste</button>
+    <button class="btn btn-ghost btn-sm" onclick="saveFinalListPDF()">📄 Sauvegarder en PDF</button>
   </div>
   </div></div>`;
 
@@ -1047,6 +1072,27 @@ function generateFinalList(){
 }
 
 /* store reference for export */
+function printMenu() {
+  document.body.classList.remove('print-list');
+  document.body.classList.add('print-menu');
+  window.print();
+  setTimeout(() => document.body.classList.remove('print-menu'), 500);
+}
+
+function printFinalList() {
+  document.body.classList.remove('print-menu');
+  document.body.classList.add('print-list');
+  window.print();
+  setTimeout(() => document.body.classList.remove('print-list'), 500);
+}
+
+function saveFinalListPDF() {
+  document.body.classList.remove('print-menu');
+  document.body.classList.add('print-list');
+  window.print(); /* browser "Save as PDF" option in print dialog */
+  setTimeout(() => document.body.classList.remove('print-list'), 500);
+}
+
 function exportFinalList(){
   if(!shoppingList) return;
   let txt='═══════════════════════════════════\n  LISTE DÉFINITIVE DE COURSES\n  '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'\n═══════════════════════════════════\n\n';
