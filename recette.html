@@ -275,37 +275,6 @@ body {
   body { background: #fff; }
 }
 
-/* ── CATEGORY COLOR VARS (overridden dynamically per recipe) ── */
-:root {
-  --cat-primary:  #0f2d5a;
-  --cat-secondary:#1a4a8a;
-  --cat-accent:   #5a86c4;
-  --cat-ice:      #e8f0fb;
-  --cat-ice2:     #f5f8fe;
-  --cat-border:   #c8d9f0;
-}
-.doc-header                          { background: var(--cat-primary); }
-.section-num                         { background: var(--cat-primary); }
-.phase-badge                         { background: var(--cat-primary); }
-.section-header                      { border-bottom-color: var(--cat-ice); }
-.ingr-cat-header, .phase-header      { background: var(--cat-ice); border-color: var(--cat-border); }
-.phase-ingr                          { background: var(--cat-ice2); border-color: var(--cat-border); }
-.ingr-cat-block, .phase, .equip-item { border-color: var(--cat-border); }
-.ingr-row                            { border-color: var(--cat-ice); }
-.substep                             { border-color: var(--cat-ice); }
-.ingr-cat-name                       { color: var(--cat-primary); }
-.section-title, .ingr-qty            { color: var(--cat-secondary); }
-.ingr-cat-count, .chip-qty,
-.phase-ingr-label, .equip-note,
-.substep-dot                         { color: var(--cat-accent); }
-.substep-dot                         { background: var(--cat-accent); }
-.note-box                            { border-left-color: var(--cat-primary); background: var(--cat-ice2); }
-.ingr-chip                           { border-color: var(--cat-border); }
-.ingr-chip .chip-qty                 { color: var(--cat-accent); }
-.section-tag                         { background: var(--cat-ice); color: var(--cat-secondary); border-color: var(--cat-border); }
-.phase-badge-time                    { color: var(--cat-secondary); border-color: var(--cat-border); }
-.doc-footer                          { background: var(--cat-ice2); border-color: var(--cat-border); }
-.substep-text b                      { font-weight: 600; color: var(--cat-primary); }
 
 </style>
 </head>
@@ -313,8 +282,8 @@ body {
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SUPABASE_URL      = 'VOTRE_URL_SUPABASE';
+const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON';
 const TABLE_NAME        = 'recettes';
 </script>
 <!-- ══════════════════════════════════════════ -->
@@ -426,25 +395,56 @@ const TABLE_NAME        = 'recettes';
 <script>
 
 const CAT_PALETTES = {
-  'Plat':           { primary:'#0f2d5a', secondary:'#1a4a8a', accent:'#5a86c4', ice:'#e8f0fb', ice2:'#f5f8fe', border:'#c8d9f0' },
-  'Entrée':         { primary:'#3d1a6b', secondary:'#5a2d8a', accent:'#9a6ac4', ice:'#f0e8fb', ice2:'#f8f4fe', border:'#c8a8e8' },
-  'Dessert':        { primary:'#1a5c2e', secondary:'#0d4a20', accent:'#5aad78', ice:'#e8f5ee', ice2:'#f4fbf6', border:'#b0d8bc' },
-  'Apéritif':       { primary:'#4a2c10', secondary:'#6b3f1e', accent:'#a07850', ice:'#f5ece0', ice2:'#faf5ef', border:'#d4b898' },
-  'Poisson':        { primary:'#1a1a1a', secondary:'#2d2d2d', accent:'#5a5a5a', ice:'#efefef', ice2:'#f7f7f7', border:'#d4d4d4' },
-  'Viande':         { primary:'#1a1a1a', secondary:'#2d2d2d', accent:'#5a5a5a', ice:'#efefef', ice2:'#f7f7f7', border:'#d4d4d4' },
-  'Accompagnement': { primary:'#1a6fb3', secondary:'#0d5a9c', accent:'#5ab0e8', ice:'#e0f0ff', ice2:'#f2f9ff', border:'#a8cce8' },
-  'Boissons':       { primary:'#c45a10', secondary:'#a34808', accent:'#e8885a', ice:'#fdf0e8', ice2:'#fef8f4', border:'#e8c8a8' },
+  'Plat':           { p:'#0f2d5a', s:'#1a4a8a', a:'#5a86c4', i:'#e8f0fb', i2:'#f5f8fe', b:'#c8d9f0' },
+  'Entrée':         { p:'#3d1a6b', s:'#5a2d8a', a:'#9a6ac4', i:'#f0e8fb', i2:'#f8f4fe', b:'#c8a8e8' },
+  'Dessert':        { p:'#1a5c2e', s:'#0d4a20', a:'#5aad78', i:'#e8f5ee', i2:'#f4fbf6', b:'#b0d8bc' },
+  'Apéritif':       { p:'#4a2c10', s:'#6b3f1e', a:'#a07850', i:'#f5ece0', i2:'#faf5ef', b:'#d4b898' },
+  'Poisson':        { p:'#1a1a1a', s:'#2d2d2d', a:'#5a5a5a', i:'#efefef', i2:'#f7f7f7', b:'#d4d4d4' },
+  'Viande':         { p:'#1a1a1a', s:'#2d2d2d', a:'#5a5a5a', i:'#efefef', i2:'#f7f7f7', b:'#d4d4d4' },
+  'Accompagnement': { p:'#1a6fb3', s:'#0d5a9c', a:'#5ab0e8', i:'#e0f0ff', i2:'#f2f9ff', b:'#a8cce8' },
+  'Boissons':       { p:'#c45a10', s:'#a34808', a:'#e8885a', i:'#fdf0e8', i2:'#fef8f4', b:'#e8c8a8' },
 };
 
 function applyCategoryColors(category) {
-  const p = CAT_PALETTES[category] || CAT_PALETTES['Plat'];
-  const root = document.documentElement;
-  root.style.setProperty('--cat-primary',   p.primary);
-  root.style.setProperty('--cat-secondary', p.secondary);
-  root.style.setProperty('--cat-accent',    p.accent);
-  root.style.setProperty('--cat-ice',       p.ice);
-  root.style.setProperty('--cat-ice2',      p.ice2);
-  root.style.setProperty('--cat-border',    p.border);
+  const v = CAT_PALETTES[category] || CAT_PALETTES['Plat'];
+  const existing = document.getElementById('cat-style');
+  if (existing) existing.remove();
+  const style = document.createElement('style');
+  style.id = 'cat-style';
+  style.textContent = `
+    .doc-header { background: ${v.p} !important; }
+    .section-num { background: ${v.p} !important; }
+    .phase-badge { background: ${v.p} !important; }
+    .section-header { border-bottom: 2px solid ${v.i} !important; }
+    .ingr-cat-header { background: ${v.i} !important; border-bottom-color: ${v.b} !important; }
+    .phase-header { background: ${v.i} !important; border-bottom-color: ${v.b} !important; }
+    .phase-ingr { background: ${v.i2} !important; border-bottom-color: ${v.b} !important; }
+    .ingr-cat-block { border-color: ${v.b} !important; }
+    .phase { border-color: ${v.b} !important; }
+    .equip-item { border-color: ${v.b} !important; }
+    .equip-icon { background: ${v.i} !important; }
+    .ingr-row { border-bottom-color: ${v.i} !important; }
+    .substep { border-bottom-color: ${v.i} !important; }
+    .substep-dot { background: ${v.a} !important; }
+    .ingr-cat-name { color: ${v.p} !important; }
+    .ingr-cat-count { color: ${v.a} !important; }
+    .section-title { color: ${v.s} !important; }
+    .ingr-qty { color: ${v.s} !important; }
+    .ingr-opt { color: ${v.a} !important; }
+    .phase-ingr-label { color: ${v.a} !important; }
+    .phase-title-text { color: ${v.p} !important; }
+    .phase-badge-time { color: ${v.s} !important; border-color: ${v.b} !important; }
+    .ingr-chip { border-color: ${v.b} !important; color: ${v.s} !important; }
+    .ingr-chip .chip-qty { color: ${v.a} !important; }
+    .equip-note { color: ${v.a} !important; }
+    .section-tag { background: ${v.i} !important; color: ${v.s} !important; border-color: ${v.b} !important; }
+    .note-box { background: ${v.i2} !important; border-left-color: ${v.p} !important; }
+    .note-box strong { color: ${v.p} !important; }
+    .doc-footer { background: ${v.i2} !important; border-top-color: ${v.b} !important; }
+    .substep-text b { font-weight: 600; color: ${v.p} !important; }
+    .page { border-color: ${v.b} !important; }
+  `;
+  document.head.appendChild(style);
 }
 
 /* ════════════════════════════════════════
