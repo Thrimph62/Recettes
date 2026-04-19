@@ -321,7 +321,7 @@ function dateKey(d) {
   const val = document.getElementById('start-date')?.value;
   const start = val ? new Date(val+'T00:00:00') : new Date();
   const dt = new Date(start);
-  dt.setDate(start.getDate() + d);
+  dt.setDate(start.getDate() + parseInt(d, 10)); // parseInt CRUCIAL — dataset.d is a string
   return localDate(dt);
 }
 
