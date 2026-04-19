@@ -1091,7 +1091,21 @@ const todayStr = new Date().toISOString().split('T')[0];
 document.getElementById('start-date').value = todayStr;
 
 buildGrid(); updateGenInfo();
-(async () => { await loadSavedMenu(); updateGenInfo(); })();
+(async () => {
+  // Load recipes from Supabase if not in localStorage
+  if (!recipes.length && sbClient) {
+    try {
+      const { data, error } = await sbClient.from('recettes').select('*');
+      if (!error && data?.length) {
+        recipes = data;
+        document.getElementById('recipe-count-badge').textContent = recipes.length+' recette(s)';
+        buildGrid(); // rebuild with recipes now available
+      }
+    } catch(e) { console.warn('Could not load recipes from Supabase', e); }
+  }
+  await loadSavedMenu();
+  updateGenInfo();
+})();
 </script>
 </body>
 </html>
