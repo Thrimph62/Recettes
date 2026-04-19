@@ -764,9 +764,12 @@ function renderShoppingList(agg, mealCount) {
   Object.values(agg).forEach(c => totalItems += Object.keys(c.items).length);
   document.getElementById('sh-meta').textContent = `${mealCount !== '—' ? mealCount+' repas · ' : ''}${Object.keys(agg).length} catégories · ${totalItems} ingrédients`;
 
+  const sortedCats = Object.keys(agg).sort((a,b) => a.localeCompare(b,'fr'));
+
   let html = '';
-  for (const [catName, catData] of Object.entries(agg)) {
-    const items = Object.values(catData.items);
+  for (const catName of sortedCats) {
+    const catData = agg[catName];
+    const items = Object.values(catData.items).sort((a,b) => a.name.localeCompare(b.name,'fr'));
     html += `<div class="cat-block">
       <div class="cat-title">
         <span class="cat-icon">${catData.icon}</span>
@@ -869,9 +872,12 @@ function generateFinalList() {
       <h3>✅ Liste définitive de courses</h3>
       <span>${total} article${total>1?'s':''} à acheter</span>
     </div><div class="final-list-body">`;
-  for (const [catName, catData] of Object.entries(bycat)) {
+  const sortedCats = Object.keys(bycat).sort((a,b) => a.localeCompare(b,'fr'));
+  for (const catName of sortedCats) {
+    const catData = bycat[catName];
+    const sortedItems = catData.items.sort((a,b) => a.name.localeCompare(b.name,'fr'));
     html += `<div class="final-cat-block"><div class="final-cat-name">${catData.icon} ${catName}</div>`;
-    for (const item of catData.items) {
+    for (const item of sortedItems) {
       html += `<div class="final-item">
         <span style="color:var(--muted)">☐</span>
         <span class="final-item-name">${item.name}${item.optional?' <em style="font-size:11px;color:var(--muted)">(opt.)</em>':''}</span>
@@ -894,9 +900,10 @@ function generateFinalList() {
 function exportFinalList() {
   if (!shoppingList) return;
   let txt = '═══════════════════════════════════\n  LISTE DÉFINITIVE DE COURSES\n  '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'\n═══════════════════════════════════\n\n';
-  for (const [catName, catData] of Object.entries(shoppingList)) {
+  for (const catName of Object.keys(shoppingList).sort((a,b)=>a.localeCompare(b,'fr'))) {
+    const catData = shoppingList[catName];
     let lines = '';
-    for (const item of Object.values(catData.items)) {
+    for (const item of Object.values(catData.items).sort((a,b)=>a.name.localeCompare(b.name,'fr'))) {
       const key = norm(item.name);
       if (checkedItems.has(key)) continue;
       const toBuy = Math.max(0,(item.qty||0)-(stockData[key]||0));
@@ -910,9 +917,10 @@ function exportFinalList() {
 function exportShoppingList() {
   if (!shoppingList) return;
   let txt = '═══════════════════════════════════\n     LISTE DE COURSES (complète)\n     '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'\n═══════════════════════════════════\n\n';
-  for (const [catName, catData] of Object.entries(shoppingList)) {
+  for (const catName of Object.keys(shoppingList).sort((a,b)=>a.localeCompare(b,'fr'))) {
+    const catData = shoppingList[catName];
     txt += `── ${catName.toUpperCase()} ──\n`;
-    for (const item of Object.values(catData.items)) {
+    for (const item of Object.values(catData.items).sort((a,b)=>a.name.localeCompare(b.name,'fr'))) {
       const stock = stockData[norm(item.name)]||0;
       const toBuy = Math.max(0,(item.qty||0)-stock);
       txt += `  ☐  ${item.name}`;
