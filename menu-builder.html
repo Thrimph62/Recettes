@@ -246,6 +246,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <div class="shopping-header">
       <h2>🛒 Liste de courses</h2>
       <span class="sh-meta" id="sh-meta">—</span>
+      <button class="btn btn-white btn-sm" onclick="loadShoppingList()" style="margin-left:12px;">📂 Charger liste sauvegardée</button>
     </div>
     <div class="shopping-body" id="shopping-body">
       <div class="empty-state">
@@ -255,6 +256,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     </div>
     <div class="shopping-footer hidden" id="shopping-footer">
       <button class="btn btn-success" onclick="generateFinalList()">✅ Générer la liste définitive</button>
+      <button class="btn btn-ghost btn-sm" onclick="saveShoppingList()">💾 Sauvegarder la liste</button>
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="clearStock()">🗑️ Vider les stocks</button>
       <button class="btn btn-ghost btn-sm" onclick="exportShoppingList()">⬇️ Exporter TXT</button>
@@ -274,6 +276,7 @@ const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 const SB_RECIPES = 'recettes';
 const SB_MENUS   = 'menus';
 const MENU_ID    = 'main';
+const SHOPPING_ID = 'shopping';
 
 let sb = null;
 try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
@@ -305,9 +308,15 @@ let stockData     = {};
 let checkedItems  = new Set();
 
 /* ══════════════════════════════════════
-   KEY HELPER — always use dk(d) for day key
+   KEY HELPER — day keys are ISO date strings e.g. "2026-04-21"
 ══════════════════════════════════════ */
-const dk = d => String(d);
+function dateKey(d) {
+  const val = document.getElementById('start-date')?.value;
+  const start = val ? new Date(val+'T00:00:00') : new Date();
+  const dt = new Date(start);
+  dt.setDate(start.getDate() + d);
+  return dt.toISOString().split('T')[0];
+}
 
 /* ══════════════════════════════════════
    LOAD RECIPES
@@ -332,7 +341,7 @@ function onRecipesLoaded(src) {
    SLOT HELPERS
 ══════════════════════════════════════ */
 function getSlots(d, mealId) {
-  const key = dk(d);
+  const key = dateKey(d);
   if (!menu[key]) menu[key] = {};
   if (!Array.isArray(menu[key][mealId]) || !menu[key][mealId].length) {
     menu[key][mealId] = [{ recipeId:'', persons: defaultP }];
@@ -486,7 +495,7 @@ function acFilter(el) {
   acInput = el;
   // Clear stored id while typing
   const d = el.dataset.d; const mealId = el.dataset.meal; const s = parseInt(el.dataset.s);
-  const key = dk(d);
+  const key = dateKey(d);
   if (menu[key]?.[mealId]?.[s]) menu[key][mealId][s].recipeId = '';
   el.classList.remove('has-value');
   acDrop.innerHTML = acBuildHTML(el.value);
@@ -498,7 +507,7 @@ function acFilter(el) {
 function acPick(recipeId, title) {
   if (!acInput) return;
   const d = acInput.dataset.d; const mealId = acInput.dataset.meal; const s = parseInt(acInput.dataset.s);
-  const key = dk(d);
+  const key = dateKey(d);
   if (!menu[key]) menu[key] = {};
   if (!Array.isArray(menu[key][mealId])) menu[key][mealId] = [];
   while (menu[key][mealId].length <= s) menu[key][mealId].push({recipeId:'', persons:defaultP});
@@ -511,7 +520,7 @@ function acPick(recipeId, title) {
 
 function acClear(el) {
   const d = el.dataset.d; const mealId = el.dataset.meal; const s = parseInt(el.dataset.s);
-  const key = dk(d);
+  const key = dateKey(d);
   if (menu[key]?.[mealId]?.[s]) menu[key][mealId][s].recipeId = '';
   el.value = ''; el.classList.remove('has-value');
   acClose(); updateGenInfo();
@@ -544,7 +553,7 @@ window.addEventListener('resize', () => { if(acInput) acPos(acInput); });
    SLOT ACTIONS
 ══════════════════════════════════════ */
 function changePer(d, mealId, s, delta) {
-  const key = dk(d);
+  const key = dateKey(d);
   const pcEl = document.getElementById(`pc-${d}-${mealId}-${s}`);
   if (!pcEl) return;
   const val = Math.max(1, Math.min(50, (parseInt(pcEl.textContent)||defaultP) + delta));
@@ -602,14 +611,13 @@ async function loadSavedMenu() {
     if (!data?.data) return;
     const payload = data.data;
 
-    // Normalize all day keys to strings
+    // Keys are ISO date strings ("2026-04-21") — load as-is
     const rawMenu = payload.menu || {};
     menu = {};
     for (const [k, v] of Object.entries(rawMenu)) {
-      const key = dk(parseInt(k));
-      menu[key] = {};
+      menu[k] = {};
       for (const [mealId, slots] of Object.entries(v)) {
-        menu[key][mealId] = Array.isArray(slots) ? slots : [slots];
+        menu[k][mealId] = Array.isArray(slots) ? slots : [slots];
       }
     }
 
@@ -668,7 +676,7 @@ function generateShoppingList() {
   // Collect all (recipe, persons) pairs from menu
   const pairs = [];
   for (let d = 0; d < numDays; d++) {
-    const dayMenu = menu[dk(d)];
+    const dayMenu = menu[dateKey(d)];
     if (!dayMenu) continue;
     for (const [mealId, slots] of Object.entries(dayMenu)) {
       if (!Array.isArray(slots)) continue;
@@ -724,7 +732,7 @@ function fmtN(n) {
 function renderShoppingList(agg, mealCount) {
   let totalItems = 0;
   Object.values(agg).forEach(c => totalItems += Object.keys(c.items).length);
-  document.getElementById('sh-meta').textContent = `${mealCount} repas · ${Object.keys(agg).length} catégories · ${totalItems} ingrédients`;
+  document.getElementById('sh-meta').textContent = `${mealCount !== '—' ? mealCount+' repas · ' : ''}${Object.keys(agg).length} catégories · ${totalItems} ingrédients`;
 
   let html = '';
   for (const [catName, catData] of Object.entries(agg)) {
@@ -891,6 +899,67 @@ function dl(txt, name) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
   a.download = name; a.click();
+}
+
+/* ══════════════════════════════════════
+   SAVE / LOAD SHOPPING LIST
+══════════════════════════════════════ */
+async function saveShoppingList() {
+  if (!shoppingList) { showStatus('error','❌ Aucune liste à sauvegarder. Générez-la d\'abord.'); return; }
+  if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
+  try {
+    const payload = {
+      shoppingList,
+      stockData,
+      checkedItems: [...checkedItems],
+    };
+    const { error } = await sb.from(SB_MENUS).upsert(
+      { id: SHOPPING_ID, data: payload, updated_at: new Date().toISOString() },
+      { onConflict: 'id' }
+    );
+    if (error) throw error;
+    showStatus('success','✓ Liste de courses sauvegardée sur Supabase.');
+  } catch(e) {
+    showStatus('error','❌ Erreur sauvegarde liste : '+e.message);
+  }
+}
+
+async function loadShoppingList() {
+  if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
+  try {
+    const { data, error } = await sb.from(SB_MENUS).select('data,updated_at').eq('id', SHOPPING_ID).single();
+    if (error) throw error;
+    if (!data?.data) { showStatus('error','❌ Aucune liste sauvegardée.'); return; }
+
+    const payload = data.data;
+    shoppingList  = payload.shoppingList  || null;
+    stockData     = payload.stockData     || {};
+    checkedItems  = new Set(payload.checkedItems || []);
+
+    if (!shoppingList) { showStatus('error','❌ Liste sauvegardée vide.'); return; }
+
+    renderShoppingList(shoppingList, '—');
+
+    // Restore stock values and checked state after DOM is built
+    for (const [key, val] of Object.entries(stockData)) {
+      const row = document.getElementById('row-'+key);
+      if (!row) continue;
+      const input = row.querySelector('.stock-input');
+      if (input) { input.value = val; onStockInput(input, key); }
+    }
+    for (const key of checkedItems) {
+      const row = document.getElementById('row-'+key);
+      if (!row) continue;
+      const cb = row.querySelector('input[type=checkbox]');
+      if (cb) { cb.checked = true; row.classList.add('checked'); }
+    }
+
+    const savedAt = data.updated_at ? new Date(data.updated_at).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    showStatus('success',`✓ Liste chargée${savedAt?' (sauvegardée le '+savedAt+')':''}.`);
+  } catch(e) {
+    if (e.code === 'PGRST116') showStatus('error','❌ Aucune liste sauvegardée trouvée.');
+    else showStatus('error','❌ Erreur chargement liste : '+e.message);
+  }
 }
 
 /* ══════════════════════════════════════
