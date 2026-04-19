@@ -608,19 +608,10 @@ async function loadSavedMenu() {
   try {
     const { data, error } = await sb.from(SB_MENUS).select('data').eq('id', MENU_ID).single();
     if (error) throw error;
-    if (!data?.data) return;
+    if (!data?.data) { buildGrid(); return; }
     const payload = data.data;
 
-    // Keys are ISO date strings ("2026-04-21") — load as-is
-    const rawMenu = payload.menu || {};
-    menu = {};
-    for (const [k, v] of Object.entries(rawMenu)) {
-      menu[k] = {};
-      for (const [mealId, slots] of Object.entries(v)) {
-        menu[k][mealId] = Array.isArray(slots) ? slots : [slots];
-      }
-    }
-
+    // Restore settings before computing date keys
     numDays = payload.numDays || 7;
     document.getElementById('days-count').value = numDays;
     if (payload.startDate) document.getElementById('start-date').value = payload.startDate;
@@ -632,9 +623,33 @@ async function loadSavedMenu() {
         if (p) { p.classList.toggle('active',on); const cb=p.querySelector('input'); if(cb) cb.checked=on; }
       });
     }
+
+    // Load menu — migrate positional keys ("0","1"…) to date keys if needed
+    const rawMenu = payload.menu || {};
+    menu = {};
+    const isPositional = Object.keys(rawMenu).some(k => /^\d+$/.test(k));
+
+    for (const [k, v] of Object.entries(rawMenu)) {
+      let key;
+      if (isPositional) {
+        // Convert index to real date using the saved start date
+        const startVal = payload.startDate || new Date().toISOString().split('T')[0];
+        const start = new Date(startVal+'T00:00:00');
+        const dt = new Date(start);
+        dt.setDate(start.getDate() + parseInt(k));
+        key = dt.toISOString().split('T')[0];
+      } else {
+        key = k; // already a date string
+      }
+      menu[key] = {};
+      for (const [mealId, slots] of Object.entries(v)) {
+        menu[key][mealId] = Array.isArray(slots) ? slots : [slots];
+      }
+    }
+
     buildGrid();
   } catch(e) {
-    // No saved menu yet — that's fine
+    buildGrid(); // Always build grid, even on error
     if (e.code !== 'PGRST116') showStatus('error','❌ Erreur chargement menu : '+e.message);
   }
 }
@@ -1005,8 +1020,7 @@ function showStatus(type, msg) {
   }
   document.getElementById('recipe-count-badge').textContent = recipes.length+' recette(s)';
 
-  // Build empty grid first, then load saved menu
-  buildGrid();
+  // Load saved menu — buildGrid() is called inside loadSavedMenu() once data is ready
   await loadSavedMenu();
 })();
 </script>
