@@ -405,7 +405,8 @@ function generatePlan() {
           const phase = recipe.phases[pi];
           const dur   = getPhaseDur(phase);
 
-          if (isRest(phase)) {
+          if (isRest(phase) && dur >= 240) {
+            // Only truly advance prep if rest is ≥ 4h
             advanceSteps.push({ daysBack: dur>=720?2:1, dur, recipe, phase, phaseIdx:pi, mealId, color });
           } else {
             dayJSteps.push({ startMin: cursor-dur, endMin: cursor, dur, recipe, phase, phaseIdx:pi, mealId, color });
