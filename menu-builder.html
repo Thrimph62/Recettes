@@ -3,34 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Menu Hebdomadaire — Étape 2</title>
+<title>Menu Hebdomadaire</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root {
+:root{
   --navy:#0f2d5a;--navy2:#1a4a8a;--navy3:#5a86c4;
   --ice:#e8f0fb;--ice2:#f5f8fe;--border:#c8d9f0;
   --text:#1a1a2e;--muted:#5a6a8a;
-  --bg:#f0f2f7;--white:#ffffff;
-  --green:#1a7a4a;--red:#a02020;
+  --bg:#f0f2f7;--white:#fff;
+  --green:#1a7a4a;--red:#a02020;--gold:#b8860b;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;gap:0;border-bottom:0.5px solid rgba(255,255,255,.08);}
+/* NAV */
+.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
 .nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;}
-.nav-links{display:flex;gap:0;}
+.nav-links{display:flex;}
 .nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
 .nav-link:hover{color:rgba(255,255,255,.8);}
-.nav-link.active{color:#fff;border-bottom-color:#b8860b;}
+.nav-link.active{color:#fff;border-bottom-color:var(--gold);}
 
-.app-header{background:var(--navy);padding:1.5rem 2.5rem;display:flex;align-items:center;gap:1.25rem;}
-.header-icon{width:44px;height:44px;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
-.header-title{color:#fff;}
-.header-title h1{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:2px;}
-.header-title p{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;}
+/* HEADER */
+.app-header{background:var(--navy);padding:1.25rem 2.5rem;display:flex;align-items:center;gap:1.25rem;}
+.header-icon{width:42px;height:42px;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;}
+.header-title h1{font-family:'DM Serif Display',serif;font-size:19px;font-weight:400;color:#fff;margin-bottom:2px;}
+.header-title p{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.06em;text-transform:uppercase;}
 .header-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
 
+/* BUTTONS */
 .btn{padding:8px 18px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
 .btn-white{background:rgba(255,255,255,.12);color:#fff;border:0.5px solid rgba(255,255,255,.2);}
 .btn-white:hover{background:rgba(255,255,255,.22);}
@@ -39,196 +41,109 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-success{background:var(--green);color:#fff;}
 .btn-success:hover{opacity:.9;}
 .btn-sm{padding:5px 12px;font-size:11px;}
-.ml-auto{margin-left:auto;}
 
+/* BODY */
 .app-body{max-width:1280px;margin:0 auto;padding:2rem 1.5rem;}
 
-.toolbar{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:14px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(15,45,90,.05);}
+/* TOOLBAR */
+.toolbar{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:12px 18px;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(15,45,90,.05);}
 .toolbar-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.sep{width:0.5px;height:22px;background:var(--border);flex-shrink:0;}
 .days-input{display:flex;align-items:center;gap:6px;}
-.days-input input{width:48px;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;text-align:center;color:var(--text);outline:none;}
+.days-input input[type=number]{width:48px;padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;text-align:center;color:var(--text);outline:none;}
 .toggle-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:0.5px solid var(--border);background:var(--ice2);cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);user-select:none;transition:all .15s;}
 .toggle-pill input{display:none;}
 .toggle-pill.active{background:var(--ice);border-color:var(--navy3);color:var(--navy2);}
-.sep{width:0.5px;height:24px;background:var(--border);}
-.recipe-count-badge{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;}
 
-/* GRID */
+/* WEEK GRID */
 .week-grid{overflow-x:auto;padding-bottom:8px;margin-bottom:1.5rem;}
 .grid-table{min-width:860px;border-collapse:separate;border-spacing:0;width:100%;}
-.col-label{
-  width:76px;background:var(--navy);color:rgba(255,255,255,.7);
-  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;
-  padding:8px 10px;text-align:left;vertical-align:top;
-  border-right:0.5px solid rgba(255,255,255,.1);white-space:nowrap;
-}
-.col-label .meal-icon{font-size:15px;display:block;margin-bottom:2px;}
-.day-header{
-  background:var(--ice);border:0.5px solid var(--border);
-  padding:7px 10px;text-align:center;font-size:11px;font-weight:600;
-  text-transform:uppercase;letter-spacing:.05em;color:var(--navy2);
-}
+.col-label{width:74px;background:var(--navy);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;vertical-align:top;border-right:0.5px solid rgba(255,255,255,.1);white-space:nowrap;}
+.col-label .meal-icon{font-size:14px;display:block;margin-bottom:2px;}
+.day-header{background:var(--ice);border:0.5px solid var(--border);padding:7px 10px;text-align:center;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--navy2);}
 .day-header.weekend{background:var(--ice2);color:var(--navy3);}
 .day-header .day-date{font-size:10px;font-weight:400;color:var(--muted);margin-top:1px;font-family:'DM Mono',monospace;}
 
 /* MEAL CELL */
-.meal-cell{border:0.5px solid var(--border);padding:5px;vertical-align:top;min-width:112px;}
-.meal-cell.pd{background:#fff8e8;}
-.meal-cell.dj{background:#e8f4ff;}
-.meal-cell.di{background:#eef0ff;}
-.meal-cell.ap{background:#f0ffe8;}
-.meal-cell.de{background:#fff0f8;}
-.meal-cell.bo{background:#f0f8ff;}
+.meal-cell{border:0.5px solid var(--border);padding:5px;vertical-align:top;min-width:110px;}
+.meal-cell.pd{background:#fff8e8;}.meal-cell.dj{background:#e8f4ff;}
+.meal-cell.di{background:#eef0ff;}.meal-cell.ap{background:#f0ffe8;}
+.meal-cell.de{background:#fff0f8;}.meal-cell.bo{background:#f0f8ff;}
 .meal-cell.sp{background:#fff8f0;}
 
 /* SLOT */
-.slot{display:flex;flex-direction:column;gap:3px;margin-bottom:4px;position:relative;}
+.slot{display:flex;flex-direction:column;gap:3px;margin-bottom:3px;}
 .slot+.slot{padding-top:4px;border-top:0.5px dashed var(--border);}
-.slot-num{
-  font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--muted);margin-bottom:1px;display:flex;align-items:center;justify-content:space-between;
-}
-.slot-remove{
-  background:none;border:none;cursor:pointer;color:var(--muted);
-  font-size:12px;line-height:1;padding:0 2px;border-radius:3px;
-}
-.slot-remove:hover{color:var(--red);background:rgba(160,32,32,.08);}
+.slot-num{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:1px;display:flex;align-items:center;justify-content:space-between;}
+.slot-remove{background:none;border:none;cursor:pointer;color:var(--muted);font-size:12px;line-height:1;padding:0 2px;border-radius:3px;}
+.slot-remove:hover{color:var(--red);}
+.add-slot-btn{width:100%;margin-top:2px;padding:3px 0;background:none;border:0.5px dashed var(--border);border-radius:5px;font-size:10px;color:var(--muted);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:4px;}
+.add-slot-btn:hover{border-color:var(--navy3);color:var(--navy2);background:rgba(90,134,196,.06);}
 
 /* AUTOCOMPLETE */
 .ac-wrap{position:relative;width:100%;}
-.ac-input{
-  width:100%;border:0.5px solid var(--border);border-radius:5px;
-  padding:4px 22px 4px 6px;font-family:'DM Sans',sans-serif;font-size:11px;
-  color:var(--text);background:rgba(255,255,255,.85);outline:none;cursor:text;
-}
+.ac-input{width:100%;border:0.5px solid var(--border);border-radius:5px;padding:4px 20px 4px 6px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text);background:rgba(255,255,255,.85);outline:none;}
 .ac-input:focus{border-color:var(--navy3);background:var(--white);}
 .ac-input.has-value{border-color:var(--navy3);background:var(--white);font-weight:500;}
-.ac-clear{
-  position:absolute;right:4px;top:50%;transform:translateY(-50%);
-  background:none;border:none;cursor:pointer;color:var(--muted);
-  font-size:12px;line-height:1;padding:1px 3px;border-radius:3px;
-  display:none;
-}
+.ac-clear{position:absolute;right:3px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;line-height:1;padding:1px 3px;border-radius:3px;display:none;}
 .ac-clear:hover{color:var(--red);}
 .ac-input.has-value ~ .ac-clear{display:block;}
-
-/* Dropdown — rendered in a fixed portal */
-.ac-dropdown{
-  position:fixed;z-index:9999;
-  background:var(--white);border:1px solid var(--border);border-radius:8px;
-  box-shadow:0 6px 24px rgba(15,45,90,.15);
-  max-height:220px;overflow-y:auto;min-width:200px;max-width:280px;
-  display:none;
-}
+.ac-dropdown{position:fixed;z-index:9999;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 24px rgba(15,45,90,.15);max-height:220px;overflow-y:auto;min-width:200px;max-width:280px;display:none;}
 .ac-dropdown.open{display:block;}
-.ac-cat-header{
-  padding:5px 10px 3px;font-size:10px;font-weight:600;
-  text-transform:uppercase;letter-spacing:.07em;color:var(--navy3);
-  background:var(--ice2);border-bottom:0.5px solid var(--border);
-  position:sticky;top:0;
-}
-.ac-item{
-  padding:6px 10px;font-size:12px;cursor:pointer;
-  border-bottom:0.5px solid var(--ice);transition:background .1s;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
+.ac-cat-header{padding:5px 10px 3px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--navy3);background:var(--ice2);border-bottom:0.5px solid var(--border);position:sticky;top:0;}
+.ac-item{padding:6px 10px;font-size:12px;cursor:pointer;border-bottom:0.5px solid var(--ice);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ac-item:last-child{border-bottom:none;}
 .ac-item:hover,.ac-item.focused{background:var(--ice);}
 .ac-item em{font-style:normal;background:#fff3a0;border-radius:2px;}
 .ac-empty{padding:10px;font-size:12px;color:var(--muted);text-align:center;}
 
-.persons-row{display:flex;align-items:center;gap:3px;}
-.persons-btn{
-  width:16px;height:16px;border-radius:50%;border:0.5px solid var(--border);
-  background:var(--white);cursor:pointer;font-size:12px;display:flex;
-  align-items:center;justify-content:center;color:var(--navy2);line-height:1;padding:0;flex-shrink:0;
-}
+/* PERSONS */
+.persons-row{display:flex;align-items:center;gap:3px;margin-top:2px;}
+.persons-btn{width:16px;height:16px;border-radius:50%;border:0.5px solid var(--border);background:var(--white);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;color:var(--navy2);line-height:1;padding:0;flex-shrink:0;}
 .persons-btn:hover{background:var(--ice);}
 .persons-count{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--navy);min-width:18px;text-align:center;}
 .persons-label{font-size:10px;color:var(--muted);}
 
-.add-slot-btn{
-  width:100%;margin-top:2px;padding:3px 0;
-  background:none;border:0.5px dashed var(--border);border-radius:5px;
-  font-size:10px;color:var(--muted);cursor:pointer;transition:all .15s;
-  display:flex;align-items:center;justify-content:center;gap:4px;
-}
-.add-slot-btn:hover{border-color:var(--navy3);color:var(--navy2);background:rgba(90,134,196,.06);}
-
-/* GENERATE / SHOPPING */
-.generate-bar{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(15,45,90,.05);}
+/* GENERATE BAR */
+.generate-bar{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:12px 18px;margin-bottom:1.5rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(15,45,90,.05);}
 .generate-info{font-size:13px;color:var(--muted);}
 .generate-info strong{color:var(--navy);font-weight:600;}
 
+/* SHOPPING SECTION */
 .shopping-section{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(15,45,90,.06);}
 .shopping-header{background:var(--navy);padding:14px 22px;display:flex;align-items:center;gap:10px;}
 .shopping-header h2{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:#fff;flex:1;}
-.shopping-header .sh-meta{font-size:12px;color:rgba(255,255,255,.45);}
+.sh-meta{font-size:12px;color:rgba(255,255,255,.45);}
 .shopping-body{padding:20px 22px;}
 
+/* SHOPPING ROWS */
 .cat-block{margin-bottom:22px;}
 .cat-title{display:flex;align-items:center;gap:10px;margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid var(--ice);}
 .cat-icon{font-size:16px;}
 .cat-name{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--navy2);}
 .cat-count{margin-left:auto;font-size:11px;color:var(--navy3);font-family:'DM Mono',monospace;}
-
-/* column headers */
-.ingr-list-header{
-  display:grid;grid-template-columns:20px 1fr 110px 140px 110px;gap:0 12px;
-  align-items:center;padding:4px 8px;
-  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;
-  color:var(--muted);border-bottom:0.5px solid var(--border);margin-bottom:2px;
-}
-
-/* one row per ingredient */
-.ingr-row{
-  display:grid;grid-template-columns:20px 1fr 110px 140px 110px;gap:0 12px;
-  align-items:center;padding:6px 8px;border-bottom:0.5px solid var(--ice);
-  transition:background .1s;
-}
+.ingr-list-header{display:grid;grid-template-columns:20px 1fr 100px 140px 100px;gap:0 10px;align-items:center;padding:4px 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:0.5px solid var(--border);margin-bottom:2px;}
+.ingr-row{display:grid;grid-template-columns:20px 1fr 100px 140px 100px;gap:0 10px;align-items:center;padding:6px 8px;border-bottom:0.5px solid var(--ice);transition:background .1s;}
 .ingr-row:last-child{border-bottom:none;}
 .ingr-row:hover{background:var(--ice2);}
-.ingr-row.zero-needed{opacity:.45;}
-
-/* checkbox col */
+.ingr-row.zero-needed{opacity:.4;}
 .ingr-row input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--navy);}
 .ingr-row.checked .ingr-name-cell{text-decoration:line-through;color:var(--muted);}
-.ingr-row.checked .qty-badge{color:var(--muted)!important;}
-.ingr-row.checked{background:#f5fff8;opacity:.6;}
-
-/* name */
+.ingr-row.checked{background:#f5fff8;opacity:.55;}
 .ingr-name-cell{font-size:13px;line-height:1.4;}
 .ingr-opt-tag{font-size:10px;color:var(--muted);font-style:italic;margin-left:4px;}
-
-/* qty badges */
-.qty-badge{
-  font-family:'DM Mono',monospace;font-size:12px;font-weight:500;
-  text-align:right;white-space:nowrap;
-}
+.qty-badge{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;text-align:right;white-space:nowrap;}
 .qty-badge.needed{color:var(--navy2);}
 .qty-badge.tobuy{color:var(--green);font-weight:600;}
 .qty-badge.tobuy.zero{color:var(--muted);font-weight:400;}
-
-/* stock input cell */
 .stock-cell{display:flex;align-items:center;gap:4px;}
-.stock-input{
-  width:64px;padding:3px 7px;
-  border:1px solid var(--border);border-radius:6px;
-  font-family:'DM Mono',monospace;font-size:12px;color:var(--text);
-  text-align:right;background:var(--white);outline:none;
-  transition:border-color .15s;
-}
+.stock-input{width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:right;background:var(--white);outline:none;transition:border-color .15s;}
 .stock-input:focus{border-color:var(--navy3);}
-.stock-unit{font-size:11px;color:var(--muted);min-width:24px;}
+.stock-unit{font-size:11px;color:var(--muted);min-width:22px;}
 
-/* final list panel */
-.final-list-section{
-  margin-top:1.5rem;border:1.5px solid var(--green);border-radius:12px;overflow:hidden;
-}
-.final-list-header{
-  background:var(--green);padding:12px 20px;
-  display:flex;align-items:center;justify-content:space-between;
-}
+/* FINAL LIST */
+.final-list-section{margin-top:1.5rem;border:1.5px solid var(--green);border-radius:12px;overflow:hidden;}
+.final-list-header{background:var(--green);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
 .final-list-header h3{font-family:'DM Serif Display',serif;font-size:16px;font-weight:400;color:#fff;}
 .final-list-header span{font-size:12px;color:rgba(255,255,255,.6);}
 .final-list-body{padding:16px 20px;}
@@ -238,22 +153,21 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .final-item:last-child{border-bottom:none;}
 .final-item-name{flex:1;}
 .final-item-qty{font-family:'DM Mono',monospace;font-size:12px;color:var(--green);font-weight:600;white-space:nowrap;}
-.final-item-check{color:var(--muted);}
 
 .shopping-footer{padding:10px 22px 16px;border-top:0.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;}
 .empty-state{text-align:center;padding:3rem 2rem;color:var(--muted);}
 .empty-state .em{font-size:36px;margin-bottom:10px;}
 .empty-state p{font-size:13px;}
 
+/* STATUS */
 .status-bar{padding:9px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
 .status-bar.success{background:#edfaf3;color:var(--green);border:0.5px solid #a0ddc0;}
 .status-bar.error{background:#fef0f0;color:var(--red);border:0.5px solid #f0c0c0;}
 .hidden{display:none!important;}
 
 @media print{
-  .app-header,.toolbar,.week-grid,.generate-bar,.shopping-footer{display:none!important;}
+  .app-nav,.app-header,.toolbar,.week-grid,.generate-bar,.shopping-footer{display:none!important;}
   .shopping-section{box-shadow:none;border:none;}
-  .ingr-check-item input{display:none;}
   body{background:#fff;}
 }
 </style>
@@ -274,14 +188,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="header-icon">📅</div>
   <div class="header-title">
     <h1>Menu Hebdomadaire</h1>
-    <p>Planificateur + Liste de courses · Étape 2 sur 5</p>
+    <p>Planificateur + Liste de courses</p>
   </div>
   <div class="header-actions">
     <label class="btn btn-white" style="cursor:pointer;">
-      📂 Charger recipes.json
+      📂 Importer recipes.json
       <input type="file" id="json-file-input" accept=".json" style="display:none;">
     </label>
-    <button class="btn btn-white" onclick="loadFromStorage()">🔗 Depuis parseur</button>
   </div>
 </header>
 
@@ -291,7 +204,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="toolbar">
     <div style="display:flex;align-items:center;gap:8px;">
       <span class="toolbar-label">Début</span>
-      <input type="date" id="start-date" style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);outline:none;cursor:pointer;" onchange="buildGrid()">
+      <input type="date" id="start-date"
+        style="padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);outline:none;cursor:pointer;"
+        onchange="buildGrid()">
     </div>
     <div class="sep"></div>
     <div style="display:flex;align-items:center;gap:8px;">
@@ -310,7 +225,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <label class="toggle-pill" id="pill-sp"><input type="checkbox" onchange="toggleMeal('sp',this.checked)"> ⭐ Spécial</label>
     </div>
     <div class="sep"></div>
-    <span class="recipe-count-badge" id="recipe-count-badge">0 recette(s)</span>
+    <span id="recipe-count-badge" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;">0 recette(s)</span>
   </div>
 
   <div class="week-grid">
@@ -319,7 +234,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
   <div class="generate-bar">
     <div class="generate-info" id="gen-info">Remplissez le menu puis générez la liste de courses.</div>
-    <div class="ml-auto" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <button class="btn btn-ghost btn-sm" onclick="resetPersonsDialog()">👥 Personnes par défaut</button>
       <button class="btn btn-ghost btn-sm" onclick="clearMenu()">🗑️ Effacer</button>
       <button class="btn btn-ghost btn-sm" onclick="saveMenu()">💾 Sauvegarder</button>
@@ -348,78 +263,87 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </main>
 
-<!-- Autocomplete dropdown portal -->
 <div class="ac-dropdown" id="ac-dropdown"></div>
 
 <script>
+/* ══════════════════════════════════════
+   SUPABASE
+══════════════════════════════════════ */
+const SB_URL  = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+const SB_RECIPES = 'recettes';
+const SB_MENUS   = 'menus';
+const MENU_ID    = 'main';
+
+let sb = null;
+try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+
 /* ══════════════════════════════════════
    CONFIG
 ══════════════════════════════════════ */
 const MEAL_TYPES = [
   { id:'pd', label:'Petit-déj.',  icon:'🌅', cls:'pd', optional:false,  maxSlots:1 },
   { id:'dj', label:'Déjeuner',    icon:'🍽️',  cls:'dj', optional:false,  maxSlots:3 },
-  { id:'ap', label:'Apéritif',    icon:'🥂', cls:'ap', optional:true,   maxSlots:1, default:false },
+  { id:'ap', label:'Apéritif',    icon:'🥂', cls:'ap', optional:true,   maxSlots:1, dflt:false },
   { id:'di', label:'Dîner',       icon:'🌙', cls:'di', optional:false,  maxSlots:3 },
-  { id:'de', label:'Dessert',     icon:'🍮', cls:'de', optional:true,   maxSlots:1, default:true  },
-  { id:'bo', label:'Boisson',     icon:'🥤', cls:'bo', optional:true,   maxSlots:1, default:false },
-  { id:'sp', label:'Spécial',     icon:'⭐', cls:'sp', optional:true,   maxSlots:3, default:false },
+  { id:'de', label:'Dessert',     icon:'🍮', cls:'de', optional:true,   maxSlots:1, dflt:true  },
+  { id:'bo', label:'Boisson',     icon:'🥤', cls:'bo', optional:true,   maxSlots:1, dflt:false },
+  { id:'sp', label:'Spécial',     icon:'⭐', cls:'sp', optional:true,   maxSlots:3, dflt:false },
 ];
 const DAYS_FR = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 
 /* ══════════════════════════════════════
-   STATE
+   STATE — day keys are ALWAYS strings
 ══════════════════════════════════════ */
-let recipes = [];
-let numDays = 7;
-let defaultPersons = 4;
-// menu[day][mealId] = [ {recipeId, persons}, ... ]
-let menu = {};
-let visibleMeals = new Set(['pd','dj','di','de']);
-let shoppingList = null;
+let recipes       = [];
+let numDays       = 7;
+let defaultP      = 4;
+let menu          = {};   // menu["0"]["dj"] = [{recipeId, persons}, ...]
+let visibleMeals  = new Set(['pd','dj','di','de']);
+let shoppingList  = null;
+let stockData     = {};
+let checkedItems  = new Set();
+
+/* ══════════════════════════════════════
+   KEY HELPER — always use dk(d) for day key
+══════════════════════════════════════ */
+const dk = d => String(d);
 
 /* ══════════════════════════════════════
    LOAD RECIPES
 ══════════════════════════════════════ */
-document.getElementById('json-file-input').addEventListener('change', async (e) => {
+document.getElementById('json-file-input').addEventListener('change', async e => {
   const f = e.target.files[0]; if (!f) return;
   try {
     const data = JSON.parse(await f.text());
     const arr = Array.isArray(data) ? data : (data.recipes || []);
     if (!arr.length) throw new Error('Aucune recette trouvée.');
-    recipes = arr; onRecipesLoaded('fichier');
+    recipes = arr; onRecipesLoaded('fichier JSON');
   } catch(err) { showStatus('error','❌ '+err.message); }
 });
-
-function loadFromStorage() {
-  const raw = localStorage.getItem('recipe-library');
-  if (!raw) { showStatus('error','❌ Bibliothèque vide. Analysez des recettes d\'abord.'); return; }
-  try { recipes = JSON.parse(raw); onRecipesLoaded('bibliothèque'); }
-  catch(e) { showStatus('error','❌ Données invalides.'); }
-}
 
 function onRecipesLoaded(src) {
   document.getElementById('recipe-count-badge').textContent = recipes.length+' recette(s)';
   showStatus('success','✓ '+recipes.length+' recette(s) depuis '+src+'.');
-  buildGrid(); loadSavedMenu(); updateGenInfo();
+  buildGrid();
 }
 
 /* ══════════════════════════════════════
    SLOT HELPERS
 ══════════════════════════════════════ */
-function getSlots(day, mealId) {
-  if (!menu[day]) menu[day] = {};
-  if (!menu[day][mealId] || !Array.isArray(menu[day][mealId])) {
-    menu[day][mealId] = [{ recipeId:'', persons: defaultPersons }];
+function getSlots(d, mealId) {
+  const key = dk(d);
+  if (!menu[key]) menu[key] = {};
+  if (!Array.isArray(menu[key][mealId]) || !menu[key][mealId].length) {
+    menu[key][mealId] = [{ recipeId:'', persons: defaultP }];
   }
-  return menu[day][mealId];
+  return menu[key][mealId];
 }
 
-function getMealDef(mealId) {
-  return MEAL_TYPES.find(m => m.id === mealId);
-}
+function getMealDef(mealId) { return MEAL_TYPES.find(m => m.id === mealId); }
 
 /* ══════════════════════════════════════
-   GRID BUILD
+   GRID
 ══════════════════════════════════════ */
 function getVisibleMeals() {
   return MEAL_TYPES.filter(m => !m.optional || visibleMeals.has(m.id));
@@ -429,96 +353,85 @@ function buildGrid() {
   numDays = parseInt(document.getElementById('days-count').value) || 7;
   const table = document.getElementById('week-table');
   const meals = getVisibleMeals();
-  const dateInput = document.getElementById('start-date').value;
-  const startDate = dateInput ? new Date(dateInput+'T00:00:00') : new Date();
+  const dateVal = document.getElementById('start-date').value;
+  const start = dateVal ? new Date(dateVal+'T00:00:00') : new Date();
 
-  // Header
-  let html = '<thead><tr><th style="background:var(--navy);border:0.5px solid rgba(255,255,255,.1);width:76px;"></th>';
+  let html = '<thead><tr><th style="background:var(--navy);border:0.5px solid rgba(255,255,255,.1);width:74px;"></th>';
   for (let d = 0; d < numDays; d++) {
-    const dt = new Date(startDate); dt.setDate(startDate.getDate() + d);
-    const dayIdx = dt.getDay() === 0 ? 6 : dt.getDay() - 1;
-    const dayName = DAYS_FR[dayIdx];
-    const dayDate = dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
-    const isWE = dt.getDay() === 0 || dt.getDay() === 6;
-    html += `<th class="day-header ${isWE?'weekend':''}">${dayName}<div class="day-date">${dayDate}</div></th>`;
+    const dt = new Date(start); dt.setDate(start.getDate() + d);
+    const di = dt.getDay() === 0 ? 6 : dt.getDay()-1;
+    const isWE = dt.getDay()===0||dt.getDay()===6;
+    html += `<th class="day-header ${isWE?'weekend':''}">${DAYS_FR[di]}<div class="day-date">${dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</div></th>`;
   }
   html += '</tr></thead><tbody>';
 
   for (const meal of meals) {
-    html += `<tr><td class="col-label"><span class="meal-icon">${meal.icon}</span>${meal.label}${meal.maxSlots>1?`<br><span style="font-size:9px;opacity:.5;">max ${meal.maxSlots}</span>`:''}</td>`;
+    html += `<tr><td class="col-label"><span class="meal-icon">${meal.icon}</span>${meal.label}${meal.maxSlots>1?`<br><span style="font-size:9px;opacity:.4">max ${meal.maxSlots}</span>`:''}</td>`;
     for (let d = 0; d < numDays; d++) {
       const slots = getSlots(d, meal.id);
-      html += `<td class="meal-cell ${meal.cls}" id="cell-${d}-${meal.id}">`;
-      html += renderCellSlots(d, meal, slots);
-      html += '</td>';
+      html += `<td class="meal-cell ${meal.cls}" id="cell-${d}-${meal.id}">${renderCellSlots(d, meal, slots)}</td>`;
     }
     html += '</tr>';
   }
   html += '</tbody>';
   table.innerHTML = html;
+  updateGenInfo();
 }
 
-function renderCellSlots(day, meal, slots) {
+function renderCellSlots(d, meal, slots) {
   let html = '';
-  const showNums = meal.maxSlots > 1;
-
+  const multi = meal.maxSlots > 1;
   for (let s = 0; s < slots.length; s++) {
     const slot = slots[s];
-    const sid = `${day}-${meal.id}-${s}`;
-    html += `<div class="slot" id="slot-${sid}">`;
-    if (showNums) {
-      html += `<div class="slot-num">
-        <span>${['①','②','③'][s] || (s+1)}</span>
-        ${slots.length > 1 ? `<button class="slot-remove" onclick="removeSlot(${day},'${meal.id}',${s})" title="Supprimer">✕</button>` : ''}
-      </div>`;
-    }
+    const sid = `${d}-${meal.id}-${s}`;
     const recipe = recipes.find(r => r.id === slot.recipeId);
     const displayVal = recipe ? recipe.title : '';
+    html += `<div class="slot" id="slot-${sid}">`;
+    if (multi) {
+      html += `<div class="slot-num">
+        <span>${['①','②','③'][s]||s+1}</span>
+        ${slots.length>1?`<button class="slot-remove" onmousedown="event.preventDefault()" onclick="removeSlot(${d},'${meal.id}',${s})">✕</button>`:''}
+      </div>`;
+    }
     html += `<div class="ac-wrap">
-      <input class="ac-input ${slot.recipeId?'has-value':''}" 
+      <input class="ac-input ${slot.recipeId?'has-value':''}"
         id="ac-${sid}" type="text"
         value="${displayVal.replace(/"/g,'&quot;')}"
-        placeholder="Rechercher…"
-        autocomplete="off"
-        data-day="${day}" data-mealid="${meal.id}" data-slotidx="${s}"
-        onfocus="acOpen('${sid}',${day},'${meal.id}',${s},this)"
-        oninput="acFilter('${sid}',${day},'${meal.id}',${s},this)"
-        onkeydown="acKey(event,'${sid}')">
-      <button class="ac-clear" onmousedown="event.preventDefault();acClear('${sid}',${day},'${meal.id}',${s})" tabindex="-1">✕</button>
+        placeholder="Rechercher…" autocomplete="off"
+        data-d="${d}" data-meal="${meal.id}" data-s="${s}"
+        onfocus="acOpen(this)"
+        oninput="acFilter(this)"
+        onkeydown="acKey(event,this)">
+      <button class="ac-clear" onmousedown="event.preventDefault()" onclick="acClear(this.previousElementSibling)">✕</button>
     </div>`;
     html += `<div class="persons-row">
-      <button class="persons-btn" onclick="changePersons(${day},'${meal.id}',${s},-1)">−</button>
-      <span class="persons-count" id="pc-${sid}">${slot.persons || defaultPersons}</span>
-      <button class="persons-btn" onclick="changePersons(${day},'${meal.id}',${s},1)">+</button>
+      <button class="persons-btn" onclick="changePer(${d},'${meal.id}',${s},-1)">−</button>
+      <span class="persons-count" id="pc-${sid}">${slot.persons||defaultP}</span>
+      <button class="persons-btn" onclick="changePer(${d},'${meal.id}',${s},1)">+</button>
       <span class="persons-label">pers.</span>
-    </div>`;
-    html += `</div>`;
+    </div></div>`;
   }
-
-  // Add slot button
-  if (meal.maxSlots > 1 && slots.length < meal.maxSlots) {
-    html += `<button class="add-slot-btn" onclick="addSlot(${day},'${meal.id}')">+ Ajouter</button>`;
+  if (multi && slots.length < meal.maxSlots) {
+    html += `<button class="add-slot-btn" onclick="addSlot(${d},'${meal.id}')">+ Ajouter</button>`;
   }
   return html;
 }
 
-function refreshCell(day, mealId) {
+function refreshCell(d, mealId) {
   const meal = getMealDef(mealId);
-  const slots = getSlots(day, mealId);
-  const cell = document.getElementById(`cell-${day}-${mealId}`);
-  if (cell && meal) cell.innerHTML = renderCellSlots(day, meal, slots);
+  const slots = getSlots(d, mealId);
+  const cell = document.getElementById(`cell-${d}-${mealId}`);
+  if (cell && meal) cell.innerHTML = renderCellSlots(d, meal, slots);
   updateGenInfo();
 }
 
 /* ══════════════════════════════════════
-   AUTOCOMPLETE ENGINE
+   AUTOCOMPLETE
 ══════════════════════════════════════ */
-let acActive = null; // { sid, day, mealId, slotIdx, inputEl }
-let acFocusIdx = -1;
+const acDrop = document.getElementById('ac-dropdown');
+let acInput = null;
 
-const acDropdown = document.getElementById('ac-dropdown');
-
-function acGetSorted(q) {
+function acSortedOptions(q) {
   const query = (q||'').toLowerCase().trim();
   const groups = {};
   for (const r of recipes) {
@@ -528,260 +441,194 @@ function acGetSorted(q) {
   }
   const cats = Object.keys(groups).sort((a,b) => a.localeCompare(b,'fr'));
   for (const c of cats) groups[c].sort((a,b) => a.title.localeCompare(b.title,'fr'));
-
-  const result = []; // [{cat, r}]
+  const result = [];
   for (const cat of cats) {
     for (const r of groups[cat]) {
-      if (!query || r.title.toLowerCase().includes(query) || cat.toLowerCase().includes(query)) {
+      if (!query || r.title.toLowerCase().includes(query) || cat.toLowerCase().includes(query))
         result.push({cat, r});
-      }
     }
   }
-  return {cats, groups, result, query};
+  return {result, query};
 }
 
 function acBuildHTML(q) {
-  const {cats, groups, result, query} = acGetSorted(q);
+  const {result, query} = acSortedOptions(q);
   if (!result.length) return `<div class="ac-empty">Aucune recette trouvée</div>`;
-  let html = ''; let lastCat = null;
+  let html='', lastCat=null;
   for (const {cat, r} of result) {
-    if (cat !== lastCat) {
-      html += `<div class="ac-cat-header">${cat}</div>`;
-      lastCat = cat;
-    }
+    if (cat !== lastCat) { html += `<div class="ac-cat-header">${cat}</div>`; lastCat=cat; }
     const hl = query
       ? r.title.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<em>$1</em>')
       : r.title;
-    html += `<div class="ac-item" data-id="${r.id}" onmousedown="event.preventDefault();acSelect('${r.id}','${r.title.replace(/'/g,"\\'")}')">
-      ${hl}
-    </div>`;
+    // Escape title for the inline handler
+    const safeTitle = r.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    html += `<div class="ac-item" onmousedown="event.preventDefault()" onclick="acPick('${r.id}','${safeTitle}')">${hl}</div>`;
   }
   return html;
 }
 
-function acPositionDropdown(inputEl) {
-  const rect = inputEl.getBoundingClientRect();
-  const spaceBelow = window.innerHeight - rect.bottom;
-  const dropH = Math.min(220, acDropdown.scrollHeight);
-  if (spaceBelow >= dropH || spaceBelow >= 100) {
-    acDropdown.style.top  = (rect.bottom + 2) + 'px';
-  } else {
-    acDropdown.style.top  = (rect.top - Math.min(dropH, 220) - 2) + 'px';
-  }
-  acDropdown.style.left  = rect.left + 'px';
-  acDropdown.style.width = Math.max(200, rect.width) + 'px';
+function acPos(el) {
+  const rect = el.getBoundingClientRect();
+  const dropH = Math.min(220, window.innerHeight - rect.bottom - 4);
+  acDrop.style.top  = (dropH > 80 ? rect.bottom+2 : rect.top-Math.min(220,acDrop.scrollHeight)-2) + 'px';
+  acDrop.style.left  = rect.left+'px';
+  acDrop.style.width = Math.max(200, rect.width)+'px';
 }
 
-function acOpen(sid, day, mealId, slotIdx, inputEl) {
-  acActive = {sid, day, mealId, slotIdx, inputEl};
-  acFocusIdx = -1;
-  acDropdown.innerHTML = acBuildHTML(inputEl.value);
-  acDropdown.classList.add('open');
-  acPositionDropdown(inputEl);
+function acOpen(el) {
+  acInput = el;
+  acDrop.innerHTML = acBuildHTML(el.value);
+  acDrop.classList.add('open');
+  acPos(el);
 }
 
-function acFilter(sid, day, mealId, slotIdx, inputEl) {
-  acActive = {sid, day, mealId, slotIdx, inputEl};
-  acFocusIdx = -1;
-  acDropdown.innerHTML = acBuildHTML(inputEl.value);
-  acDropdown.classList.add('open');
-  acPositionDropdown(inputEl);
-  // Clear stored recipeId while typing
-  const slots = getSlots(day, mealId);
-  if (slots[slotIdx]) { slots[slotIdx].recipeId = ''; inputEl.classList.remove('has-value'); }
+function acFilter(el) {
+  acInput = el;
+  // Clear stored id while typing
+  const d = el.dataset.d; const mealId = el.dataset.meal; const s = parseInt(el.dataset.s);
+  const key = dk(d);
+  if (menu[key]?.[mealId]?.[s]) menu[key][mealId][s].recipeId = '';
+  el.classList.remove('has-value');
+  acDrop.innerHTML = acBuildHTML(el.value);
+  acDrop.classList.add('open');
+  acPos(el);
   updateGenInfo();
 }
 
-function acSelect(recipeId, title) {
-  // Prefer acActive; fall back to the currently focused ac-input
-  let ctx = acActive;
-  if (!ctx) {
-    const inputEl = document.activeElement;
-    if (!inputEl || !inputEl.classList.contains('ac-input')) return;
-    ctx = {
-      inputEl,
-      day:      parseInt(inputEl.dataset.day),
-      mealId:   inputEl.dataset.mealid,
-      slotIdx:  parseInt(inputEl.dataset.slotidx),
-    };
-  }
-  const {day, mealId, slotIdx, inputEl} = ctx;
-  const slots = getSlots(day, mealId);
-  if (!slots[slotIdx]) slots[slotIdx] = { recipeId:'', persons: defaultPersons };
-  slots[slotIdx].recipeId = recipeId;
-  inputEl.value = title;
-  inputEl.classList.add('has-value');
+function acPick(recipeId, title) {
+  if (!acInput) return;
+  const d = acInput.dataset.d; const mealId = acInput.dataset.meal; const s = parseInt(acInput.dataset.s);
+  const key = dk(d);
+  if (!menu[key]) menu[key] = {};
+  if (!Array.isArray(menu[key][mealId])) menu[key][mealId] = [];
+  while (menu[key][mealId].length <= s) menu[key][mealId].push({recipeId:'', persons:defaultP});
+  menu[key][mealId][s].recipeId = recipeId;
+  acInput.value = title;
+  acInput.classList.add('has-value');
   acClose();
   updateGenInfo();
 }
 
-function acClear(sid, day, mealId, slotIdx) {
-  const inputEl = document.getElementById('ac-'+sid);
-  if (inputEl) { inputEl.value = ''; inputEl.classList.remove('has-value'); }
-  const slots = getSlots(day, mealId);
-  if (slots[slotIdx]) slots[slotIdx].recipeId = '';
-  acClose();
-  updateGenInfo();
+function acClear(el) {
+  const d = el.dataset.d; const mealId = el.dataset.meal; const s = parseInt(el.dataset.s);
+  const key = dk(d);
+  if (menu[key]?.[mealId]?.[s]) menu[key][mealId][s].recipeId = '';
+  el.value = ''; el.classList.remove('has-value');
+  acClose(); updateGenInfo();
 }
 
-function acClose() {
-  acDropdown.classList.remove('open');
-  acActive = null; acFocusIdx = -1;
+function acClose() { acDrop.classList.remove('open'); acInput = null; }
+
+function acKey(e, el) {
+  const items = acDrop.querySelectorAll('.ac-item');
+  let fi = [...items].findIndex(i => i.classList.contains('focused'));
+  if (e.key==='ArrowDown') {
+    e.preventDefault(); if(fi<items.length-1)fi++;
+    items.forEach((i,idx)=>i.classList.toggle('focused',idx===fi));
+    items[fi]?.scrollIntoView({block:'nearest'});
+  } else if (e.key==='ArrowUp') {
+    e.preventDefault(); if(fi>0)fi--;
+    items.forEach((i,idx)=>i.classList.toggle('focused',idx===fi));
+    items[fi]?.scrollIntoView({block:'nearest'});
+  } else if (e.key==='Enter' && fi>=0) { e.preventDefault(); items[fi].click(); }
+  else if (e.key==='Escape') acClose();
 }
 
-function acKey(e, sid) {
-  const items = acDropdown.querySelectorAll('.ac-item');
-  if (!items.length) return;
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    acFocusIdx = Math.min(acFocusIdx+1, items.length-1);
-    items.forEach((el,i)=>el.classList.toggle('focused',i===acFocusIdx));
-    items[acFocusIdx]?.scrollIntoView({block:'nearest'});
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    acFocusIdx = Math.max(acFocusIdx-1, 0);
-    items.forEach((el,i)=>el.classList.toggle('focused',i===acFocusIdx));
-    items[acFocusIdx]?.scrollIntoView({block:'nearest'});
-  } else if (e.key === 'Enter' && acFocusIdx >= 0) {
-    e.preventDefault();
-    items[acFocusIdx]?.click();
-  } else if (e.key === 'Escape') {
-    acClose();
-  }
-}
-
-// Close on outside click
 document.addEventListener('mousedown', e => {
-  if (!acDropdown.contains(e.target) && !e.target.classList.contains('ac-input')) acClose();
+  if (!acDrop.contains(e.target) && !e.target.classList.contains('ac-input')) acClose();
 });
-
-// Reposition on scroll/resize
-window.addEventListener('scroll', () => { if(acActive) acPositionDropdown(acActive.inputEl); }, true);
-window.addEventListener('resize', () => { if(acActive) acPositionDropdown(acActive.inputEl); });
+window.addEventListener('scroll', () => { if(acInput) acPos(acInput); }, true);
+window.addEventListener('resize', () => { if(acInput) acPos(acInput); });
 
 /* ══════════════════════════════════════
-   SLOT INTERACTIONS
+   SLOT ACTIONS
 ══════════════════════════════════════ */
-
-function changePersons(day, mealId, slotIdx, delta) {
-  const slots = getSlots(day, mealId);
-  if (!slots[slotIdx]) return;
-  const pcEl = document.getElementById(`pc-${day}-${mealId}-${slotIdx}`);
+function changePer(d, mealId, s, delta) {
+  const key = dk(d);
+  const pcEl = document.getElementById(`pc-${d}-${mealId}-${s}`);
   if (!pcEl) return;
-  let val = Math.max(1, Math.min(50, (parseInt(pcEl.textContent)||defaultPersons) + delta));
+  const val = Math.max(1, Math.min(50, (parseInt(pcEl.textContent)||defaultP) + delta));
   pcEl.textContent = val;
-  slots[slotIdx].persons = val;
+  if (menu[key]?.[mealId]?.[s]) menu[key][mealId][s].persons = val;
 }
 
-function addSlot(day, mealId) {
+function addSlot(d, mealId) {
   const meal = getMealDef(mealId);
-  const slots = getSlots(day, mealId);
+  const slots = getSlots(d, mealId);
   if (slots.length >= meal.maxSlots) return;
-  slots.push({ recipeId:'', persons: defaultPersons });
-  refreshCell(day, mealId);
+  slots.push({recipeId:'', persons:defaultP});
+  refreshCell(d, mealId);
 }
 
-function removeSlot(day, mealId, slotIdx) {
-  const slots = getSlots(day, mealId);
-  if (slots.length <= 1) { slots[0] = { recipeId:'', persons: defaultPersons }; }
-  else { slots.splice(slotIdx, 1); }
-  refreshCell(day, mealId);
+function removeSlot(d, mealId, s) {
+  const slots = getSlots(d, mealId);
+  if (slots.length <= 1) { slots[0] = {recipeId:'', persons:defaultP}; }
+  else { slots.splice(s, 1); }
+  refreshCell(d, mealId);
 }
 
 function toggleMeal(id, on) {
   if (on) visibleMeals.add(id); else visibleMeals.delete(id);
   document.getElementById('pill-'+id)?.classList.toggle('active', on);
-  buildGrid(); updateGenInfo();
+  buildGrid();
 }
 
-document.getElementById('days-count').addEventListener('change', () => { buildGrid(); updateGenInfo(); });
+document.getElementById('days-count').addEventListener('change', buildGrid);
 
 /* ══════════════════════════════════════
-   SUPABASE
-══════════════════════════════════════ */
-const SUPABASE_URL      = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
-const MENU_TABLE        = 'menus';
-const MENU_ROW_ID       = 'main';
-
-let sbClient = null;
-try {
-  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch(e) { console.warn('Supabase init failed', e); }
-
-/* ══════════════════════════════════════
-   SAVE / LOAD / CLEAR
+   SAVE / LOAD  (Supabase + localStorage)
 ══════════════════════════════════════ */
 async function saveMenu() {
+  if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
   const startDate = document.getElementById('start-date').value;
   const payload = { menu, numDays, visibleMeals:[...visibleMeals], startDate };
-
-  // Always save to localStorage as fallback
-  localStorage.setItem('weekly-menu', JSON.stringify(payload));
-
-  if (!sbClient) { showStatus('success','✓ Menu sauvegardé localement (Supabase indisponible).'); return; }
-
   try {
-    const startDate = document.getElementById('start-date').value;
-    const { error } = await sbClient.from(MENU_TABLE).upsert({
-      id:         MENU_ROW_ID,
-      data:       { menu, numDays, visibleMeals:[...visibleMeals], startDate },
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' });
+    const { error } = await sb.from(SB_MENUS).upsert(
+      { id: MENU_ID, data: payload, updated_at: new Date().toISOString() },
+      { onConflict: 'id' }
+    );
     if (error) throw error;
     showStatus('success','✓ Menu sauvegardé sur Supabase.');
   } catch(e) {
-    console.error('Supabase save error:', e);
-    showStatus('error','⚠️ Erreur Supabase — menu sauvegardé localement uniquement. ' + e.message);
+    showStatus('error','❌ Erreur Supabase : '+e.message);
   }
 }
 
 async function loadSavedMenu() {
-  // Try Supabase first
-  if (sbClient) {
-    try {
-      const { data, error } = await sbClient
-        .from(MENU_TABLE)
-        .select('data')
-        .eq('id', MENU_ROW_ID)
-        .single();
-      if (!error && data?.data) {
-        applyMenuState(data.data);
-        return;
-      }
-    } catch(e) { console.warn('Supabase load failed, falling back to localStorage', e); }
-  }
-
-  // Fallback: localStorage
-  const raw = localStorage.getItem('weekly-menu');
-  if (!raw) return;
+  if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
   try {
-    const s = JSON.parse(raw);
-    applyMenuState(s);
-  } catch(_) {}
-}
+    const { data, error } = await sb.from(SB_MENUS).select('data').eq('id', MENU_ID).single();
+    if (error) throw error;
+    if (!data?.data) return;
+    const payload = data.data;
 
-function applyMenuState(s) {
-  menu = s.menu || {};
-  // Migrate old format (object → array)
-  for (const d of Object.values(menu)) {
-    for (const [k, v] of Object.entries(d)) {
-      if (!Array.isArray(v)) d[k] = [v];
+    // Normalize all day keys to strings
+    const rawMenu = payload.menu || {};
+    menu = {};
+    for (const [k, v] of Object.entries(rawMenu)) {
+      const key = dk(parseInt(k));
+      menu[key] = {};
+      for (const [mealId, slots] of Object.entries(v)) {
+        menu[key][mealId] = Array.isArray(slots) ? slots : [slots];
+      }
     }
+
+    numDays = payload.numDays || 7;
+    document.getElementById('days-count').value = numDays;
+    if (payload.startDate) document.getElementById('start-date').value = payload.startDate;
+    if (Array.isArray(payload.visibleMeals) && payload.visibleMeals.length) {
+      visibleMeals = new Set(payload.visibleMeals);
+      MEAL_TYPES.filter(m=>m.optional).forEach(m => {
+        const on = visibleMeals.has(m.id);
+        const p = document.getElementById('pill-'+m.id);
+        if (p) { p.classList.toggle('active',on); const cb=p.querySelector('input'); if(cb) cb.checked=on; }
+      });
+    }
+    buildGrid();
+  } catch(e) {
+    // No saved menu yet — that's fine
+    if (e.code !== 'PGRST116') showStatus('error','❌ Erreur chargement menu : '+e.message);
   }
-  numDays = s.numDays || 7;
-  document.getElementById('days-count').value = numDays;
-  if (s.startDate) document.getElementById('start-date').value = s.startDate;
-  const vm = Array.isArray(s.visibleMeals) ? s.visibleMeals : [];
-  if (vm.length) {
-    visibleMeals = new Set(vm);
-    MEAL_TYPES.filter(m=>m.optional).forEach(m=>{
-      const on = visibleMeals.has(m.id);
-      const p = document.getElementById('pill-'+m.id);
-      if (p) { p.classList.toggle('active',on); const cb=p.querySelector('input'); if(cb) cb.checked=on; }
-    });
-  }
-  buildGrid();
 }
 
 function clearMenu() {
@@ -790,12 +637,13 @@ function clearMenu() {
   document.getElementById('shopping-body').innerHTML='<div class="empty-state"><div class="em">🧺</div><p>Menu effacé.</p></div>';
   document.getElementById('shopping-footer').classList.add('hidden');
   document.getElementById('sh-meta').textContent='—';
-  updateGenInfo();
+  shoppingList=null;
+  document.getElementById('final-list-container')?.remove();
 }
 
 function resetPersonsDialog() {
-  const p = parseInt(prompt('Nombre de personnes par défaut pour tous les repas :', defaultPersons));
-  if (!isNaN(p) && p >= 1) { defaultPersons = p; buildGrid(); }
+  const p = parseInt(prompt('Personnes par défaut :', defaultP));
+  if (!isNaN(p) && p >= 1) { defaultP = p; buildGrid(); }
 }
 
 /* ══════════════════════════════════════
@@ -803,13 +651,13 @@ function resetPersonsDialog() {
 ══════════════════════════════════════ */
 function updateGenInfo() {
   let count = 0;
-  for (const d of Object.values(menu)) {
-    for (const slots of Object.values(d)) {
+  for (const day of Object.values(menu)) {
+    for (const slots of Object.values(day)) {
       if (Array.isArray(slots)) slots.forEach(s => { if(s.recipeId) count++; });
     }
   }
   document.getElementById('gen-info').innerHTML = count
-    ? `Menu : <strong>${count} repas</strong> planifié(s) sur ${numDays} jour(s).`
+    ? `Menu : <strong>${count} repas</strong> planifié(s).`
     : 'Remplissez le menu puis générez la liste de courses.';
 }
 
@@ -817,82 +665,71 @@ function updateGenInfo() {
    SHOPPING LIST
 ══════════════════════════════════════ */
 function generateShoppingList() {
+  // Collect all (recipe, persons) pairs from menu
   const pairs = [];
   for (let d = 0; d < numDays; d++) {
-    if (!menu[d]) continue;
-    for (const [mealId, slots] of Object.entries(menu[d])) {
-      const arr = Array.isArray(slots) ? slots : [slots];
-      for (const slot of arr) {
+    const dayMenu = menu[dk(d)];
+    if (!dayMenu) continue;
+    for (const [mealId, slots] of Object.entries(dayMenu)) {
+      if (!Array.isArray(slots)) continue;
+      for (const slot of slots) {
         if (!slot.recipeId) continue;
         const recipe = recipes.find(r => r.id === slot.recipeId);
-        if (recipe) pairs.push({ recipe, persons: slot.persons || defaultPersons });
+        if (recipe) pairs.push({ recipe, persons: slot.persons || defaultP });
       }
     }
   }
-  if (!pairs.length) { showStatus('error','❌ Aucune recette sélectionnée.'); return; }
 
-  const agg = {};
+  if (!pairs.length) { showStatus('error','❌ Aucune recette sélectionnée dans le menu.'); return; }
+
+  // Aggregate ingredients
+  const agg = {}; // { catName: { icon, items: { normKey: {name,unit,qty,note,optional} } } }
   for (const { recipe, persons } of pairs) {
-    const scale = recipe.basePortions > 0 ? persons / recipe.basePortions : 1;
-    for (const cat of (recipe.ingredients || [])) {
-      if (!agg[cat.category]) agg[cat.category] = { icon: cat.icon||'🥣', items:{} };
-      for (const item of cat.items) {
+    const base = recipe.basePortions || recipe.baseportions || 4;
+    const scale = base > 0 ? persons / base : 1;
+    const ingrs = recipe.ingredients || [];
+    for (const cat of ingrs) {
+      const catName = cat.category || cat.cat || 'Autres';
+      if (!agg[catName]) agg[catName] = { icon: cat.icon || '🥣', items: {} };
+      const items = Array.isArray(cat.items) ? cat.items : [];
+      for (const item of items) {
         const key = norm(item.name);
-        if (!agg[cat.category].items[key]) {
-          agg[cat.category].items[key] = { name:item.name, unit:item.unit||'', qty:0, note:item.note||'', optional:item.optional||false };
+        if (!agg[catName].items[key]) {
+          agg[catName].items[key] = { name:item.name, unit:item.unit||'', qty:0, optional:item.optional||false };
         }
-        agg[cat.category].items[key].qty += (item.qty||0) * scale;
+        agg[catName].items[key].qty += (item.qty||0) * scale;
       }
     }
   }
 
   shoppingList = agg;
-  renderShoppingList(agg, pairs);
+  checkedItems.clear();
+  renderShoppingList(agg, pairs.length);
 }
 
-function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+function norm(s) { return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
 
 function fmtQty(q, unit) {
   if (!q) return unit||'—';
-  if (q>=1000 && unit==='g') return fmtN(q/1000)+' kg';
-  if (q>=1000 && unit==='ml') return fmtN(q/1000)+' L';
+  if (q>=1000&&unit==='g') return fmtN(q/1000)+' kg';
+  if (q>=1000&&unit==='ml') return fmtN(q/1000)+' L';
   return fmtN(q)+(unit?' '+unit:'');
 }
-function fmtN(n){
-  if(n===Math.floor(n)) return n.toString();
-  const r=Math.round(n*4)/4;
+function fmtN(n) {
+  if (n===Math.floor(n)) return n.toString();
+  const r = Math.round(n*4)/4;
   return r===Math.floor(r)?r.toString():r.toFixed(2).replace(/\.?0+$/,'');
 }
 
-/* ── checked items (excluded from final list) ── */
-let checkedItems = new Set();
+function renderShoppingList(agg, mealCount) {
+  let totalItems = 0;
+  Object.values(agg).forEach(c => totalItems += Object.keys(c.items).length);
+  document.getElementById('sh-meta').textContent = `${mealCount} repas · ${Object.keys(agg).length} catégories · ${totalItems} ingrédients`;
 
-/* ── stock: persisted by normalized ingredient name ── */
-let stockData = JSON.parse(localStorage.getItem('shopping-stock') || '{}');
-function saveStock(){ localStorage.setItem('shopping-stock', JSON.stringify(stockData)); }
-function clearStock(){
-  if(!confirm('Vider toutes les quantités en stock ?')) return;
-  stockData = {}; saveStock();
-  document.querySelectorAll('.stock-input').forEach(el=>{ el.value=''; });
-  document.querySelectorAll('.ingr-row').forEach(row=>{
-    const key = row.dataset.key;
-    if(key) recalcRow(key);
-    const cb = row.querySelector('input[type=checkbox]');
-    if(cb) cb.checked = false;
-    row.classList.remove('checked');
-  });
-  checkedItems.clear();
-}
-
-function renderShoppingList(agg, pairs) {
-  let totalItems=0;
-  Object.values(agg).forEach(c=>totalItems+=Object.keys(c.items).length);
-  document.getElementById('sh-meta').textContent=`${pairs.length} repas · ${Object.keys(agg).length} catégories · ${totalItems} ingrédients`;
-
-  let html='';
+  let html = '';
   for (const [catName, catData] of Object.entries(agg)) {
     const items = Object.values(catData.items);
-    html+=`<div class="cat-block">
+    html += `<div class="cat-block">
       <div class="cat-title">
         <span class="cat-icon">${catData.icon}</span>
         <span class="cat-name">${catName}</span>
@@ -903,208 +740,205 @@ function renderShoppingList(agg, pairs) {
         <span style="text-align:right">Besoin</span>
         <span style="text-align:center">En stock</span>
         <span style="text-align:right">À acheter</span>
-      </div>
-      <div>`;
+      </div><div>`;
     for (const item of items) {
       const key = norm(item.name);
-      const stockVal = stockData[key] || 0;
+      const stock = stockData[key] || 0;
       const needed = item.qty || 0;
-      const toBuy = Math.max(0, needed - stockVal);
-      const neededStr = needed ? fmtQty(needed, item.unit) : (item.unit || '—');
-      const toBuyStr  = needed ? fmtQty(toBuy, item.unit) : '—';
-      html+=`<div class="ingr-row ${toBuy===0&&needed>0?'zero-needed':''}" id="row-${key}" data-key="${key}" data-needed="${needed}" data-unit="${item.unit||''}">
+      const toBuy = Math.max(0, needed - stock);
+      html += `<div class="ingr-row ${toBuy===0&&needed>0?'zero-needed':''}" id="row-${key}" data-key="${key}" data-needed="${needed}" data-unit="${item.unit||''}">
         <input type="checkbox" onchange="onRowCheck(this,'${key}')">
         <div class="ingr-name-cell">${item.name}${item.optional?'<span class="ingr-opt-tag">(opt.)</span>':''}</div>
-        <div class="qty-badge needed" id="needed-${key}">${neededStr}</div>
+        <div class="qty-badge needed" id="needed-${key}">${needed?fmtQty(needed,item.unit):'—'}</div>
         <div class="stock-cell">
           <input class="stock-input" type="number" min="0" step="any"
-            value="${stockVal||''}" placeholder="0"
-            data-key="${key}"
-            oninput="onStockInput(this)">
+            value="${stock||''}" placeholder="0"
+            oninput="onStockInput(this,'${key}')">
           <span class="stock-unit">${item.unit||''}</span>
         </div>
-        <div class="qty-badge tobuy ${toBuy===0?'zero':''}" id="tobuy-${key}">${toBuyStr}</div>
+        <div class="qty-badge tobuy ${toBuy===0?'zero':''}" id="tobuy-${key}">${needed?fmtQty(toBuy,item.unit):'—'}</div>
       </div>`;
     }
-    html+='</div></div>';
+    html += '</div></div>';
   }
 
   document.getElementById('shopping-body').innerHTML = html;
   document.getElementById('shopping-footer').classList.remove('hidden');
-  // Remove any old final list
   document.getElementById('final-list-container')?.remove();
-  showStatus('success',`✓ ${totalItems} ingrédients. Renseignez vos stocks puis cliquez sur « Générer la liste définitive ».`);
+  showStatus('success', `✓ ${totalItems} ingrédients sur ${mealCount} repas.`);
 }
 
-function onStockInput(input){
-  const key = input.dataset.key;
+function onStockInput(input, key) {
   const val = parseFloat(input.value) || 0;
   stockData[key] = val;
-  saveStock();
-  recalcRow(key);
-}
-
-function recalcRow(key){
   const row = document.getElementById('row-'+key);
-  if(!row) return;
+  if (!row) return;
   const needed = parseFloat(row.dataset.needed) || 0;
   const unit   = row.dataset.unit || '';
-  const stock  = stockData[key] || 0;
-  const toBuy  = Math.max(0, needed - stock);
-  const toBuyEl = document.getElementById('tobuy-'+key);
-  if(toBuyEl){
-    toBuyEl.textContent = needed ? fmtQty(toBuy, unit) : '—';
-    toBuyEl.classList.toggle('zero', toBuy===0);
-  }
+  const toBuy  = Math.max(0, needed - val);
+  const el = document.getElementById('tobuy-'+key);
+  if (el) { el.textContent = needed?fmtQty(toBuy,unit):'—'; el.classList.toggle('zero',toBuy===0); }
   row.classList.toggle('zero-needed', toBuy===0 && needed>0);
 }
 
-function onRowCheck(cb, key){
-  const row = cb.closest('.ingr-row');
-  row.classList.toggle('checked', cb.checked);
-  if(cb.checked) checkedItems.add(key);
-  else checkedItems.delete(key);
+function onRowCheck(cb, key) {
+  cb.closest('.ingr-row').classList.toggle('checked', cb.checked);
+  if (cb.checked) checkedItems.add(key); else checkedItems.delete(key);
 }
 
-/* ── Final shopping list ── */
-function generateFinalList(){
-  if(!shoppingList) return;
+function clearStock() {
+  if (!confirm('Vider toutes les quantités en stock ?')) return;
+  stockData = {};
+  document.querySelectorAll('.stock-input').forEach(el => { el.value = ''; });
+  document.querySelectorAll('.ingr-row').forEach(row => {
+    const key = row.dataset.key;
+    if (key) onStockInput({value:''}, key);
+    const cb = row.querySelector('input[type=checkbox]');
+    if (cb) cb.checked = false;
+    row.classList.remove('checked');
+  });
+  checkedItems.clear();
+}
+
+function generateFinalList() {
+  if (!shoppingList) return;
   const bycat = {};
-  for(const [catName, catData] of Object.entries(shoppingList)){
-    for(const item of Object.values(catData.items)){
+  for (const [catName, catData] of Object.entries(shoppingList)) {
+    for (const item of Object.values(catData.items)) {
       const key = norm(item.name);
-      const needed = item.qty || 0;
-      const stock  = stockData[key] || 0;
-      const toBuy  = Math.max(0, needed - stock);
-      if(toBuy <= 0) continue;
-      if(checkedItems.has(key)) continue;
-      if(!bycat[catName]) bycat[catName]={ icon:catData.icon, items:[] };
+      if (checkedItems.has(key)) continue;
+      const toBuy = Math.max(0, (item.qty||0) - (stockData[key]||0));
+      if (toBuy <= 0) continue;
+      if (!bycat[catName]) bycat[catName] = { icon:catData.icon, items:[] };
       bycat[catName].items.push({ name:item.name, toBuy, unit:item.unit||'', optional:item.optional });
     }
   }
 
-  const totalFinal = Object.values(bycat).reduce((a,c)=>a+c.items.length,0);
-
-  // Remove previous
   document.getElementById('final-list-container')?.remove();
+  const total = Object.values(bycat).reduce((a,c)=>a+c.items.length,0);
 
-  if(!totalFinal){
-    const div=document.createElement('div');
-    div.id='final-list-container';
-    div.style.cssText='margin-top:1.5rem;padding:1.5rem;text-align:center;background:#edfaf3;border-radius:12px;border:1.5px solid var(--green);color:var(--green);font-size:14px;';
-    div.innerHTML='✅ Vous avez tout en stock — rien à acheter !';
+  if (!total) {
+    const div = document.createElement('div');
+    div.id = 'final-list-container';
+    div.style.cssText = 'margin-top:1.5rem;padding:1.5rem;text-align:center;background:#edfaf3;border-radius:12px;border:1.5px solid var(--green);color:var(--green);font-size:14px;';
+    div.textContent = '✅ Vous avez tout en stock — rien à acheter !';
     document.getElementById('shopping-section').after(div);
     return;
   }
 
-  let html=`<div class="final-list-section" id="final-list-container">
+  let html = `<div class="final-list-section" id="final-list-container">
     <div class="final-list-header">
       <h3>✅ Liste définitive de courses</h3>
-      <span>${totalFinal} article${totalFinal>1?'s':''} à acheter</span>
-    </div>
-    <div class="final-list-body">`;
-  for(const [catName, catData] of Object.entries(bycat)){
-    html+=`<div class="final-cat-block">
-      <div class="final-cat-name">${catData.icon||''} ${catName}</div>`;
-    for(const item of catData.items){
-      html+=`<div class="final-item">
-        <span class="final-item-check">☐</span>
+      <span>${total} article${total>1?'s':''} à acheter</span>
+    </div><div class="final-list-body">`;
+  for (const [catName, catData] of Object.entries(bycat)) {
+    html += `<div class="final-cat-block"><div class="final-cat-name">${catData.icon} ${catName}</div>`;
+    for (const item of catData.items) {
+      html += `<div class="final-item">
+        <span style="color:var(--muted)">☐</span>
         <span class="final-item-name">${item.name}${item.optional?' <em style="font-size:11px;color:var(--muted)">(opt.)</em>':''}</span>
         <span class="final-item-qty">${fmtQty(item.toBuy,item.unit)}</span>
       </div>`;
     }
-    html+='</div>';
+    html += '</div>';
   }
-  html+=`<div style="margin-top:12px;display:flex;gap:8px;">
+  html += `<div style="margin-top:12px;display:flex;gap:8px;">
     <button class="btn btn-ghost btn-sm" onclick="exportFinalList()">⬇️ Exporter TXT</button>
     <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Imprimer</button>
-  </div>
-  </div></div>`;
+  </div></div></div>`;
 
-  const tmp=document.createElement('div'); tmp.innerHTML=html;
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
   document.getElementById('shopping-section').after(tmp.firstElementChild);
   document.getElementById('final-list-container').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-/* store reference for export */
-function exportFinalList(){
-  if(!shoppingList) return;
-  let txt='═══════════════════════════════════\n  LISTE DÉFINITIVE DE COURSES\n  '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'\n═══════════════════════════════════\n\n';
-  for(const [catName,catData] of Object.entries(shoppingList)){
-    let lines='';
-    for(const item of Object.values(catData.items)){
-      const toBuy=Math.max(0,(item.qty||0)-(stockData[norm(item.name)]||0));
-      if(toBuy>0 && !checkedItems.has(norm(item.name))) lines+=`  ☐  ${item.name} ........... ${fmtQty(toBuy,item.unit)}\n`;
+function exportFinalList() {
+  if (!shoppingList) return;
+  let txt = '═══════════════════════════════════\n  LISTE DÉFINITIVE DE COURSES\n  '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'\n═══════════════════════════════════\n\n';
+  for (const [catName, catData] of Object.entries(shoppingList)) {
+    let lines = '';
+    for (const item of Object.values(catData.items)) {
+      const key = norm(item.name);
+      if (checkedItems.has(key)) continue;
+      const toBuy = Math.max(0,(item.qty||0)-(stockData[key]||0));
+      if (toBuy > 0) lines += `  ☐  ${item.name} ........... ${fmtQty(toBuy,item.unit)}\n`;
     }
-    if(lines) txt+=`── ${catName.toUpperCase()} ──\n`+lines+'\n';
+    if (lines) txt += `── ${catName.toUpperCase()} ──\n${lines}\n`;
   }
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
-  a.download='liste-definitives-courses.txt'; a.click();
+  dl(txt,'liste-definitives-courses.txt');
 }
 
-function exportShoppingList(){
-  if(!shoppingList) return;
-  let txt='═══════════════════════════════════\n     LISTE DE COURSES (complète)\n     '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'\n═══════════════════════════════════\n\n';
-  for(const [catName,catData] of Object.entries(shoppingList)){
-    txt+=`── ${catName.toUpperCase()} ──\n`;
-    for(const item of Object.values(catData.items)){
-      const stock=stockData[norm(item.name)]||0;
-      const toBuy=Math.max(0,(item.qty||0)-stock);
-      txt+=`  ☐  ${item.name}`;
-      if(item.qty) txt+=` — Besoin: ${fmtQty(item.qty,item.unit)}`;
-      if(stock)    txt+=` · Stock: ${fmtQty(stock,item.unit)}`;
-      txt+=` · À acheter: ${fmtQty(toBuy,item.unit)}\n`;
+function exportShoppingList() {
+  if (!shoppingList) return;
+  let txt = '═══════════════════════════════════\n     LISTE DE COURSES (complète)\n     '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'\n═══════════════════════════════════\n\n';
+  for (const [catName, catData] of Object.entries(shoppingList)) {
+    txt += `── ${catName.toUpperCase()} ──\n`;
+    for (const item of Object.values(catData.items)) {
+      const stock = stockData[norm(item.name)]||0;
+      const toBuy = Math.max(0,(item.qty||0)-stock);
+      txt += `  ☐  ${item.name}`;
+      if (item.qty) txt += ` — Besoin: ${fmtQty(item.qty,item.unit)}`;
+      if (stock)    txt += ` · Stock: ${fmtQty(stock,item.unit)}`;
+      txt += ` · À acheter: ${fmtQty(toBuy,item.unit)}\n`;
     }
-    txt+='\n';
+    txt += '\n';
   }
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
-  a.download='liste-courses-complete.txt'; a.click();
+  dl(txt,'liste-courses-complete.txt');
+}
+
+function dl(txt, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain;charset=utf-8'}));
+  a.download = name; a.click();
 }
 
 /* ══════════════════════════════════════
    STATUS
 ══════════════════════════════════════ */
-function showStatus(type,msg){
-  const el=document.getElementById('status');
-  el.className='status-bar '+type; el.textContent=msg;
+function showStatus(type, msg) {
+  const el = document.getElementById('status');
+  el.className = 'status-bar '+type;
+  el.textContent = msg;
   el.classList.remove('hidden');
-  if(type==='success') setTimeout(()=>el.classList.add('hidden'),4000);
+  if (type==='success') setTimeout(()=>el.classList.add('hidden'), 4000);
 }
 
 /* ══════════════════════════════════════
    INIT
 ══════════════════════════════════════ */
-MEAL_TYPES.filter(m=>m.optional).forEach(m=>{
-  const on = m.default===true;
-  if(on) visibleMeals.add(m.id);
-  const p=document.getElementById('pill-'+m.id);
-  if(p){p.classList.toggle('active',on);const cb=p.querySelector('input');if(cb)cb.checked=on;}
-});
-
-const stored=localStorage.getItem('recipe-library');
-if(stored){try{recipes=JSON.parse(stored);document.getElementById('recipe-count-badge').textContent=recipes.length+' recette(s)';}catch(_){}}
-
-// Default start date = today
-const todayStr = new Date().toISOString().split('T')[0];
-document.getElementById('start-date').value = todayStr;
-
-buildGrid(); updateGenInfo();
 (async () => {
-  // Load recipes from Supabase if not in localStorage
-  if (!recipes.length && sbClient) {
+  // Set pills
+  MEAL_TYPES.filter(m=>m.optional).forEach(m => {
+    if (m.dflt) visibleMeals.add(m.id);
+    const p = document.getElementById('pill-'+m.id);
+    const on = visibleMeals.has(m.id);
+    if (p) { p.classList.toggle('active',on); const cb=p.querySelector('input'); if(cb) cb.checked=on; }
+  });
+
+  // Default start date = today
+  document.getElementById('start-date').value = new Date().toISOString().split('T')[0];
+
+  // Load recipes from Supabase only
+  if (sb) {
     try {
-      const { data, error } = await sbClient.from('recettes').select('*');
+      const { data, error } = await sb.from(SB_RECIPES).select('*');
       if (!error && data?.length) {
         recipes = data;
-        document.getElementById('recipe-count-badge').textContent = recipes.length+' recette(s)';
-        buildGrid(); // rebuild with recipes now available
+      } else if (error) {
+        showStatus('error','❌ Impossible de charger les recettes : '+error.message);
       }
-    } catch(e) { console.warn('Could not load recipes from Supabase', e); }
+    } catch(e) {
+      showStatus('error','❌ Erreur Supabase recettes : '+e.message);
+    }
+  } else {
+    showStatus('error','❌ Supabase non disponible. Vérifiez la connexion.');
   }
+  document.getElementById('recipe-count-badge').textContent = recipes.length+' recette(s)';
+
+  // Build empty grid first, then load saved menu
+  buildGrid();
   await loadSavedMenu();
-  updateGenInfo();
 })();
 </script>
 </body>
