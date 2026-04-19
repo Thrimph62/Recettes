@@ -3,28 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Planificateur de Préparation — Étape 3</title>
+<title>Planificateur de Préparation</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --navy:#0f2d5a;--navy2:#1a4a8a;--navy3:#5a86c4;
   --ice:#e8f0fb;--ice2:#f5f8fe;--border:#c8d9f0;
   --text:#1a1a2e;--muted:#5a6a8a;
   --bg:#f0f2f7;--white:#fff;
-  --green:#1a7a4a;--red:#a02020;--amber:#a06000;
-  --pd:#f59e0b;--dj:#3b82f6;--di:#6366f1;
-  --ap:#22c55e;--de:#ec4899;--bo:#06b6d4;--sp:#f97316;
+  --green:#1a7a4a;--red:#a02020;--gold:#b8860b;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-.app-header{background:var(--navy);padding:1.5rem 2.5rem;display:flex;align-items:center;gap:1.25rem;}
-.header-icon{width:44px;height:44px;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;}
-.header-title{color:#fff;}
-.header-title h1{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:2px;}
-.header-title p{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;}
-.header-actions{margin-left:auto;display:flex;gap:8px;}
+/* NAV */
+.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
+.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;}
+.nav-links{display:flex;}
+.nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-link:hover{color:rgba(255,255,255,.8);}
+.nav-link.active{color:#fff;border-bottom-color:var(--gold);}
 
+/* HEADER */
+.app-header{background:var(--navy);padding:1.25rem 2.5rem;display:flex;align-items:center;gap:1.25rem;}
+.header-icon{width:42px;height:42px;background:rgba(255,255,255,.1);border:0.5px solid rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;}
+.header-title h1{font-family:'DM Serif Display',serif;font-size:19px;font-weight:400;color:#fff;margin-bottom:2px;}
+.header-title p{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.06em;text-transform:uppercase;}
+.header-actions{margin-left:auto;display:flex;gap:8px;align-items:center;}
 .btn{padding:8px 18px;border-radius:8px;border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
 .btn-white{background:rgba(255,255,255,.12);color:#fff;border:0.5px solid rgba(255,255,255,.2);}
 .btn-white:hover{background:rgba(255,255,255,.22);}
@@ -32,120 +38,111 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-primary:hover{background:var(--navy2);}
 .btn-ghost{background:var(--ice);color:var(--navy2);border:0.5px solid var(--border);}
 .btn-ghost:hover{border-color:var(--navy3);}
+.btn-success{background:var(--green);color:#fff;}
+.btn-success:hover{opacity:.9;}
 .btn-sm{padding:5px 12px;font-size:11px;}
-.ml-auto{margin-left:auto;}
 
-.app-body{max-width:1100px;margin:0 auto;padding:2rem 1.5rem;}
+.app-body{max-width:860px;margin:0 auto;padding:2rem 1.5rem;}
 
-/* DAY SELECTOR */
-.day-strip{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:1.5rem;display:flex;gap:6px;overflow-x:auto;box-shadow:0 1px 6px rgba(15,45,90,.05);}
-.day-pill{padding:6px 14px;border-radius:20px;border:0.5px solid var(--border);background:var(--ice2);cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;transition:all .15s;flex-shrink:0;}
-.day-pill:hover{border-color:var(--navy3);color:var(--navy2);}
-.day-pill.active{background:var(--navy);color:#fff;border-color:var(--navy);}
-.day-pill .dp-date{font-size:10px;opacity:.7;display:block;font-family:'DM Mono',monospace;}
-
-/* SETUP PANEL */
-.setup-card{background:var(--white);border:0.5px solid var(--border);border-radius:12px;padding:20px;margin-bottom:1.5rem;box-shadow:0 1px 6px rgba(15,45,90,.05);}
-.setup-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.meal-setup-grid{display:flex;flex-direction:column;gap:8px;}
-.meal-setup-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border:0.5px solid var(--border);border-radius:8px;background:var(--ice2);}
-.meal-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.meal-setup-label{font-size:13px;font-weight:500;min-width:90px;}
-.recipe-chips{display:flex;flex-wrap:wrap;gap:5px;flex:1;}
-.recipe-chip{font-size:11px;padding:3px 10px;border-radius:10px;background:var(--white);border:0.5px solid var(--border);color:var(--navy2);}
-.recipe-chip.no-recipe{color:var(--muted);font-style:italic;}
-.time-picker{padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;color:var(--text);background:var(--white);outline:none;width:90px;}
-.time-picker:focus{border-color:var(--navy3);}
-.no-meal-row{font-size:13px;color:var(--muted);font-style:italic;padding:8px;}
-
-/* TABS */
-.tabs{display:flex;gap:4px;margin-bottom:1.5rem;}
-.tab{padding:9px 20px;border-radius:8px 8px 0 0;border:0.5px solid var(--border);background:var(--ice2);cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);transition:all .15s;border-bottom:none;}
-.tab.active{background:var(--white);color:var(--navy2);border-color:var(--border);}
-.tab-content{background:var(--white);border:0.5px solid var(--border);border-radius:0 12px 12px 12px;padding:24px;box-shadow:0 2px 12px rgba(15,45,90,.06);}
-
-/* TIMELINE (JOUR J) */
-.timeline-wrap{position:relative;}
-.timeline-hour-row{display:flex;align-items:flex-start;gap:0;margin-bottom:0;}
-.timeline-hour-label{
-  width:56px;flex-shrink:0;font-family:'DM Mono',monospace;font-size:11px;
-  color:var(--muted);padding-top:8px;text-align:right;padding-right:12px;
-}
-.timeline-hour-track{
-  flex:1;border-top:0.5px solid var(--border);min-height:40px;position:relative;
-  padding:4px 0;
-}
-.timeline-hour-track.half-hour{border-top-style:dashed;opacity:.5;min-height:20px;}
-
-/* PHASE BLOCK on timeline */
-.phase-block{
-  position:relative;border-radius:6px;padding:5px 10px;
-  margin:2px 4px 2px 0;display:inline-flex;flex-direction:column;
-  cursor:default;border:0.5px solid rgba(0,0,0,.1);
-  min-width:120px;
-}
-.phase-block.advance{opacity:.35;pointer-events:none;}
-.pb-recipe{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;opacity:.75;margin-bottom:2px;}
-.pb-phase{font-size:12px;font-weight:500;line-height:1.3;}
-.pb-time{font-family:'DM Mono',monospace;font-size:10px;opacity:.75;margin-top:2px;}
-.pb-badge{font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.3);display:inline-flex;align-items:center;gap:3px;width:fit-content;margin-top:2px;}
-
-/* ADVANCE PREP */
-.advance-section{margin-bottom:2rem;}
-.advance-header{
-  display:flex;align-items:center;gap:10px;margin-bottom:12px;
-  padding-bottom:8px;border-bottom:2px solid var(--ice);
-}
-.advance-day-badge{
-  padding:3px 14px;border-radius:12px;font-size:12px;font-weight:600;
-  background:var(--navy);color:#fff;
-}
-.advance-items{display:flex;flex-direction:column;gap:6px;}
-.advance-item{
-  display:flex;align-items:center;gap:12px;padding:10px 14px;
-  border:0.5px solid var(--border);border-radius:8px;
-  background:var(--ice2);
-}
-.adv-recipe{font-size:11px;font-weight:600;color:var(--navy2);min-width:120px;text-transform:uppercase;letter-spacing:.04em;}
-.adv-phase{font-size:13px;flex:1;}
-.adv-duration{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);}
-.adv-type{font-size:11px;padding:2px 8px;border-radius:8px;background:var(--ice);color:var(--navy3);border:0.5px solid var(--border);}
-.adv-toggle{
-  padding:3px 8px;border-radius:6px;border:0.5px solid var(--border);
-  background:var(--white);font-size:11px;cursor:pointer;color:var(--muted);
-}
-.adv-toggle:hover{border-color:var(--navy3);color:var(--navy2);}
-.adv-toggle.day-j{background:var(--ice);color:var(--navy2);border-color:var(--navy3);}
-
-.empty-plan{text-align:center;padding:3rem 2rem;color:var(--muted);}
-.empty-plan .em{font-size:36px;margin-bottom:10px;}
-.empty-plan p{font-size:13px;}
-
+/* STATUS */
 .status-bar{padding:9px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
 .status-bar.success{background:#edfaf3;color:var(--green);border:0.5px solid #a0ddc0;}
 .status-bar.error{background:#fef0f0;color:var(--red);border:0.5px solid #f0c0c0;}
 .status-bar.info{background:var(--ice);color:var(--navy2);border:0.5px solid var(--border);}
 .hidden{display:none!important;}
 
-/* LEGEND */
-.legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
-.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
-.legend-dot{width:12px;height:12px;border-radius:3px;}
+/* SETUP CARD */
+.setup-card{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;box-shadow:0 1px 6px rgba(15,45,90,.05);}
+.setup-header{background:var(--ice);padding:12px 18px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.setup-header-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--navy2);}
+.setup-body{padding:16px 18px;display:flex;flex-direction:column;gap:6px;}
+.setup-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:0.5px solid var(--border);border-radius:8px;background:var(--ice2);}
+.setup-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.setup-meal-label{font-size:12px;font-weight:500;min-width:80px;}
+.setup-chips{display:flex;flex-wrap:wrap;gap:4px;flex:1;}
+.setup-chip{font-size:11px;padding:2px 9px;border-radius:10px;background:var(--white);border:0.5px solid var(--border);color:var(--navy2);}
+.time-picker{padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);background:var(--white);outline:none;width:84px;}
+.time-picker:focus{border-color:var(--navy3);}
+.setup-actions{padding:12px 18px 16px;border-top:0.5px solid var(--border);display:flex;gap:8px;}
+
+/* DAY SECTION */
+.day-section{margin-bottom:2rem;}
+.day-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:12px;
+  padding:14px 18px;background:var(--navy);border-radius:12px;
+  box-shadow:0 2px 8px rgba(15,45,90,.12);
+}
+.day-header-date{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:#fff;}
+.day-header-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;}
+.day-header-badge{
+  margin-left:auto;padding:3px 12px;border-radius:12px;
+  background:rgba(255,255,255,.12);border:0.5px solid rgba(255,255,255,.2);
+  font-size:11px;color:rgba(255,255,255,.7);font-family:'DM Mono',monospace;
+}
+.day-empty{
+  padding:20px;text-align:center;color:var(--muted);font-size:13px;
+  background:var(--white);border:0.5px solid var(--border);border-radius:12px;
+}
+
+/* SECTION TYPE (Avance / Jour J) */
+.plan-section{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;box-shadow:0 1px 5px rgba(15,45,90,.04);}
+.plan-section-header{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;border-bottom:0.5px solid var(--border);
+}
+.plan-section-header.dayj{background:var(--ice);}
+.plan-section-header.advance{background:#fff8f0;}
+.psh-icon{font-size:16px;}
+.psh-title{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--navy2);}
+.psh-title.advance{color:#a06000;}
+.psh-count{margin-left:auto;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
+
+/* STEP ROW */
+.step-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 16px;border-bottom:0.5px solid var(--ice);
+  transition:background .1s;
+}
+.step-row:last-child{border-bottom:none;}
+.step-row:hover{background:var(--ice2);}
+.step-row.done{opacity:.45;}
+.step-row.done .step-name,.step-row.done .step-recipe{text-decoration:line-through;color:var(--muted);}
+
+.step-cb{width:15px;height:15px;cursor:pointer;accent-color:var(--navy);flex-shrink:0;}
+
+/* time column */
+.step-time{
+  display:flex;flex-direction:column;align-items:flex-end;gap:1px;
+  min-width:88px;flex-shrink:0;
+}
+.step-time-range{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--navy2);white-space:nowrap;}
+.step-time-range.advance-label{color:#a06000;font-size:11px;}
+.step-dur{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
+
+/* color bar */
+.step-bar{width:3px;height:36px;border-radius:2px;flex-shrink:0;}
+
+/* content */
+.step-content{flex:1;min-width:0;}
+.step-recipe{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px;}
+.step-name{font-size:13px;font-weight:500;color:var(--text);}
+
+/* phase badge */
+.step-phase-badge{
+  font-size:10px;padding:2px 8px;border-radius:8px;
+  background:var(--ice);color:var(--navy3);border:0.5px solid var(--border);
+  flex-shrink:0;white-space:nowrap;
+}
+
+.week-empty{text-align:center;padding:4rem 2rem;color:var(--muted);}
+.week-empty .em{font-size:40px;margin-bottom:12px;}
+.week-empty p{font-size:13px;}
 
 @media print{
-  .app-header,.day-strip,.setup-card,.tabs,.btn{display:none!important;}
-  .tab-content{border:none;box-shadow:none;padding:0;}
+  .app-nav,.app-header,.setup-card,.btn{display:none!important;}
+  .day-header{background:var(--navy)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   body{background:#fff;}
 }
-</style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
-.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;}
-.nav-links{display:flex;}
-.nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
-.nav-link:hover{color:rgba(255,255,255,.8);}
-.nav-link.active{color:#fff;border-bottom-color:#b8860b;}
 </style>
 </head>
 <body>
@@ -164,10 +161,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="header-icon">⏱️</div>
   <div class="header-title">
     <h1>Planificateur de Préparation</h1>
-    <p>J-1 / J-2 + Timing Jour J · Étape 3 sur 5</p>
+    <p>Planning semaine — Jour J + Préparation à l'avance</p>
   </div>
   <div class="header-actions">
-    <button class="btn btn-white" onclick="loadData()">🔗 Charger depuis menu</button>
     <button class="btn btn-white btn-sm" onclick="window.print()">🖨️ Imprimer</button>
   </div>
 </header>
@@ -175,127 +171,108 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <main class="app-body">
   <div id="status" class="hidden"></div>
 
-  <!-- DAY STRIP -->
-  <div class="day-strip" id="day-strip">
-    <span style="font-size:13px;color:var(--muted);align-self:center;">Chargez le menu pour sélectionner un jour →</span>
-  </div>
-
-  <!-- SETUP -->
-  <div class="setup-card">
-    <div class="setup-title">⚙️ Horaires de service — <span id="setup-day-label" style="text-transform:none;font-weight:400;color:var(--navy2);">sélectionnez un jour</span></div>
-    <div class="meal-setup-grid" id="meal-setup-grid">
-      <p class="no-meal-row">Aucune donnée chargée.</p>
+  <!-- SERVICE TIMES SETUP -->
+  <div class="setup-card" id="setup-card">
+    <div class="setup-header">
+      <span class="setup-header-title">⚙️ Horaires de service — définissez l'heure de chaque repas</span>
     </div>
-    <div style="margin-top:12px;display:flex;gap:8px;">
-      <button class="btn btn-primary btn-sm" onclick="buildPlan()">▶ Calculer le planning</button>
+    <div class="setup-body" id="setup-body">
+      <p style="font-size:13px;color:var(--muted);">Chargement…</p>
+    </div>
+    <div class="setup-actions">
+      <button class="btn btn-primary" onclick="generatePlan()">▶ Générer le planning</button>
       <button class="btn btn-ghost btn-sm" onclick="saveTimings()">💾 Sauvegarder les horaires</button>
     </div>
   </div>
 
-  <!-- TABS + CONTENT -->
-  <div class="tabs">
-    <div class="tab active" id="tab-dayj" onclick="switchTab('dayj')">⏰ Jour J</div>
-    <div class="tab" id="tab-advance" onclick="switchTab('advance')">📅 Préparation à l'avance</div>
-  </div>
-
-  <div class="tab-content">
-    <div id="panel-dayj">
-      <div class="empty-plan"><div class="em">🗓️</div><p>Définissez les horaires puis cliquez sur « Calculer le planning ».</p></div>
-    </div>
-    <div id="panel-advance" class="hidden">
-      <div class="empty-plan"><div class="em">📋</div><p>Les étapes à préparer à l'avance apparaîtront ici.</p></div>
-    </div>
-  </div>
+  <!-- WEEKLY PLAN -->
+  <div id="week-plan"></div>
 
 </main>
 
 <script>
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    SUPABASE
-═══════════════════════════════════════ */
-const SB_URL  = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+══════════════════════════════════════ */
+const SB_URL = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
 let sb = null;
 try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    CONFIG
-═══════════════════════════════════════ */
-const MEAL_COLORS = { pd:'#f59e0b',dj:'#3b82f6',ap:'#22c55e',di:'#6366f1',de:'#ec4899',bo:'#06b6d4',sp:'#f97316' };
-const MEAL_LABELS = { pd:'Petit-déj.',dj:'Déjeuner',ap:'Apéritif',di:'Dîner',de:'Dessert',bo:'Boisson',sp:'Spécial' };
-const MEAL_ICONS  = { pd:'🌅',dj:'🍽️',ap:'🥂',di:'🌙',de:'🍮',bo:'🥤',sp:'⭐' };
-const MEAL_ORDER  = ['pd','dj','ap','di','de','bo','sp'];
-const DAYS_FR = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
-const DEFAULT_TIMES = { pd:'08:00',dj:'12:30',ap:'18:30',di:'19:30',de:'20:30',bo:'12:30',sp:'20:00' };
+══════════════════════════════════════ */
+const MEAL_COLORS  = { pd:'#f59e0b',dj:'#3b82f6',ap:'#22c55e',di:'#6366f1',de:'#ec4899',bo:'#06b6d4',sp:'#f97316' };
+const MEAL_LABELS  = { pd:'Petit-déj.',dj:'Déjeuner',ap:'Apéritif',di:'Dîner',de:'Dessert',bo:'Boisson',sp:'Spécial' };
+const MEAL_ICONS   = { pd:'🌅',dj:'🍽️',ap:'🥂',di:'🌙',de:'🍮',bo:'🥤',sp:'⭐' };
+const MEAL_ORDER   = ['pd','dj','ap','di','de','bo','sp'];
+const DAYS_FR      = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const MONTHS_FR    = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+const DEFAULT_T    = { pd:'08:00',dj:'12:30',ap:'18:30',di:'19:30',de:'20:30',bo:'12:30',sp:'20:00' };
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    STATE
-═══════════════════════════════════════ */
-let recipes     = [];
-let menu        = {};
-let numDays     = 7;
-let startDate   = '';   // ISO date string e.g. "2026-04-19"
-let selectedDay = 0;
-let mealTimings = {};   // mealTimings[dateKey][mealId] = "HH:MM"
-let phaseOverrides = {};
-let planData    = null;
+══════════════════════════════════════ */
+let recipes    = [];
+let menu       = {};
+let numDays    = 7;
+let startDate  = '';
+let mealTimings = {}; // mealTimings[dateKey][mealId] = "HH:MM"
+let checkedSteps = new Set(); // "dateKey-recipeId-phaseIdx"
 
-/* ═══════════════════════════════════════
-   DATE KEY HELPERS (same as menu-builder)
-═══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   DATE HELPERS
+══════════════════════════════════════ */
 function localDate(dt) {
   return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
 }
 function dayToDate(d) {
   const start = new Date(startDate+'T00:00:00');
-  const dt = new Date(start);
+  const dt    = new Date(start);
   dt.setDate(start.getDate() + parseInt(d, 10));
   return localDate(dt);
 }
-function dateLabel(d) {
+function dayToLabel(d) {
   const start = new Date(startDate+'T00:00:00');
-  const dt = new Date(start);
+  const dt    = new Date(start);
   dt.setDate(start.getDate() + parseInt(d, 10));
-  const idx = dt.getDay()===0?6:dt.getDay()-1;
-  return DAYS_FR[idx]+' '+dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'});
+  const idx = dt.getDay()===0 ? 6 : dt.getDay()-1;
+  return { name: DAYS_FR[idx], date: `${dt.getDate()} ${MONTHS_FR[dt.getMonth()]}`, isWE: dt.getDay()===0||dt.getDay()===6 };
 }
 
-/* ═══════════════════════════════════════
-   LOAD DATA FROM SUPABASE
-═══════════════════════════════════════ */
-async function loadData() {
+/* ══════════════════════════════════════
+   LOAD FROM SUPABASE
+══════════════════════════════════════ */
+async function loadAll() {
   if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
-  showStatus('info','Chargement en cours…');
+  showStatus('info','Chargement des données…');
   try {
-    // Load recipes
-    const { data: rData, error: rErr } = await sb.from('recettes').select('*');
-    if (rErr) throw rErr;
-    recipes = rData || [];
+    const [rRes, mRes, tRes, cRes] = await Promise.all([
+      sb.from('recettes').select('*'),
+      sb.from('menus').select('data').eq('id','main').maybeSingle(),
+      sb.from('menus').select('data').eq('id','timings').maybeSingle(),
+      sb.from('menus').select('data').eq('id','plan-checks').maybeSingle(),
+    ]);
+    if (rRes.error) throw rRes.error;
+    if (mRes.error) throw mRes.error;
 
-    // Load menu
-    const { data: mData, error: mErr } = await sb.from('menus').select('data').eq('id','main').maybeSingle();
-    if (mErr) throw mErr;
-    if (!mData?.data) { showStatus('error','❌ Aucun menu sauvegardé. Créez-en un dans le Menu Builder.'); return; }
+    recipes   = rRes.data || [];
+    const mp  = mRes.data?.data || {};
+    menu      = mp.menu     || {};
+    numDays   = mp.numDays  || 7;
+    startDate = mp.startDate || localDate(new Date());
+    mealTimings  = tRes.data?.data?.timings || {};
+    checkedSteps = new Set(cRes.data?.data?.checks || []);
 
-    const payload = mData.data;
-    menu     = payload.menu || {};
-    numDays  = payload.numDays || 7;
-    startDate = payload.startDate || localDate(new Date());
-
-    // Load timings
-    const { data: tData } = await sb.from('menus').select('data').eq('id','timings').maybeSingle();
-    mealTimings = tData?.data?.timings || {};
-
-    buildDayStrip();
-    selectDay(0);
-    showStatus('success','✓ Menu chargé — '+recipes.length+' recettes, '+numDays+' jours depuis le '+startDate+'.');
+    buildSetupPanel();
+    document.getElementById('status').classList.add('hidden');
   } catch(e) {
-    showStatus('error','❌ Erreur : '+e.message);
+    showStatus('error','❌ '+e.message);
   }
 }
 
 async function saveTimings() {
-  if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
+  if (!sb) return;
   try {
     const { error } = await sb.from('menus').upsert(
       { id:'timings', data:{ timings: mealTimings }, updated_at: new Date().toISOString() },
@@ -303,78 +280,58 @@ async function saveTimings() {
     );
     if (error) throw error;
     showStatus('success','✓ Horaires sauvegardés.');
-  } catch(e) { showStatus('error','❌ Erreur sauvegarde : '+e.message); }
+  } catch(e) { showStatus('error','❌ '+e.message); }
 }
 
-/* ═══════════════════════════════════════
-   DAY STRIP
-═══════════════════════════════════════ */
-function buildDayStrip() {
-  const strip = document.getElementById('day-strip');
-  if (!startDate) { strip.innerHTML='<span style="font-size:13px;color:var(--muted);align-self:center;">Chargez le menu →</span>'; return; }
-  let html = '';
-  for (let d = 0; d < numDays; d++) {
-    const dateKey = dayToDate(d);
-    const meals = getMealsForDay(dateKey);
-    html += `<div class="day-pill ${d===selectedDay?'active':''}" onclick="selectDay(${d})">
-      ${dateLabel(d)}
-      <span class="dp-date">${meals.length ? meals.length+' repas' : 'vide'}</span>
-    </div>`;
-  }
-  strip.innerHTML = html;
-}
-
-function selectDay(d) {
-  selectedDay = d;
-  buildDayStrip();
-  buildSetupPanel(d);
-  planData = null;
-  document.getElementById('panel-dayj').innerHTML='<div class="empty-plan"><div class="em">🗓️</div><p>Cliquez sur « Calculer le planning ».</p></div>';
-  document.getElementById('panel-advance').innerHTML='<div class="empty-plan"><div class="em">📋</div><p>Cliquez sur « Calculer le planning ».</p></div>';
-}
-
-/* ═══════════════════════════════════════
-   SETUP PANEL
-═══════════════════════════════════════ */
+/* ══════════════════════════════════════
+   SETUP PANEL — one row per meal per day
+══════════════════════════════════════ */
 function getMealsForDay(dateKey) {
   if (!menu[dateKey]) return [];
   const result = [];
   for (const mealId of MEAL_ORDER) {
     const slots = menu[dateKey][mealId];
     if (!slots) continue;
-    const arr = Array.isArray(slots) ? slots : [slots];
-    const active = arr.filter(s => s && s.recipeId);
+    const arr    = Array.isArray(slots) ? slots : [slots];
+    const active = arr.filter(s => s?.recipeId);
     if (active.length) result.push({ mealId, slots: active });
   }
   return result;
 }
 
-function buildSetupPanel(d) {
-  const dateKey = dayToDate(d);
-  document.getElementById('setup-day-label').textContent = dateLabel(d);
-  const meals = getMealsForDay(dateKey);
-  const grid = document.getElementById('meal-setup-grid');
-
-  if (!meals.length) { grid.innerHTML='<p class="no-meal-row">Aucune recette planifiée ce jour-là.</p>'; return; }
-
+function buildSetupPanel() {
+  const body = document.getElementById('setup-body');
   let html = '';
-  for (const {mealId, slots} of meals) {
-    const color = MEAL_COLORS[mealId] || '#888';
-    const savedTime = (mealTimings[dateKey]?.[mealId]) || DEFAULT_TIMES[mealId] || '12:00';
-    const recipeNames = slots.map(s => {
-      const r = recipes.find(r => r.id === s.recipeId);
-      return r ? r.title : '?';
-    });
-    html += `<div class="meal-setup-row">
-      <div class="meal-dot" style="background:${color}"></div>
-      <div class="meal-setup-label">${MEAL_ICONS[mealId]||''} ${MEAL_LABELS[mealId]||mealId}</div>
-      <div class="recipe-chips">${recipeNames.map(n=>`<span class="recipe-chip">${n}</span>`).join('')}</div>
-      <label style="font-size:11px;color:var(--muted);margin-right:4px;">Service :</label>
-      <input type="time" class="time-picker" value="${savedTime}"
-        onchange="onTimingChange('${dateKey}','${mealId}',this.value)" id="tp-${d}-${mealId}">
-    </div>`;
+  let anyMeals = false;
+
+  for (let d = 0; d < numDays; d++) {
+    const dateKey = dayToDate(d);
+    const meals   = getMealsForDay(dateKey);
+    if (!meals.length) continue;
+    anyMeals = true;
+
+    const lbl = dayToLabel(d);
+    html += `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:4px 0 6px;">${lbl.name} ${lbl.date}</div>`;
+    for (const { mealId, slots } of meals) {
+      const color = MEAL_COLORS[mealId]||'#888';
+      const savedTime = mealTimings[dateKey]?.[mealId] || DEFAULT_T[mealId] || '12:00';
+      const names = slots.map(s => recipes.find(r=>r.id===s.recipeId)?.title || '?');
+      html += `<div class="setup-row">
+        <div class="setup-dot" style="background:${color}"></div>
+        <div class="setup-meal-label">${MEAL_ICONS[mealId]} ${MEAL_LABELS[mealId]||mealId}</div>
+        <div class="setup-chips">${names.map(n=>`<span class="setup-chip">${n}</span>`).join('')}</div>
+        <input type="time" class="time-picker" value="${savedTime}"
+          onchange="onTimingChange('${dateKey}','${mealId}',this.value)">
+      </div>`;
+    }
+    html += '</div>';
   }
-  grid.innerHTML = html;
+
+  if (!anyMeals) {
+    html = '<p style="font-size:13px;color:var(--muted);">Aucun repas dans le menu. Créez-en un dans le Menu Builder.</p>';
+  }
+  body.innerHTML = html;
 }
 
 function onTimingChange(dateKey, mealId, val) {
@@ -382,186 +339,246 @@ function onTimingChange(dateKey, mealId, val) {
   mealTimings[dateKey][mealId] = val;
 }
 
-/* ═══════════════════════════════════════
-   DURATION PARSING
-═══════════════════════════════════════ */
-function parseDuration(str) {
+/* ══════════════════════════════════════
+   DURATION / PHASE HELPERS
+══════════════════════════════════════ */
+function parseDur(str) {
   if (!str) return 0;
   const s = str.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27FF}]/gu,'').trim();
-  const hm = s.match(/(\d+)\s*h\s*(\d+)?\s*(?:min)?/i);
+  const hm = s.match(/(\d+)\s*h\s*(\d+)?/i);
   if (hm) return parseInt(hm[1])*60+(parseInt(hm[2])||0);
-  const h = s.match(/(\d+)\s*h/i); if (h) return parseInt(h[1])*60;
-  const m = s.match(/(\d+)\s*min/i); if (m) return parseInt(m[1]);
-  const n = parseInt(s); return isNaN(n) ? 0 : n;
+  const h = s.match(/(\d+)\s*h/i); if(h) return parseInt(h[1])*60;
+  const m = s.match(/(\d+)\s*min/i); if(m) return parseInt(m[1]);
+  const n = parseInt(s); return isNaN(n)?0:n;
 }
-
-function isRestPhase(phase) {
+function getPhaseDur(phase) {
+  let max = 0;
+  for (const b of (phase.timeBadges||[])) max = Math.max(max, parseDur(b));
+  return max || 15;
+}
+function isRest(phase) {
   const t = (phase.title||'').toLowerCase();
   return t.includes('repos')||t.includes('marinade')||t.includes('réfrigér')||
          t.includes('congel')||t.includes('macér')||t.includes('nuit')||
          t.includes('rest')||t.includes('levée')||t.includes('refroid')||
          (phase.timeBadges||[]).some(b=>b.includes('💤')||b.includes('😴'));
 }
-
-function getPhaseDuration(phase) {
-  let total = 0;
-  for (const badge of (phase.timeBadges||[])) total = Math.max(total, parseDuration(badge));
-  return total || 15;
+function minToTime(m) {
+  const h=Math.floor(((m%1440)+1440)%1440/60), mm=((m%60)+60)%60;
+  return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
 }
-
-/* ═══════════════════════════════════════
-   PLAN BUILDER
-═══════════════════════════════════════ */
-function timeToMin(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
-function minToTime(m) { const h=Math.floor(m/60)%24; const mm=m%60; return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
-function fmtDuration(min) {
-  if (min<60) return min+'min';
-  const h=Math.floor(min/60); const m=min%60;
+function fmtDur(min) {
+  if(min<60) return min+'min';
+  const h=Math.floor(min/60), m=min%60;
   return m?`${h}h${String(m).padStart(2,'0')}`:`${h}h`;
 }
 
-function buildPlan() {
-  const d = selectedDay;
-  const dateKey = dayToDate(d);
-  const meals = getMealsForDay(dateKey);
-  if (!meals.length) { showStatus('error','❌ Aucun repas ce jour.'); return; }
+/* ══════════════════════════════════════
+   GENERATE FULL PLAN
+══════════════════════════════════════ */
+function generatePlan() {
+  const container = document.getElementById('week-plan');
+  container.innerHTML = '';
 
-  const dayJPhases = [], advancePhases = [];
+  let totalSteps = 0;
 
-  for (const {mealId, slots} of meals) {
-    const serviceTime = mealTimings[dateKey]?.[mealId] || DEFAULT_TIMES[mealId] || '12:00';
-    const serviceMin = timeToMin(serviceTime);
-    const color = MEAL_COLORS[mealId];
+  for (let d = 0; d < numDays; d++) {
+    const dateKey = dayToDate(d);
+    const meals   = getMealsForDay(dateKey);
+    const lbl     = dayToLabel(d);
 
-    for (const slot of slots) {
-      const recipe = recipes.find(r => r.id === slot.recipeId);
-      if (!recipe) continue;
-      let cursor = serviceMin;
+    // Collect all steps for this day
+    const dayJSteps    = []; // {startMin, endMin, dur, recipe, phase, phaseIdx, mealId}
+    const advanceSteps = []; // {daysBack, dur, recipe, phase, phaseIdx, mealId}
 
-      for (let pi = recipe.phases.length-1; pi >= 0; pi--) {
-        const phase = recipe.phases[pi];
-        const overKey = recipe.id+'-'+pi;
-        const override = phaseOverrides[overKey];
-        const dur = getPhaseDuration(phase);
-        const isRest = override==='advance' || (override!=='dayj' && isRestPhase(phase));
+    for (const { mealId, slots } of meals) {
+      const serviceTime = mealTimings[dateKey]?.[mealId] || DEFAULT_T[mealId] || '12:00';
+      const serviceMin  = parseInt(serviceTime.split(':')[0])*60 + parseInt(serviceTime.split(':')[1]);
+      const color = MEAL_COLORS[mealId];
 
-        if (isRest) {
-          const daysBack = dur>=720 ? 2 : 1;
-          advancePhases.push({ recipe, phase, phaseIdx:pi, daysBack, dur, mealId, color, override:overKey });
-        } else {
-          dayJPhases.push({ recipe, phase, phaseIdx:pi, startMin:cursor-dur, endMin:cursor, dur, mealId, color, override:overKey });
-          cursor -= dur;
+      for (const slot of slots) {
+        const recipe = recipes.find(r => r.id === slot.recipeId);
+        if (!recipe) continue;
+        let cursor = serviceMin;
+
+        for (let pi = recipe.phases.length-1; pi >= 0; pi--) {
+          const phase = recipe.phases[pi];
+          const dur   = getPhaseDur(phase);
+
+          if (isRest(phase)) {
+            advanceSteps.push({ daysBack: dur>=720?2:1, dur, recipe, phase, phaseIdx:pi, mealId, color });
+          } else {
+            dayJSteps.push({ startMin: cursor-dur, endMin: cursor, dur, recipe, phase, phaseIdx:pi, mealId, color });
+            cursor -= dur;
+          }
         }
       }
     }
-  }
 
-  planData = { dayJPhases, advancePhases, d };
-  renderDayJ(dayJPhases);
-  renderAdvance(advancePhases);
-  showStatus('success','✓ Planning calculé.');
-}
-
-/* ═══════════════════════════════════════
-   RENDER — JOUR J
-═══════════════════════════════════════ */
-function renderDayJ(phases) {
-  const panel = document.getElementById('panel-dayj');
-  if (!phases.length) { panel.innerHTML='<div class="empty-plan"><div class="em">☀️</div><p>Toutes les étapes sont en préparation à l\'avance.</p></div>'; return; }
-
-  const minStart=Math.min(...phases.map(p=>p.startMin)), maxEnd=Math.max(...phases.map(p=>p.endMin));
-  const startHour=Math.max(0,Math.floor(minStart/60)-1), endHour=Math.min(23,Math.ceil(maxEnd/60)+1);
-
-  const seen=new Set();
-  let html='<div class="legend">';
-  for(const p of phases){ if(!seen.has(p.mealId)){seen.add(p.mealId);html+=`<div class="legend-item"><div class="legend-dot" style="background:${p.color}"></div>${MEAL_ICONS[p.mealId]} ${MEAL_LABELS[p.mealId]}</div>`;}}
-  html+='</div><div class="timeline-wrap">';
-
-  for(let h=startHour;h<=endHour;h++){
-    for(let half=0;half<2;half++){
-      const slotMin=h*60+half*30, isHour=half===0;
-      const slotPhases=phases.filter(p=>p.startMin>=slotMin&&p.startMin<slotMin+30);
-      let blocks='';
-      for(const p of slotPhases){
-        const c=p.color, light=hexLighten(c,0.88);
-        blocks+=`<div class="phase-block" style="background:${light};border-color:${c}">
-          <div class="pb-recipe" style="color:${c}">${p.recipe.title}</div>
-          <div class="pb-phase">${p.phase.letter?p.phase.letter+'. ':''} ${p.phase.title}</div>
-          <div class="pb-time">${minToTime(p.startMin)} → ${minToTime(p.endMin)}</div>
-          <div class="pb-badge" style="background:${hexLighten(c,0.7)};color:${c}">⏱ ${fmtDuration(p.dur)}</div>
-          <button onclick="togglePhaseToAdvance('${p.override}')" style="margin-top:4px;font-size:10px;padding:2px 6px;border-radius:5px;border:0.5px solid ${c};background:${light};color:${c};cursor:pointer;">⇄ J-1</button>
-        </div>`;
+    // Group day-J steps by recipe, sorted by each recipe's first step start time
+    const recipeGroups = {}; // recipeId -> { recipe, mealId, color, firstStart, steps[] }
+    for (const s of dayJSteps) {
+      const rid = s.recipe.id+'-'+s.mealId; // unique per recipe+meal combo
+      if (!recipeGroups[rid]) {
+        recipeGroups[rid] = { recipe:s.recipe, mealId:s.mealId, color:s.color, firstStart:s.startMin, steps:[] };
       }
-      html+=`<div class="timeline-hour-row"><div class="timeline-hour-label">${isHour?minToTime(h*60):''}</div><div class="timeline-hour-track ${isHour?'':'half-hour'}">${blocks}</div></div>`;
+      recipeGroups[rid].steps.push(s);
+      recipeGroups[rid].firstStart = Math.min(recipeGroups[rid].firstStart, s.startMin);
     }
-  }
-  html+='</div>';
-  panel.innerHTML = html;
-}
+    // Sort phases within each recipe chronologically
+    for (const g of Object.values(recipeGroups)) g.steps.sort((a,b)=>a.startMin-b.startMin);
+    // Sort recipe groups by their first step
+    const sortedGroups = Object.values(recipeGroups).sort((a,b)=>a.firstStart-b.firstStart);
 
-/* ═══════════════════════════════════════
-   RENDER — ADVANCE PREP
-═══════════════════════════════════════ */
-function renderAdvance(phases) {
-  const panel = document.getElementById('panel-advance');
-  if (!phases.length) { panel.innerHTML='<div class="empty-plan"><div class="em">✅</div><p>Aucune préparation à l\'avance nécessaire.</p></div>'; return; }
+    // Build day section
+    const hasSomething = dayJSteps.length > 0 || advanceSteps.length > 0;
+    totalSteps += dayJSteps.length + advanceSteps.length;
 
-  const groups = {};
-  for (const p of phases) { if(!groups[p.daysBack]) groups[p.daysBack]=[]; groups[p.daysBack].push(p); }
+    const sec = document.createElement('div');
+    sec.className = 'day-section';
 
-  let html = '';
-  for (const db of Object.keys(groups).sort((a,b)=>b-a)) {
-    const label = db==1?'J − 1 (veille)':db==2?'J − 2 (avant-veille)':`J − ${db}`;
-    html += `<div class="advance-section"><div class="advance-header"><span class="advance-day-badge">${label}</span></div><div class="advance-items">`;
-    for (const p of groups[db]) {
-      html += `<div class="advance-item">
-        <div class="adv-recipe" style="color:${p.color}">${MEAL_ICONS[p.mealId]||''} ${p.recipe.title}</div>
-        <div class="adv-phase">${p.phase.letter?p.phase.letter+'. ':''} ${p.phase.title}</div>
-        <div class="adv-duration">${fmtDuration(p.dur)}</div>
-        <div class="adv-type">${isRestPhase(p.phase)?'💤 Repos':'🔪 Prep'}</div>
-        <button class="adv-toggle" onclick="togglePhaseToAdvance('${p.override}')">⇄ Jour J</button>
+    // Day header
+    const badge = `${dayJSteps.length+advanceSteps.length} étape${dayJSteps.length+advanceSteps.length>1?'s':''}`;
+    sec.innerHTML = `
+      <div class="day-header">
+        <div>
+          <div class="day-header-date">${lbl.name} ${lbl.date}</div>
+          <div class="day-header-sub">${meals.length} repas planifié${meals.length>1?'s':''}</div>
+        </div>
+        <div class="day-header-badge">${hasSomething ? badge : '—'}</div>
       </div>`;
+
+    if (!hasSomething) {
+      sec.innerHTML += `<div class="day-empty">Aucun repas planifié ce jour</div>`;
+      container.appendChild(sec);
+      continue;
     }
-    html += '</div></div>';
+
+    // Advance section
+    if (advanceSteps.length) {
+      const groups = {};
+      for (const s of advanceSteps) {
+        if (!groups[s.daysBack]) groups[s.daysBack] = [];
+        groups[s.daysBack].push(s);
+      }
+      for (const db of Object.keys(groups).sort((a,b)=>b-a)) {
+        const label = db==1 ? 'J − 1 · À préparer la veille' : `J − ${db} · À préparer ${db} jours avant`;
+        let html = `<div class="plan-section">
+          <div class="plan-section-header advance">
+            <span class="psh-icon">📅</span>
+            <span class="psh-title advance">${label}</span>
+            <span class="psh-count">${groups[db].length} étape${groups[db].length>1?'s':''}</span>
+          </div>`;
+        for (const s of groups[db]) {
+          const ck = `${dateKey}-${s.recipe.id}-${s.phaseIdx}`;
+          const done = checkedSteps.has(ck);
+          html += `<div class="step-row ${done?'done':''}" id="sr-${ck}">
+            <input type="checkbox" class="step-cb" ${done?'checked':''} onchange="toggleStep('${ck}',this.checked)">
+            <div class="step-time">
+              <span class="step-time-range advance-label">J − ${db}</span>
+              <span class="step-dur">${fmtDur(s.dur)}</span>
+            </div>
+            <div class="step-bar" style="background:${s.color}"></div>
+            <div class="step-content">
+              <div class="step-recipe">${MEAL_ICONS[s.mealId]} ${s.recipe.title}</div>
+              <div class="step-name">${s.phase.letter ? s.phase.letter+'. ' : ''}${s.phase.title}</div>
+            </div>
+            <span class="step-phase-badge">💤 Repos</span>
+          </div>`;
+        }
+        html += '</div>';
+        sec.innerHTML += html;
+      }
+    }
+
+    // Jour J section
+    if (dayJSteps.length) {
+      let html = `<div class="plan-section">
+        <div class="plan-section-header dayj">
+          <span class="psh-icon">⏰</span>
+          <span class="psh-title">Jour J — par recette, ordre chronologique</span>
+          <span class="psh-count">${dayJSteps.length} étape${dayJSteps.length>1?'s':''}</span>
+        </div>`;
+      for (const grp of sortedGroups) {
+        // Recipe sub-header
+        html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px 4px;background:var(--ice2);border-bottom:0.5px solid var(--border);">
+          <div style="width:9px;height:9px;border-radius:50%;background:${grp.color};flex-shrink:0;"></div>
+          <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--navy2);">${MEAL_ICONS[grp.mealId]} ${grp.recipe.title}</span>
+          <span style="font-size:10px;color:var(--muted);margin-left:auto;">${MEAL_LABELS[grp.mealId]}</span>
+        </div>`;
+        for (const s of grp.steps) {
+          const ck   = `${dateKey}-${s.recipe.id}-${s.phaseIdx}`;
+          const done = checkedSteps.has(ck);
+          html += `<div class="step-row ${done?'done':''}" id="sr-${ck}">
+            <input type="checkbox" class="step-cb" ${done?'checked':''} onchange="toggleStep('${ck}',this.checked)">
+            <div class="step-time">
+              <span class="step-time-range">${minToTime(s.startMin)} → ${minToTime(s.endMin)}</span>
+              <span class="step-dur">${fmtDur(s.dur)}</span>
+            </div>
+            <div class="step-bar" style="background:${s.color}"></div>
+            <div class="step-content">
+              <div class="step-name">${s.phase.letter ? s.phase.letter+'. ' : ''}${s.phase.title}</div>
+            </div>
+          </div>`;
+        }
+      }
+      html += '</div>';
+      sec.innerHTML += html;
+    }
+
+    container.appendChild(sec);
   }
-  panel.innerHTML = html;
+
+  if (!totalSteps) {
+    container.innerHTML = `<div class="week-empty"><div class="em">📋</div><p>Aucune étape de préparation trouvée.<br>Vérifiez que vos recettes ont des phases.</p></div>`;
+  }
 }
 
-function togglePhaseToAdvance(key) {
-  const c = phaseOverrides[key];
-  if(c==='advance') phaseOverrides[key]='dayj';
-  else if(c==='dayj') delete phaseOverrides[key];
-  else phaseOverrides[key]='advance';
-  buildPlan();
+/* ══════════════════════════════════════
+   CHECKBOX
+══════════════════════════════════════ */
+function toggleStep(ck, done) {
+  if (done) checkedSteps.add(ck); else checkedSteps.delete(ck);
+  const row = document.getElementById('sr-'+ck);
+  if (row) row.classList.toggle('done', done);
+  saveChecks();
 }
 
-function switchTab(t) {
-  ['dayj','advance'].forEach(id=>{
-    document.getElementById('tab-'+id).classList.toggle('active',id===t);
-    document.getElementById('panel-'+id).classList.toggle('hidden',id!==t);
-  });
+async function saveChecks() {
+  if (!sb) return;
+  try {
+    await sb.from('menus').upsert(
+      { id:'plan-checks', data:{ checks:[...checkedSteps] }, updated_at:new Date().toISOString() },
+      { onConflict:'id' }
+    );
+  } catch(e) { console.warn('Save checks failed:', e); }
 }
 
-function hexLighten(hex,amount) {
-  const num=parseInt(hex.replace('#',''),16);
-  const r=Math.round(((num>>16)&0xff)*(1-amount)+255*amount);
-  const g=Math.round(((num>>8)&0xff)*(1-amount)+255*amount);
-  const b=Math.round((num&0xff)*(1-amount)+255*amount);
+/* ══════════════════════════════════════
+   COLOR HELPER
+══════════════════════════════════════ */
+function hexLight(hex, a) {
+  const n=parseInt(hex.replace('#',''),16);
+  const r=Math.round(((n>>16)&0xff)*(1-a)+255*a);
+  const g=Math.round(((n>>8)&0xff)*(1-a)+255*a);
+  const b=Math.round((n&0xff)*(1-a)+255*a);
   return `rgb(${r},${g},${b})`;
 }
 
-function showStatus(type,msg) {
-  const el=document.getElementById('status');
-  el.className='status-bar '+type; el.textContent=msg;
+/* ══════════════════════════════════════
+   STATUS
+══════════════════════════════════════ */
+function showStatus(type, msg) {
+  const el = document.getElementById('status');
+  el.className = 'status-bar '+type; el.textContent = msg;
   el.classList.remove('hidden');
-  if(type==='success') setTimeout(()=>el.classList.add('hidden'),4000);
+  if (type==='success') setTimeout(()=>el.classList.add('hidden'), 4000);
 }
 
-/* ═══════════════════════════════════════
+/* ══════════════════════════════════════
    INIT
-═══════════════════════════════════════ */
-loadData();
+══════════════════════════════════════ */
+loadAll();
 </script>
-
 </body>
 </html>
