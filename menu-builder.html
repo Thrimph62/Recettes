@@ -722,13 +722,11 @@ async function saveMenu() {
   if (!sbClient) { showStatus('success','✓ Menu sauvegardé localement (Supabase indisponible).'); return; }
 
   try {
+    const startDate = document.getElementById('start-date').value;
     const { error } = await sbClient.from(MENU_TABLE).upsert({
-      id:            MENU_ROW_ID,
-      menu_data:     menu,
-      num_days:      numDays,
-      visible_meals: [...visibleMeals],
-      start_date:    startDate,
-      updated_at:    new Date().toISOString(),
+      id:         MENU_ROW_ID,
+      data:       { menu, numDays, visibleMeals:[...visibleMeals], startDate },
+      updated_at: new Date().toISOString(),
     }, { onConflict: 'id' });
     if (error) throw error;
     showStatus('success','✓ Menu sauvegardé sur Supabase.');
@@ -744,16 +742,11 @@ async function loadSavedMenu() {
     try {
       const { data, error } = await sbClient
         .from(MENU_TABLE)
-        .select('*')
+        .select('data')
         .eq('id', MENU_ROW_ID)
         .single();
-      if (!error && data) {
-        applyMenuState({
-          menu:         data.menu_data || {},
-          numDays:      data.num_days  || 7,
-          visibleMeals: data.visible_meals || [],
-          startDate:    data.start_date || '',
-        });
+      if (!error && data?.data) {
+        applyMenuState(data.data);
         return;
       }
     } catch(e) { console.warn('Supabase load failed, falling back to localStorage', e); }
