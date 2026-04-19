@@ -308,14 +308,21 @@ let stockData     = {};
 let checkedItems  = new Set();
 
 /* ══════════════════════════════════════
-   KEY HELPER — day keys are ISO date strings e.g. "2026-04-21"
+   KEY HELPER — local date string, never toISOString() (UTC trap)
 ══════════════════════════════════════ */
+function localDate(dt) {
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth()+1).padStart(2,'0');
+  const d = String(dt.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
 function dateKey(d) {
   const val = document.getElementById('start-date')?.value;
   const start = val ? new Date(val+'T00:00:00') : new Date();
   const dt = new Date(start);
   dt.setDate(start.getDate() + d);
-  return dt.toISOString().split('T')[0];
+  return localDate(dt);
 }
 
 /* ══════════════════════════════════════
@@ -343,7 +350,8 @@ function onRecipesLoaded(src) {
 function getSlots(d, mealId) {
   const key = dateKey(d);
   if (!menu[key]) menu[key] = {};
-  if (!Array.isArray(menu[key][mealId]) || !menu[key][mealId].length) {
+  // Only create default slot if this meal has NO entry at all from loaded data
+  if (!menu[key][mealId]) {
     menu[key][mealId] = [{ recipeId:'', persons: defaultP }];
   }
   return menu[key][mealId];
@@ -604,14 +612,18 @@ async function saveMenu() {
 }
 
 async function loadSavedMenu() {
-  if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
+  if (!sb) { showStatus('error','❌ Supabase non disponible.'); buildGrid(); return; }
   try {
-    const { data, error } = await sb.from(SB_MENUS).select('data').eq('id', MENU_ID).single();
-    if (error) throw error;
-    if (!data?.data) { buildGrid(); return; }
-    const payload = data.data;
+    const { data, error } = await sb.from(SB_MENUS).select('data').eq('id', MENU_ID).maybeSingle();
+    console.log('[Menu] Supabase response:', { data, error });
 
-    // Restore settings before computing date keys
+    if (error) { console.error('[Menu] Error:', error); buildGrid(); return; }
+    if (!data?.data) { console.log('[Menu] No saved menu.'); buildGrid(); return; }
+
+    const payload = data.data;
+    console.log('[Menu] Payload:', payload);
+
+    // Apply settings BEFORE computing dateKey
     numDays = payload.numDays || 7;
     document.getElementById('days-count').value = numDays;
     if (payload.startDate) document.getElementById('start-date').value = payload.startDate;
@@ -624,22 +636,22 @@ async function loadSavedMenu() {
       });
     }
 
-    // Load menu — migrate positional keys ("0","1"…) to date keys if needed
+    // Populate menu — detect and migrate positional keys ("0","1"…) if needed
     const rawMenu = payload.menu || {};
     menu = {};
-    const isPositional = Object.keys(rawMenu).some(k => /^\d+$/.test(k));
+    const allKeys = Object.keys(rawMenu);
+    const isPositional = allKeys.length > 0 && allKeys.every(k => /^\d+$/.test(k));
+    console.log('[Menu] Keys from Supabase:', allKeys, '| Positional?', isPositional);
 
     for (const [k, v] of Object.entries(rawMenu)) {
       let key;
       if (isPositional) {
-        // Convert index to real date using the saved start date
-        const startVal = payload.startDate || new Date().toISOString().split('T')[0];
+        const startVal = payload.startDate || localDate(new Date());
         const start = new Date(startVal+'T00:00:00');
-        const dt = new Date(start);
-        dt.setDate(start.getDate() + parseInt(k));
-        key = dt.toISOString().split('T')[0];
+        const dt = new Date(start); dt.setDate(start.getDate() + parseInt(k));
+        key = localDate(dt);
       } else {
-        key = k; // already a date string
+        key = k;
       }
       menu[key] = {};
       for (const [mealId, slots] of Object.entries(v)) {
@@ -647,10 +659,13 @@ async function loadSavedMenu() {
       }
     }
 
+    console.log('[Menu] Final menu keys:', Object.keys(menu));
+    console.log('[Menu] dateKey(0) will be:', dateKey(0));
+
     buildGrid();
   } catch(e) {
-    buildGrid(); // Always build grid, even on error
-    if (e.code !== 'PGRST116') showStatus('error','❌ Erreur chargement menu : '+e.message);
+    console.error('[Menu] Exception in loadSavedMenu:', e);
+    buildGrid();
   }
 }
 
@@ -1000,8 +1015,8 @@ function showStatus(type, msg) {
     if (p) { p.classList.toggle('active',on); const cb=p.querySelector('input'); if(cb) cb.checked=on; }
   });
 
-  // Default start date = today
-  document.getElementById('start-date').value = new Date().toISOString().split('T')[0];
+  // Default start date = today (local date, not UTC)
+  document.getElementById('start-date').value = localDate(new Date());
 
   // Load recipes from Supabase only
   if (sb) {
