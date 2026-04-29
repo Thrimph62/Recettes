@@ -30,6 +30,13 @@ body {
   min-height: 100vh;
 }
 
+.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
+.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;}
+.nav-links{display:flex;}
+.nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-link:hover{color:rgba(255,255,255,.8);}
+.nav-link.active{color:#fff;border-bottom-color:var(--gold);}
+
 /* ── HEADER ── */
 .app-header {
   background: var(--navy);
@@ -364,6 +371,16 @@ body {
 </style>
 </head>
 <body>
+
+<nav class="app-nav">
+  <div class="nav-brand">🍽️ Recettes</div>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Bibliothèque</a>
+    <a href="recipe-parser.html" class="nav-link active">Parseur</a>
+    <a href="menu-builder.html" class="nav-link">Menu</a>
+    <a href="prep-planner.html" class="nav-link">Planificateur</a>
+  </div>
+</nav>
 
 <header class="app-header">
   <div class="header-icon">🍽️</div>
@@ -759,7 +776,7 @@ function renderResults(r) {
   // Identity
   document.getElementById('r-title').textContent = r.title;
   document.getElementById('r-category').textContent = r.category || 'Non spécifiée';
-  document.getElementById('r-portions').textContent = `Base : ${r.basePortions} personne${r.basePortions > 1 ? 's' : ''}`;
+  document.getElementById('r-portions').textContent = `Base : ${r.basePortions || r.baseportions || '?'} personne${(r.basePortions || r.baseportions || 1) > 1 ? 's' : ''}`;
   document.getElementById('r-serve').textContent = r.serveWith ? `À servir avec : ${r.serveWith}` : '';
 
   // Times
@@ -963,7 +980,7 @@ function renderLibrary() {
             return `<div class="library-item">
               <span class="lib-cat">${r.category || '?'}</span>
               <div class="lib-name">${r.title}</div>
-              <div class="lib-meta">${r.basePortions} pers. · ${r.phases.length} phases · ${r.times.total || r.times.Total || '—'}</div>
+              <div class="lib-meta">${r.basePortions || r.baseportions || '?'} pers. · ${(r.phases||[]).length} phases · ${r.times?.total || r.times?.Total || '—'}</div>
               <button class="lib-remove" onclick="removeFromLibrary(${i})" title="Supprimer">✕</button>
             </div>`;
           }).join('')}
