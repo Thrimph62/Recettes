@@ -763,7 +763,7 @@ function parseRecipeHTML(html) {
   });
 
   return {
-    id: slugify(title) + '-' + Date.now(),
+    id: crypto.randomUUID ? crypto.randomUUID() : (slugify(title) + '-' + Date.now()),
     title, category: category.trim(), basePortions,
     serveWith, times, equipment, ingredients, phases, notes,
     _totalIngredients: totalIngr,
@@ -901,19 +901,37 @@ function downloadJSON(data, filename) {
    ════════════════════════════════════════ */
 addLibBtn.addEventListener('click', async () => {
   if (!currentRecipe) return;
-  if (!sb) { showStatus('error', '❌ Supabase non disponible.'); return; }
-  const clean = JSON.parse(JSON.stringify(currentRecipe));
-  delete clean._totalIngredients;
+  if (!sb) { addStatus.textContent = '❌ Supabase non disponible.'; addStatus.style.color='var(--red)'; return; }
+  const full = JSON.parse(JSON.stringify(currentRecipe));
+  delete full._totalIngredients;
+
+  // Only send fields that exist as columns in the recettes table
+  const row = {
+    id:           full.id,
+    title:        full.title,
+    category:     full.category || '',
+    basePortions: full.basePortions || full.baseportions || 4,
+    times:        full.times        || {},
+    equipment:    full.equipment    || [],
+    ingredients:  full.ingredients  || [],
+    phases:       full.phases       || [],
+    notes:        full.notes        || [],
+  };
+
+  addStatus.textContent = '⏳ Sauvegarde…';
+  addStatus.style.color = 'var(--muted)';
   try {
-    const { error } = await sb.from('recettes').upsert(clean, { onConflict: 'id' });
+    const { error } = await sb.from('recettes').upsert(row, { onConflict: 'id' });
     if (error) throw error;
-    // Update local library
-    const idx = library.findIndex(r => r.id === clean.id);
-    if (idx >= 0) library[idx] = clean; else library.push(clean);
-    addStatus.textContent = `✓ Ajouté — ${library.length} recette(s) dans la bibliothèque`;
+    const idx = library.findIndex(r => r.id === row.id);
+    if (idx >= 0) library[idx] = full; else library.push(full);
+    addStatus.textContent = `✓ Sauvegardé — ${library.length} recette(s)`;
+    addStatus.style.color = 'var(--green)';
     renderLibrary();
   } catch(e) {
-    showStatus('error', '❌ Erreur Supabase : ' + e.message);
+    addStatus.textContent = '❌ ' + e.message;
+    addStatus.style.color = 'var(--red)';
+    console.error('Supabase upsert error:', e);
   }
 });
 
@@ -931,8 +949,9 @@ clearLibBtn.addEventListener('click', async () => {
     const { error } = await sb.from('recettes').delete().in('id', ids);
     if (error) throw error;
     library = []; renderLibrary();
+    showStatus('success', '✓ Bibliothèque vidée.');
   } catch(e) {
-    showStatus('error', '❌ Erreur suppression : ' + e.message);
+    showStatus('error', '❌ ' + e.message);
   }
 });
 
@@ -952,7 +971,7 @@ async function saveLibrary() {
 async function loadLibrary() {
   if (!sb) return;
   try {
-    const { data, error } = await sb.from('recettes').select('*');
+    const { data, error } = await sb.from('recettes').select('*').order('title', { ascending: true });
     if (error) throw error;
     library = data || [];
     document.getElementById('lib-count-badge').textContent = library.length ? `${library.length} recette(s)` : '';
