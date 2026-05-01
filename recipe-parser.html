@@ -680,6 +680,10 @@ function parseRecipeHTML(html) {
   // Servir avec
   const serveWith = text(doc, '.servir-value.filled') || '';
 
+  // Photo — extract base64 src from photo-zone img
+  const photoImg = doc.querySelector('.photo-zone img');
+  const photo = photoImg ? (photoImg.getAttribute('src') || '') : '';
+
   // Times
   const times = {};
   doc.querySelectorAll('.meta-pill').forEach(pill => {
@@ -766,6 +770,7 @@ function parseRecipeHTML(html) {
     id: crypto.randomUUID ? crypto.randomUUID() : (slugify(title) + '-' + Date.now()),
     title, category: category.trim(), basePortions,
     serveWith, times, equipment, ingredients, phases, notes,
+    photo, html,
     _totalIngredients: totalIngr,
     addedAt: new Date().toISOString()
   };
@@ -910,12 +915,16 @@ addLibBtn.addEventListener('click', async () => {
     id:           full.id,
     title:        full.title,
     category:     full.category || '',
-    basePortions: full.basePortions || full.baseportions || 4,
+    baseportions: full.basePortions || full.baseportions || 4,
     times:        full.times        || {},
+    serving:      full.serveWith    || '',
     equipment:    full.equipment    || [],
     ingredients:  full.ingredients  || [],
     phases:       full.phases       || [],
     notes:        full.notes        || [],
+    addedat:      full.addedAt      || new Date().toISOString(),
+    photo:        full.photo        || '',
+    html:         full.html         || '',
   };
 
   addStatus.textContent = '⏳ Sauvegarde…';
