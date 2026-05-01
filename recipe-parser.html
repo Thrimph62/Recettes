@@ -6,6 +6,7 @@
 <title>Parseur de Recettes — Étape 1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --navy:   #0f2d5a;
@@ -533,8 +534,19 @@ body {
 /* ════════════════════════════════════════
    STATE
    ════════════════════════════════════════ */
+/* ════════════════════════════════════════
+   SUPABASE
+   ════════════════════════════════════════ */
+const SB_URL = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
+let sb = null;
+try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+
+/* ════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════ */
 let currentRecipe = null;
-let library = JSON.parse(localStorage.getItem('recipe-library') || '[]');
+let library = [];
 
 /* ════════════════════════════════════════
    DOM REFS
@@ -887,14 +899,22 @@ function downloadJSON(data, filename) {
 /* ════════════════════════════════════════
    LIBRARY
    ════════════════════════════════════════ */
-addLibBtn.addEventListener('click', () => {
+addLibBtn.addEventListener('click', async () => {
   if (!currentRecipe) return;
+  if (!sb) { showStatus('error', '❌ Supabase non disponible.'); return; }
   const clean = JSON.parse(JSON.stringify(currentRecipe));
   delete clean._totalIngredients;
-  const exists = library.findIndex(r => r.id === clean.id);
-  if (exists >= 0) { library[exists] = clean; addStatus.textContent = '✓ Recette mise à jour'; }
-  else { library.push(clean); addStatus.textContent = `✓ Ajouté — ${library.length} recette(s) dans la bibliothèque`; }
-  saveLibrary(); renderLibrary();
+  try {
+    const { error } = await sb.from('recettes').upsert(clean, { onConflict: 'id' });
+    if (error) throw error;
+    // Update local library
+    const idx = library.findIndex(r => r.id === clean.id);
+    if (idx >= 0) library[idx] = clean; else library.push(clean);
+    addStatus.textContent = `✓ Ajouté — ${library.length} recette(s) dans la bibliothèque`;
+    renderLibrary();
+  } catch(e) {
+    showStatus('error', '❌ Erreur Supabase : ' + e.message);
+  }
 });
 
 exportLibBtn.addEventListener('click', () => {
@@ -902,15 +922,44 @@ exportLibBtn.addEventListener('click', () => {
   downloadJSON({ recipes: library, exportedAt: new Date().toISOString(), count: library.length }, 'recipes.json');
 });
 
-clearLibBtn.addEventListener('click', () => {
+clearLibBtn.addEventListener('click', async () => {
   if (!library.length) return;
-  if (confirm(`Vider la bibliothèque ? (${library.length} recette(s) seront supprimées)`)) {
-    library = []; saveLibrary(); renderLibrary();
+  if (!confirm(`Vider la bibliothèque ? (${library.length} recette(s) supprimées)`)) return;
+  if (!sb) return;
+  try {
+    const ids = library.map(r => r.id);
+    const { error } = await sb.from('recettes').delete().in('id', ids);
+    if (error) throw error;
+    library = []; renderLibrary();
+  } catch(e) {
+    showStatus('error', '❌ Erreur suppression : ' + e.message);
   }
 });
 
-function saveLibrary() {
-  localStorage.setItem('recipe-library', JSON.stringify(library));
+async function saveLibrary() {
+  if (!sb) { showStatus('error', '❌ Supabase non disponible.'); return; }
+  try {
+    const { error } = await sb.from('recettes').upsert(
+      library.map(r => ({ ...r, id: r.id })),
+      { onConflict: 'id' }
+    );
+    if (error) throw error;
+  } catch(e) {
+    showStatus('error', '❌ Erreur sauvegarde Supabase : ' + e.message);
+  }
+}
+
+async function loadLibrary() {
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.from('recettes').select('*');
+    if (error) throw error;
+    library = data || [];
+    document.getElementById('lib-count-badge').textContent = library.length ? `${library.length} recette(s)` : '';
+    renderLibrary();
+  } catch(e) {
+    showStatus('error', '❌ Erreur chargement bibliothèque : ' + e.message);
+  }
 }
 
 function toggleCatGroup(el) {
@@ -991,9 +1040,18 @@ function renderLibrary() {
   container.innerHTML = html;
 }
 
-function removeFromLibrary(i) {
-  library.splice(i, 1);
-  saveLibrary(); renderLibrary();
+async function removeFromLibrary(i) {
+  const recipe = library[i];
+  if (!recipe) return;
+  if (!sb) return;
+  try {
+    const { error } = await sb.from('recettes').delete().eq('id', recipe.id);
+    if (error) throw error;
+    library.splice(i, 1);
+    renderLibrary();
+  } catch(e) {
+    showStatus('error', '❌ Erreur suppression : ' + e.message);
+  }
 }
 
 /* ════════════════════════════════════════
@@ -1008,7 +1066,7 @@ function showStatus(type, msg) {
 /* ════════════════════════════════════════
    INIT
    ════════════════════════════════════════ */
-renderLibrary();
+loadLibrary();
 </script>
 </body>
 </html>
