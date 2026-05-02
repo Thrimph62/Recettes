@@ -4,825 +4,130 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Recette</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* ══════════════════════════════════════════
-   TOKENS
-══════════════════════════════════════════ */
-:root {
-  --navy:   #0f2d5a;
-  --navy2:  #1a4a8a;
-  --navy3:  #5a86c4;
-  --ice:    #e8f0fb;
-  --ice2:   #f5f8fe;
-  --border: #c8d9f0;
-  --text:   #1a1a2e;
-  --muted:  #5a6a8a;
-  --gold:   #b8860b;
-  --bg:     #f0f2f7;
-  --white:  #ffffff;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-}
+:root{--navy:#0f2d5a;--navy2:#1a4a8a;--border:#c8d9f0;--text:#1a1a2e;--muted:#5a6a8a;--bg:#f0f2f7;--white:#fff;--gold:#b8860b;--red:#a02020;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 
-/* ══════════════════════════════════════════
-   NAV
-══════════════════════════════════════════ */
-.app-nav {
-  background: var(--navy);
-  padding: 0 2.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0;
-  border-bottom: 0.5px solid rgba(255,255,255,0.08);
-}
-.nav-brand {
-  font-family: 'DM Serif Display', serif;
-  color: #fff;
-  font-size: 17px;
-  font-weight: 400;
-  padding: 1rem 0;
-  margin-right: 2rem;
-  text-decoration: none;
-  white-space: nowrap;
-}
-.nav-links { display: flex; gap: 0; }
-.nav-link {
-  color: rgba(255,255,255,0.45);
-  text-decoration: none;
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 1rem 1.2rem;
-  border-bottom: 2px solid transparent;
-  transition: color .15s, border-color .15s;
-  white-space: nowrap;
-}
-.nav-link:hover { color: rgba(255,255,255,0.8); }
+/* NAV */
+.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
+.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;text-decoration:none;}
+.nav-links{display:flex;}
+.nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-link:hover{color:rgba(255,255,255,.8);}
 
-/* ══════════════════════════════════════════
-   LOADING / STATES
-══════════════════════════════════════════ */
-.state-wrap {
-  display: flex; align-items: center; justify-content: center;
-  min-height: 60vh;
-}
-.state-box {
-  text-align: center; padding: 3rem 2rem; max-width: 400px;
-}
-.state-icon { font-size: 40px; margin-bottom: 1rem; opacity: .4; }
-.state-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 22px; color: var(--text); margin-bottom: .5rem;
-}
-.state-msg { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem; }
-.state-btn {
-  display: inline-block; background: var(--navy); color: #fff;
-  padding: 9px 22px; border-radius: 8px; font-size: 13px;
-  text-decoration: none; transition: background .15s;
-}
-.state-btn:hover { background: var(--navy2); }
-.spinner {
-  width: 32px; height: 32px; border: 2.5px solid var(--border);
-  border-top-color: var(--navy2); border-radius: 50%;
-  animation: spin .7s linear infinite; margin: 0 auto 1rem;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+/* BACK BAR */
+.back-bar{background:var(--white);border-bottom:0.5px solid var(--border);padding:10px 2.5rem;display:flex;align-items:center;gap:10px;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--navy2);text-decoration:none;padding:5px 12px;border-radius:8px;background:var(--bg);border:0.5px solid var(--border);transition:all .15s;}
+.back-btn:hover{border-color:var(--navy2);}
+.breadcrumb{font-size:12px;color:var(--muted);}
 
-/* ══════════════════════════════════════════
-   PAGE WRAPPER
-══════════════════════════════════════════ */
-#recipe-page { display: none; padding: 2rem 1.5rem 4rem; }
-.page {
-  background: var(--white); max-width: 800px; margin: 0 auto;
-  border-radius: 8px; border: 0.5px solid var(--border); overflow: hidden;
-  box-shadow: 0 2px 16px rgba(15,45,90,0.1);
-}
+/* STATES */
+.state-wrap{max-width:600px;margin:4rem auto;text-align:center;padding:2rem;}
+.state-icon{font-size:48px;margin-bottom:1rem;}
+.state-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--navy);margin-bottom:.5rem;}
+.state-msg{font-size:13px;color:var(--muted);}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem;}
+@keyframes spin{to{transform:rotate(360deg);}}
 
-/* ── Back bar ── */
-.back-bar {
-  max-width: 800px; margin: 0 auto 1rem;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.back-link {
-  display: inline-flex; align-items: center; gap: 6px;
-  color: var(--muted); text-decoration: none; font-size: 13px;
-  transition: color .15s;
-}
-.back-link:hover { color: var(--navy); }
-.action-btns { display: flex; gap: .5rem; }
-.action-btn {
-  background: var(--white); border: 0.5px solid var(--border);
-  border-radius: 7px; padding: 6px 14px; font-size: 12px;
-  color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif;
-  transition: border-color .15s, color .15s;
-  display: flex; align-items: center; gap: 5px;
-  text-decoration: none;
-}
-.action-btn:hover { border-color: var(--navy3); color: var(--navy2); }
-
-/* ══════════════════════════════════════════
-   RECIPE TEMPLATE (identique au template statique)
-══════════════════════════════════════════ */
-.doc-header { background: var(--navy); padding: 2.5rem 3rem 2rem; }
-.doc-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; margin-bottom: 1.5rem; }
-.header-left { flex: 1; }
-.recipe-category-tag {
-  display: inline-flex; align-items: center; padding: 3px 12px; border-radius: 12px;
-  background: rgba(255,255,255,0.12); border: 0.5px solid rgba(255,255,255,0.2);
-  font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.8);
-  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px;
-}
-.recipe-title {
-  font-family: Georgia, serif; font-size: 32px; font-weight: normal;
-  line-height: 1.2; color: #fff;
-}
-.photo-zone {
-  width: 180px; height: 130px; border-radius: 6px;
-  border: 1.5px dashed rgba(255,255,255,0.22);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 6px; color: rgba(255,255,255,0.3); font-size: 12px; flex-shrink: 0;
-  background: rgba(255,255,255,0.04);
-}
-.photo-zone .photo-icon { font-size: 24px; opacity: .4; }
-.photo-zone .photo-note { font-size: 10px; color: rgba(255,255,255,0.2); }
-
-/* portions */
-.portions-row {
-  display: flex; align-items: center; gap: 12px; padding: 8px 14px;
-  margin-bottom: 10px; background: rgba(255,255,255,0.07);
-  border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.12);
-  width: fit-content;
-}
-.portions-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.42); }
-.portions-btn {
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 0.5px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1);
-  color: #fff; font-size: 15px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; line-height: 1;
-}
-.portions-btn:hover { background: rgba(255,255,255,0.22); }
-.portions-count { font-size: 16px; font-weight: 600; color: #fff; min-width: 22px; text-align: center; }
-.portions-unit { font-size: 12px; color: rgba(255,255,255,0.52); }
-.portions-reset {
-  font-size: 10px; color: rgba(255,255,255,0.35); cursor: pointer;
-  border: 0.5px solid rgba(255,255,255,0.18); border-radius: 8px;
-  padding: 1px 7px; background: none;
-}
-.portions-reset:hover { color: rgba(255,255,255,0.7); }
-
-/* temps */
-.meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-.meta-pill {
-  display: flex; align-items: center; gap: 8px; padding: 7px 14px;
-  border-radius: 20px; background: rgba(255,255,255,0.08);
-  border: 0.5px solid rgba(255,255,255,0.13);
-}
-.meta-pill .micon { font-size: 15px; }
-.meta-pill .mlabel { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(255,255,255,0.4); }
-.meta-pill .mvalue { font-size: 13px; font-weight: 600; color: #fff; }
-.meta-pill.total { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.24); }
-.meta-pill.total .mlabel { color: rgba(255,255,255,0.58); }
-.meta-sep { color: rgba(255,255,255,0.18); align-self: center; font-size: 18px; }
-.servir-row {
-  display: flex; align-items: center; gap: 10px; padding: 9px 14px;
-  background: rgba(255,255,255,0.05); border-radius: 6px;
-  border: 0.5px dashed rgba(255,255,255,0.16);
-}
-.servir-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.servir-value { font-size: 13px; color: rgba(255,255,255,0.88); }
-
-/* body */
-.doc-body { padding: 2.5rem 3rem; }
-.section { margin-bottom: 2.5rem; }
-.section-header {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 1.25rem; padding-bottom: 8px;
-  border-bottom: 2px solid var(--ice);
-}
-.section-num {
-  width: 24px; height: 24px; background: var(--navy); color: #fff;
-  border-radius: 50%; font-size: 12px; font-weight: 600;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.section-title { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--navy2); }
-.section-tag {
-  margin-left: auto; font-size: 10px; padding: 2px 9px; border-radius: 10px;
-  background: var(--ice); color: var(--navy2); border: 0.5px solid var(--border);
-}
-
-/* matériel */
-.equipment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.equip-item { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border: 0.5px solid var(--border); border-radius: 6px; }
-.equip-icon { width: 30px; height: 30px; border-radius: 6px; background: var(--ice); display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
-.equip-name { font-size: 13px; }
-.equip-note { font-size: 11px; color: var(--navy3); }
-
-/* ingrédients */
-.ingr-cat-block { border: 0.5px solid var(--border); border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
-.ingr-cat-header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--ice); border-bottom: 0.5px solid var(--border); }
-.ingr-cat-icon { font-size: 15px; }
-.ingr-cat-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy); }
-.ingr-cat-count { margin-left: auto; font-size: 11px; color: var(--navy3); }
-.ingr-cat-rows { padding: 0 14px; }
-.ingr-row { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; border-bottom: 0.5px solid var(--ice); font-size: 14px; }
-.ingr-row:last-child { border-bottom: none; }
-.ingr-qty { min-width: 85px; font-size: 12px; color: var(--navy2); font-variant-numeric: tabular-nums; transition: color .2s; }
-.ingr-qty.modified { color: var(--gold); font-weight: 600; }
-.ingr-name { flex: 1; }
-.ingr-opt { font-size: 11px; color: var(--navy3); font-style: italic; }
-
-/* phases */
-.phase { margin-bottom: 1.25rem; border: 0.5px solid var(--border); border-radius: 8px; overflow: hidden; }
-.phase-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--ice); border-bottom: 0.5px solid var(--border); }
-.phase-badge { width: 28px; height: 28px; background: var(--navy); color: #fff; border-radius: 6px; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.phase-title-text { font-size: 14px; font-weight: 600; color: var(--navy); }
-.phase-meta { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
-.phase-badge-time { font-size: 11px; padding: 3px 10px; border-radius: 10px; background: #fff; color: var(--navy2); border: 0.5px solid var(--border); display: flex; align-items: center; gap: 5px; }
-.phase-ingr { padding: 8px 16px; background: var(--ice2); border-bottom: 0.5px solid var(--border); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.phase-ingr-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy3); margin-right: 2px; white-space: nowrap; }
-.ingr-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 12px; background: #fff; border: 0.5px solid var(--border); font-size: 12px; color: var(--navy2); }
-.ingr-chip .chip-qty { font-size: 11px; color: var(--navy3); transition: color .2s; }
-.ingr-chip .chip-qty.modified { color: var(--gold); font-weight: 600; }
-.phase-steps { padding: 0 16px; }
-.substep { display: flex; gap: 12px; padding: 11px 0; border-bottom: 0.5px solid var(--ice); }
-.substep:last-child { border-bottom: none; }
-.substep-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--navy3); flex-shrink: 0; margin-top: 7px; }
-.substep-text { font-size: 14px; line-height: 1.65; }
-.substep-alert {
-  display: inline-flex; align-items: center; gap: 4px; font-size: 11px;
-  padding: 1px 8px; border-radius: 8px; background: #fff8e0; color: #a07000;
-  border: 0.5px solid #f0d070; margin-left: 6px; white-space: nowrap;
-}
-.note-box { background: var(--ice2); border-left: 3px solid var(--navy); border-radius: 0 6px 6px 0; padding: 10px 15px; font-size: 13px; line-height: 1.6; color: #444; margin-bottom: 7px; }
-.note-box strong { font-weight: 600; color: var(--navy); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 3px; }
-
-/* footer */
-.doc-footer {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 3rem; background: var(--ice2);
-  border-top: 0.5px solid var(--border);
-  font-size: 11px; color: var(--muted);
-}
-
-/* print */
-@media print {
-  .app-nav, .back-bar { display: none; }
-  #recipe-page { padding: 0; }
-  .page { box-shadow: none; border: none; border-radius: 0; }
-  body { background: #fff; }
-}
-
-
+/* RECIPE FRAME */
+#recipe-frame{width:100%;border:none;display:block;min-height:100vh;}
 </style>
 </head>
 <body>
 
-<!-- ══ CONFIG SUPABASE ══════════════════════ -->
-<script>
-const SUPABASE_URL      = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
-const TABLE_NAME        = 'recettes';
-</script>
-<!-- ══════════════════════════════════════════ -->
-
-<!-- NAV -->
 <nav class="app-nav">
-  <a href="index.html" class="nav-brand">🍽 Mes Recettes</a>
+  <a href="index.html" class="nav-brand">🍽️ Recettes</a>
   <div class="nav-links">
-    <a href="index.html"         class="nav-link">Bibliothèque</a>
+    <a href="index.html" class="nav-link">Bibliothèque</a>
     <a href="recipe-parser.html" class="nav-link">Parseur</a>
-    <a href="menu-builder.html"  class="nav-link">Menus</a>
-    <a href="prep-planner.html"  class="nav-link">Planning</a>
+    <a href="menu-builder.html" class="nav-link">Menu</a>
+    <a href="prep-planner.html" class="nav-link">Planificateur</a>
   </div>
 </nav>
 
-<!-- LOADING -->
-<div id="loading-state" class="state-wrap">
-  <div class="state-box">
-    <div class="spinner"></div>
-    <div class="state-title">Chargement…</div>
-  </div>
+<div class="back-bar">
+  <a href="index.html" class="back-btn">← Bibliothèque</a>
+  <span class="breadcrumb" id="breadcrumb"></span>
 </div>
 
-<!-- ERROR -->
-<div id="error-state" class="state-wrap" style="display:none">
-  <div class="state-box">
-    <div class="state-icon">⚠️</div>
-    <div class="state-title">Recette introuvable</div>
-    <p class="state-msg">Cette recette n'existe pas ou la connexion à la base a échoué.</p>
-    <a href="index.html" class="state-btn">← Retour à la bibliothèque</a>
-  </div>
+<div id="state-loading" class="state-wrap">
+  <div class="spinner"></div>
+  <div class="state-title">Chargement…</div>
 </div>
 
-<!-- CONFIG ERROR -->
-<div id="config-error-state" class="state-wrap" style="display:none">
-  <div class="state-box">
-    <div class="state-icon">⚙️</div>
-    <div class="state-title">Configuration manquante</div>
-    <p class="state-msg">Renseignez <code>SUPABASE_URL</code> et <code>SUPABASE_ANON_KEY</code> en haut du fichier HTML.</p>
-  </div>
+<div id="state-error" class="state-wrap" style="display:none">
+  <div class="state-icon">🔍</div>
+  <div class="state-title">Recette introuvable</div>
+  <div class="state-msg">Cette recette n'existe pas ou la connexion à la base a échoué.</div>
 </div>
 
-<!-- RECIPE PAGE -->
-<div id="recipe-page">
-  <div class="back-bar">
-    <a href="index.html" class="back-link">← Bibliothèque</a>
-    <div class="action-btns">
-      <button class="action-btn" onclick="window.print()">🖨 Imprimer</button>
-      <button class="action-btn" id="btn-copy-link" onclick="copyLink()">🔗 Copier le lien</button>
-    </div>
-  </div>
-
-  <div class="page" id="recipe-doc">
-
-    <!-- HEADER (rempli dynamiquement) -->
-    <div class="doc-header" id="doc-header"></div>
-
-    <!-- BODY -->
-    <div class="doc-body">
-
-      <!-- 1. MATÉRIEL -->
-      <div class="section" id="section-equipment" style="display:none">
-        <div class="section-header">
-          <div class="section-num">1</div>
-          <div class="section-title">Matériel spécifique</div>
-          <div class="section-tag" id="equip-tag"></div>
-        </div>
-        <div class="equipment-grid" id="equipment-grid"></div>
-      </div>
-
-      <!-- 2. INGRÉDIENTS -->
-      <div class="section" id="section-ingredients">
-        <div class="section-header">
-          <div class="section-num" id="num-ingr">2</div>
-          <div class="section-title">Ingrédients</div>
-          <div class="section-tag" id="ingr-tag"></div>
-        </div>
-        <div id="ingredients-list"></div>
-      </div>
-
-      <!-- 3. PRÉPARATION -->
-      <div class="section" id="section-phases">
-        <div class="section-header">
-          <div class="section-num" id="num-prep">3</div>
-          <div class="section-title">Préparation</div>
-          <div class="section-tag" id="phases-tag"></div>
-        </div>
-        <div id="phases-list"></div>
-      </div>
-
-      <!-- 4. NOTES -->
-      <div class="section" id="section-notes" style="display:none">
-        <div class="section-header">
-          <div class="section-num" id="num-notes">4</div>
-          <div class="section-title">Notes &amp; astuces famille</div>
-        </div>
-        <div id="notes-list"></div>
-      </div>
-
-    </div><!-- /doc-body -->
-
-    <div class="doc-footer">
-      <span id="footer-title"></span>
-      <span id="footer-date"></span>
-    </div>
-  </div><!-- /page -->
-</div><!-- /recipe-page -->
+<div id="recipe-container" style="display:none"></div>
 
 <script>
+const SB_URL = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
 
-const CAT_PALETTES = {
-  'Plat':           { p:'#0f2d5a', s:'#1a4a8a', a:'#5a86c4', i:'#e8f0fb', i2:'#f5f8fe', b:'#c8d9f0' },
-  'Entrée':         { p:'#3d1a6b', s:'#5a2d8a', a:'#9a6ac4', i:'#f0e8fb', i2:'#f8f4fe', b:'#c8a8e8' },
-  'Dessert':        { p:'#1a5c2e', s:'#0d4a20', a:'#5aad78', i:'#e8f5ee', i2:'#f4fbf6', b:'#b0d8bc' },
-  'Apéritif':       { p:'#4a2c10', s:'#6b3f1e', a:'#a07850', i:'#f5ece0', i2:'#faf5ef', b:'#d4b898' },
-  'Poisson':        { p:'#1a1a1a', s:'#2d2d2d', a:'#5a5a5a', i:'#efefef', i2:'#f7f7f7', b:'#d4d4d4' },
-  'Viande':         { p:'#1a1a1a', s:'#2d2d2d', a:'#5a5a5a', i:'#efefef', i2:'#f7f7f7', b:'#d4d4d4' },
-  'Accompagnement': { p:'#1a6fb3', s:'#0d5a9c', a:'#5ab0e8', i:'#e0f0ff', i2:'#f2f9ff', b:'#a8cce8' },
-  'Boissons':       { p:'#c45a10', s:'#a34808', a:'#e8885a', i:'#fdf0e8', i2:'#fef8f4', b:'#e8c8a8' },
-};
+(async () => {
+  // Get id from URL
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  if (!id) { showError(); return; }
 
-function applyCategoryColors(category) {
-  const v = CAT_PALETTES[category] || CAT_PALETTES['Plat'];
-  const existing = document.getElementById('cat-style');
-  if (existing) existing.remove();
-  const style = document.createElement('style');
-  style.id = 'cat-style';
-  style.textContent = `
-    .doc-header { background: ${v.p} !important; }
-    .section-num { background: ${v.p} !important; }
-    .phase-badge { background: ${v.p} !important; }
-    .section-header { border-bottom: 2px solid ${v.i} !important; }
-    .ingr-cat-header { background: ${v.i} !important; border-bottom-color: ${v.b} !important; }
-    .phase-header { background: ${v.i} !important; border-bottom-color: ${v.b} !important; }
-    .phase-ingr { background: ${v.i2} !important; border-bottom-color: ${v.b} !important; }
-    .ingr-cat-block { border-color: ${v.b} !important; }
-    .phase { border-color: ${v.b} !important; }
-    .equip-item { border-color: ${v.b} !important; }
-    .equip-icon { background: ${v.i} !important; }
-    .ingr-row { border-bottom-color: ${v.i} !important; }
-    .substep { border-bottom-color: ${v.i} !important; }
-    .substep-dot { background: ${v.a} !important; }
-    .ingr-cat-name { color: ${v.p} !important; }
-    .ingr-cat-count { color: ${v.a} !important; }
-    .section-title { color: ${v.s} !important; }
-    .ingr-qty { color: ${v.s} !important; }
-    .ingr-opt { color: ${v.a} !important; }
-    .phase-ingr-label { color: ${v.a} !important; }
-    .phase-title-text { color: ${v.p} !important; }
-    .phase-badge-time { color: ${v.s} !important; border-color: ${v.b} !important; }
-    .ingr-chip { border-color: ${v.b} !important; color: ${v.s} !important; }
-    .ingr-chip .chip-qty { color: ${v.a} !important; }
-    .equip-note { color: ${v.a} !important; }
-    .section-tag { background: ${v.i} !important; color: ${v.s} !important; border-color: ${v.b} !important; }
-    .note-box { background: ${v.i2} !important; border-left-color: ${v.p} !important; }
-    .note-box strong { color: ${v.p} !important; }
-    .doc-footer { background: ${v.i2} !important; border-top-color: ${v.b} !important; }
-    .substep-text b { font-weight: 600; color: ${v.p} !important; }
-    .page { border-color: ${v.b} !important; }
-  `;
-  document.head.appendChild(style);
-}
+  let sb;
+  try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) { showError(); return; }
 
-/* ════════════════════════════════════════
-   INIT
-════════════════════════════════════════ */
-let recipe       = null;
-let BASE_PORTIONS = 4;
-let currentPortions = 4;
-
-const recipeId = new URLSearchParams(location.search).get('id');
-
-async function init() {
-  if (SUPABASE_URL === 'VOTRE_URL_SUPABASE') {
-    show('config-error-state'); return;
-  }
-  if (!recipeId) {
-    show('error-state'); return;
-  }
   try {
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const { data, error } = await client
-      .from(TABLE_NAME)
-      .select('*')
-      .eq('id', recipeId)
+    const { data, error } = await sb
+      .from('recettes_recettes')
+      .select('title, category, html')
+      .eq('id', id)
       .single();
-    if (error || !data) throw error;
-    recipe = data;
+
+    if (error || !data) { showError(); return; }
+
+    // Update page title and breadcrumb
+    document.title = data.title + ' — Recettes';
+    document.getElementById('breadcrumb').textContent = data.category + ' · ' + data.title;
+
     if (data.html) {
-      renderRawHTML(data.html);
+      // Render the stored HTML directly in an iframe for full isolation
+      const container = document.getElementById('recipe-container');
+      const iframe = document.createElement('iframe');
+      iframe.id = 'recipe-frame';
+      iframe.scrolling = 'no';
+      container.appendChild(iframe);
+
+      const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+      iDoc.open();
+      iDoc.write(data.html);
+      iDoc.close();
+
+      // Auto-resize iframe to content height
+      const resize = () => {
+        try { iframe.style.height = iDoc.body.scrollHeight + 'px'; } catch(_) {}
+      };
+      iframe.onload = resize;
+      setTimeout(resize, 300);
+      setTimeout(resize, 800);
+
+      document.getElementById('state-loading').style.display = 'none';
+      container.style.display = 'block';
     } else {
-      render(recipe);
+      // No HTML stored — show basic recipe info
+      showError();
     }
-    show('recipe-page');
   } catch(e) {
-    console.error(e);
-    show('error-state');
+    showError();
   }
+})();
+
+function showError() {
+  document.getElementById('state-loading').style.display = 'none';
+  document.getElementById('state-error').style.display = 'block';
 }
-
-function show(id) {
-  ['loading-state','error-state','config-error-state','recipe-page']
-    .forEach(s => document.getElementById(s).style.display = s === id ? '' : 'none');
-  if (id === 'recipe-page') document.getElementById(id).style.display = 'block';
-}
-
-/* ════════════════════════════════════════
-   RENDER RAW HTML
-════════════════════════════════════════ */
-function renderRawHTML(html) {
-  const page = document.getElementById('recipe-page');
-  page.innerHTML = `
-    <div class="back-bar">
-      <a href="index.html" class="back-link">← Bibliothèque</a>
-      <div class="action-btns">
-        <button class="action-btn" onclick="printFrame()">🖨 Imprimer</button>
-        <button class="action-btn" id="btn-copy-link" onclick="copyLink()">🔗 Copier le lien</button>
-      </div>
-    </div>
-    <div style="max-width:800px;margin:0 auto;">
-      <iframe id="recipe-frame" style="width:100%;border:none;border-radius:8px;min-height:600px;"
-              sandbox="allow-same-origin allow-scripts" scrolling="no"></iframe>
-    </div>`;
-
-  const frame = document.getElementById('recipe-frame');
-  const doc = frame.contentDocument || frame.contentWindow.document;
-  doc.open();
-  doc.write(html);
-  doc.close();
-
-  /* auto-resize iframe to content height */
-  frame.onload = () => {
-    try {
-      const h = doc.body.scrollHeight;
-      frame.style.height = h + 'px';
-    } catch(e) {}
-  };
-  /* fallback resize */
-  setTimeout(() => {
-    try { frame.style.height = doc.body.scrollHeight + 'px'; } catch(e) {}
-  }, 500);
-}
-
-function printFrame() {
-  const frame = document.getElementById('recipe-frame');
-  if (frame) frame.contentWindow.print();
-  else window.print();
-}
-
-/* ════════════════════════════════════════
-   RENDER
-════════════════════════════════════════ */
-function render(r) {
-  BASE_PORTIONS    = r.basePortions || r.baseportions || 4;
-  currentPortions  = BASE_PORTIONS;
-
-  document.title = r.title + ' — Mes Recettes';
-  applyCategoryColors(r.category);
-
-  renderHeader(r);
-  if (r.photo) {
-    const zone = document.getElementById('photo-zone');
-    if (zone) {
-      zone.innerHTML = `<img src="${r.photo}" alt="${r.title}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`;
-    }
-  }
-  renderEquipment(r.equipment || []);
-  renderIngredients(r.ingredients || []);
-  renderPhases(r.phases || []);
-  renderNotes(r.notes || []);
-
-  document.getElementById('footer-title').textContent = r.title;
-  document.getElementById('footer-date').textContent  =
-    new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
-
-  /* section numbering (skip equipment if hidden) */
-  const hasEquip = (r.equipment || []).length > 0;
-  const base = hasEquip ? 2 : 1;
-  document.getElementById('num-ingr').textContent  = hasEquip ? 2 : 1;
-  document.getElementById('num-prep').textContent  = base + 1;
-  document.getElementById('num-notes').textContent = base + 2;
-}
-
-/* ── HEADER ── */
-function renderHeader(r) {
-  const times = r.times || {};
-  const pills = [];
-
-  if (times.prep || times['Préparation']) {
-    pills.push(metaPill('🔪', 'Préparation', times.prep || times['Préparation']));
-    if (times.rest || times['Repos'] || times.cook || times['Cuisson']) pills.push('<span class="meta-sep">·</span>');
-  }
-  if (times.rest || times['Repos']) {
-    pills.push(metaPill('💤', 'Repos', times.rest || times['Repos']));
-    if (times.cook || times['Cuisson']) pills.push('<span class="meta-sep">·</span>');
-  }
-  if (times.cook || times['Cuisson']) {
-    pills.push(metaPill('🔥', 'Cuisson', times.cook || times['Cuisson']));
-  }
-  if (times.total || times['Total']) {
-    if (pills.length) pills.push('<span class="meta-sep">·</span>');
-    pills.push(metaPill('⏱', 'Total', times.total || times['Total'], true));
-  }
-
-  const serving = r.serving || r['À servir avec'] || '';
-
-  document.getElementById('doc-header').innerHTML = `
-    <div class="doc-header-top">
-      <div class="header-left">
-        <div class="recipe-category-tag">${r.category || 'Recette'}</div>
-        <div class="recipe-title">${r.title}</div>
-      </div>
-      <div class="photo-zone" id="photo-zone">
-        <div class="photo-icon">📷</div>
-        <div class="photo-note">Photo à ajouter</div>
-      </div>
-    </div>
-
-    <div class="portions-row">
-      <span class="portions-label">Portions</span>
-      <button class="portions-btn" onclick="changePortions(-1)">−</button>
-      <span class="portions-count" id="portions-display">${BASE_PORTIONS}</span>
-      <span class="portions-unit">personne${BASE_PORTIONS > 1 ? 's' : ''}</span>
-      <button class="portions-btn" onclick="changePortions(1)">+</button>
-      <button class="portions-reset" onclick="resetPortions()">↺ base</button>
-    </div>
-
-    <div class="meta-row">${pills.join('')}</div>
-
-    ${serving ? `
-    <div class="servir-row">
-      <span class="servir-label">🍷 À servir avec</span>
-      <span class="servir-value">${serving}</span>
-    </div>` : ''}
-  `;
-}
-
-function metaPill(icon, label, value, total = false) {
-  return `<div class="meta-pill${total?' total':''}">
-    <span class="micon">${icon}</span>
-    <span class="mlabel">${label}</span>
-    <span class="mvalue">${value}</span>
-  </div>`;
-}
-
-/* ── EQUIPMENT ── */
-function renderEquipment(items) {
-  if (!items.length) return;
-  const sec = document.getElementById('section-equipment');
-  sec.style.display = '';
-  document.getElementById('equip-tag').textContent = items.length + ' élément' + (items.length > 1 ? 's' : '');
-  document.getElementById('equipment-grid').innerHTML = items.map(e => `
-    <div class="equip-item">
-      <div class="equip-icon">${e.icon || '🔧'}</div>
-      <div>
-        <div class="equip-name">${e.name}</div>
-        ${e.note ? `<div class="equip-note">${e.note}</div>` : ''}
-      </div>
-    </div>`).join('');
-}
-
-/* ── INGREDIENTS ── */
-function renderIngredients(ingredients) {
-  /* Normalize: handle both flat [{qty,name,...}] and grouped [{category,icon,items:[...]}] */
-  const CAT_ICONS = {
-    'Viande': '🥩', 'Poisson': '🐟', 'Légumes': '🥦', 'Fruits': '🍊',
-    'Épices': '🌿', 'Aromates': '🌿', 'Herbes': '🌿', 'Produits laitiers': '🧈',
-    'Féculents': '🌾', 'Boulangerie': '🍞', 'Liquides': '🫙', 'Sauces': '🫙',
-    'Autres': '🧂',
-  };
-
-  /* Detect format: grouped = has .items array */
-  const isGrouped = ingredients.length > 0 && Array.isArray(ingredients[0].items);
-
-  const groups = {};
-  if (isGrouped) {
-    /* Already grouped by category */
-    for (const grp of ingredients) {
-      const cat = grp.category || 'Autres';
-      groups[cat] = { icon: grp.icon || CAT_ICONS[cat] || '🧂', items: grp.items || [] };
-    }
-  } else {
-    /* Flat list — group by category field */
-    for (const ing of ingredients) {
-      const cat = ing.category || 'Autres';
-      if (!groups[cat]) groups[cat] = { icon: CAT_ICONS[cat] || '🧂', items: [] };
-      groups[cat].items.push(ing);
-    }
-  }
-
-  document.getElementById('ingr-tag').textContent = 'pour ' + BASE_PORTIONS + ' personne' + (BASE_PORTIONS > 1 ? 's' : '');
-
-  let html = '';
-  for (const [cat, grpData] of Object.entries(groups)) {
-    const catItems = Array.isArray(grpData) ? grpData : grpData.items;
-    const catIcon  = (grpData.icon) || CAT_ICONS[cat] || '🧂';
-    html += `<div class="ingr-cat-block">
-      <div class="ingr-cat-header">
-        <span class="ingr-cat-icon">${catIcon}</span>
-        <span class="ingr-cat-name">${cat}</span>
-        <span class="ingr-cat-count">${catItems.length} ingr.</span>
-      </div>
-      <div class="ingr-cat-rows">
-        ${catItems.map(ing => {
-          const qtyDisplay = ing.qty
-            ? `${fmtQty(ing.qty)}\u00a0${ing.unit || ''}`.trim()
-            : (ing.qtyLabel || ing.unit || '');
-          return `<div class="ingr-row">
-            <span class="ingr-qty" data-base="${ing.qty || ''}" data-unit="${ing.unit || ''}">${qtyDisplay}</span>
-            <span class="ingr-name">${ing.name}${ing.optional ? ' <span class="ingr-opt">(opt.)</span>' : ''}</span>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>`;
-  }
-  document.getElementById('ingredients-list').innerHTML = html;
-}
-
-/* ── PHASES ── */
-function renderPhases(phases) {
-  document.getElementById('phases-tag').textContent = phases.length + ' phase' + (phases.length > 1 ? 's' : '');
-
-  document.getElementById('phases-list').innerHTML = phases.map(p => {
-    const timeBadges = (p.timeBadges || []).map(t =>
-      `<span class="phase-badge-time">${t}</span>`
-    ).join('');
-
-    const phaseIngrs = (p.ingredients || []).map(i => {
-      const qDisplay = i.qty
-        ? `${fmtQty(i.qty)}\u00a0${i.unit || ''}`.trim()
-        : (i.qtyLabel && i.qtyLabel !== 'PM' ? i.qtyLabel : '');
-      return `<span class="ingr-chip">
-        ${qDisplay ? `<span class="chip-qty" data-base="${i.qty || ''}" data-unit="${i.unit || ''}">${qDisplay}</span>` : ''}
-        ${i.name}
-      </span>`;
-    }).join('');
-
-    const steps = (p.steps || []).map(s =>
-      `<div class="substep">
-        <div class="substep-dot"></div>
-        <div class="substep-text">${s}</div>
-      </div>`
-    ).join('');
-
-    return `<div class="phase">
-      <div class="phase-header">
-        <div class="phase-badge">${p.letter || '•'}</div>
-        <div class="phase-title-text">${p.title}</div>
-        <div class="phase-meta">${timeBadges}</div>
-      </div>
-      ${phaseIngrs ? `<div class="phase-ingr">
-        <span class="phase-ingr-label">Ingrédients</span>
-        ${phaseIngrs}
-      </div>` : ''}
-      <div class="phase-steps">${steps}</div>
-    </div>`;
-  }).join('');
-}
-
-/* ── NOTES ── */
-function renderNotes(notes) {
-  if (!notes.length) return;
-  document.getElementById('section-notes').style.display = '';
-  document.getElementById('notes-list').innerHTML = notes.map(n => `
-    <div class="note-box">
-      ${n.title ? `<strong>${n.title}</strong>` : ''}
-      ${n.text || n}
-    </div>`).join('');
-}
-
-/* ════════════════════════════════════════
-   PORTIONS LOGIC
-════════════════════════════════════════ */
-function fmtQty(v) {
-  v = parseFloat(v);
-  if (!v || isNaN(v)) return '';
-  if (v < 0.1)  return v.toFixed(2).replace(/\.?0+$/, '');
-  if (v < 1)    return v.toFixed(1).replace(/\.?0+$/, '');
-  if (v < 10)   return (Math.round(v * 4) / 4) + '';
-  if (v < 100)  return (Math.round(v * 2) / 2) + '';
-  return Math.round(v) + '';
-}
-
-function scaleAll() {
-  const ratio = currentPortions / BASE_PORTIONS;
-  document.querySelectorAll('.ingr-qty').forEach(el => {
-    const base = parseFloat(el.dataset.base);
-    if (isNaN(base) || base === 0) return;
-    const unit   = (el.dataset.unit || '').trim();
-    const scaled = base * ratio;
-    el.textContent = unit ? fmtQty(scaled) + '\u00a0' + unit : fmtQty(scaled);
-    el.classList.toggle('modified', Math.abs(ratio - 1) > 0.001);
-  });
-  document.querySelectorAll('.chip-qty').forEach(el => {
-    const base = parseFloat(el.dataset.base);
-    if (isNaN(base) || base === 0) return;
-    const unit   = (el.dataset.unit || '').trim();
-    const scaled = base * ratio;
-    el.textContent = unit ? fmtQty(scaled) + '\u00a0' + unit : fmtQty(scaled);
-    el.classList.toggle('modified', Math.abs(ratio - 1) > 0.001);
-  });
-  const display = document.getElementById('portions-display');
-  if (display) display.textContent = currentPortions;
-  const tag = document.getElementById('ingr-tag');
-  if (tag) tag.textContent = 'pour ' + currentPortions + ' personne' + (currentPortions > 1 ? 's' : '');
-}
-
-function changePortions(delta) {
-  const next = currentPortions + delta;
-  if (next < 1 || next > 50) return;
-  currentPortions = next;
-  scaleAll();
-}
-
-function resetPortions() {
-  currentPortions = BASE_PORTIONS;
-  scaleAll();
-}
-
-/* ════════════════════════════════════════
-   COPY LINK
-════════════════════════════════════════ */
-function copyLink() {
-  navigator.clipboard.writeText(location.href).then(() => {
-    const btn = document.getElementById('btn-copy-link');
-    btn.textContent = '✓ Copié !';
-    setTimeout(() => btn.textContent = '🔗 Copier le lien', 2000);
-  });
-}
-
-/* ════════════════════════════════════════
-   START
-════════════════════════════════════════ */
-init();
 </script>
 </body>
 </html>
