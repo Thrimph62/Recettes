@@ -848,11 +848,15 @@ function generateFinalList() {
   for (const [catName, catData] of Object.entries(shoppingList)) {
     for (const item of Object.values(catData.items)) {
       const key = norm(item.name);
-      if (checkedItems.has(key)) continue;
-      const toBuy = Math.max(0, (item.qty||0) - (stockData[key]||0));
-      if (toBuy <= 0) continue;
+      if (checkedItems.has(key)) continue; // skip checked items
+      const needed = item.qty || 0;
+      const stock  = stockData[key] || 0;
+      const toBuy  = Math.max(0, needed - stock);
+      // Include if: has qty to buy, OR is a PM item (qty=0, no stock input)
+      const isPM = needed === 0;
+      if (!isPM && toBuy <= 0) continue;
       if (!bycat[catName]) bycat[catName] = { icon:catData.icon, items:[] };
-      bycat[catName].items.push({ name:item.name, toBuy, unit:item.unit||'', optional:item.optional });
+      bycat[catName].items.push({ name:item.name, toBuy, unit:item.unit||'', optional:item.optional, isPM });
     }
   }
 
@@ -879,10 +883,11 @@ function generateFinalList() {
     const sortedItems = catData.items.sort((a,b) => a.name.localeCompare(b.name,'fr'));
     html += `<div class="final-cat-block"><div class="final-cat-name">${catData.icon} ${catName}</div>`;
     for (const item of sortedItems) {
+      const qtyDisplay = item.isPM ? 'PM' : fmtQty(item.toBuy, item.unit);
       html += `<div class="final-item">
         <span style="color:var(--muted)">☐</span>
         <span class="final-item-name">${item.name}${item.optional?' <em style="font-size:11px;color:var(--muted)">(opt.)</em>':''}</span>
-        <span class="final-item-qty">${fmtQty(item.toBuy,item.unit)}</span>
+        <span class="final-item-qty">${qtyDisplay}</span>
       </div>`;
     }
     html += '</div>';
@@ -952,7 +957,7 @@ async function saveShoppingList() {
         id:            SHOPPING_ROW_ID,
         shopping:      shoppingList,
         stocks:        stockData,
-        cheched_items: [...checkedItems],
+        checked_items: [...checkedItems],
         generated_at:  new Date().toISOString(),
       },
       { onConflict: 'id' }
@@ -968,15 +973,15 @@ async function loadShoppingList() {
   if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
   try {
     const { data, error } = await sb.from(SB_SHOPPING)
-      .select('shopping, stocks, cheched_items, generated_at')
+      .select('shopping, stocks, checked_items, generated_at')
       .eq('id', SHOPPING_ROW_ID)
       .single();
     if (error) throw error;
     if (!data?.shopping) { showStatus('error','❌ Aucune liste sauvegardée.'); return; }
 
-    shoppingList  = data.shopping   || null;
-    stockData     = data.stocks     || {};
-    checkedItems  = new Set(data.cheched_items || []);
+    shoppingList = data.shopping        || null;
+    stockData    = data.stocks          || {};
+    checkedItems = new Set(data.checked_items || []);
 
     if (!shoppingList) { showStatus('error','❌ Liste sauvegardée vide.'); return; }
 
