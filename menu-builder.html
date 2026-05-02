@@ -273,10 +273,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 ══════════════════════════════════════ */
 const SB_URL  = 'https://tinxbmvtxmjwbvgjkrcf.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpbnhibXZ0eG1qd2J2Z2prcmNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzOTczMTIsImV4cCI6MjA5MDk3MzMxMn0.5puQLZsZEU-KrongwCBAk-1UqEUu72vdw6h_T1Zjpfw';
-const SB_RECIPES = 'recettes';
-const SB_MENUS   = 'menus';
+const SB_RECIPES = 'recettes_recettes';
+const SB_MENUS   = 'recettes_menus';
 const MENU_ID    = 'main';
-const SHOPPING_ID = 'shopping';
+const SB_SHOPPING = 'recettes_listes_courses';
+const SHOPPING_ROW_ID = 'main';
 
 let sb = null;
 try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
@@ -951,8 +952,8 @@ async function saveShoppingList() {
       stockData,
       checkedItems: [...checkedItems],
     };
-    const { error } = await sb.from(SB_MENUS).upsert(
-      { id: SHOPPING_ID, data: payload, updated_at: new Date().toISOString() },
+    const { error } = await sb.from(SB_SHOPPING).upsert(
+      { id: SHOPPING_ROW_ID, data: payload, updated_at: new Date().toISOString() },
       { onConflict: 'id' }
     );
     if (error) throw error;
@@ -965,7 +966,7 @@ async function saveShoppingList() {
 async function loadShoppingList() {
   if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
   try {
-    const { data, error } = await sb.from(SB_MENUS).select('data,updated_at').eq('id', SHOPPING_ID).single();
+    const { data, error } = await sb.from(SB_SHOPPING).select('data,updated_at').eq('id', SHOPPING_ROW_ID).single();
     if (error) throw error;
     if (!data?.data) { showStatus('error','❌ Aucune liste sauvegardée.'); return; }
 

@@ -248,10 +248,10 @@ async function loadAll() {
   showStatus('info','Chargement des données…');
   try {
     const [rRes, mRes, tRes, cRes] = await Promise.all([
-      sb.from('recettes').select('*'),
-      sb.from('menus').select('data').eq('id','main').maybeSingle(),
-      sb.from('menus').select('data').eq('id','timings').maybeSingle(),
-      sb.from('menus').select('data').eq('id','plan-checks').maybeSingle(),
+      sb.from('recettes_recettes').select('*'),
+      sb.from('recettes_menus').select('data').eq('id','main').maybeSingle(),
+      sb.from('recettes_menus').select('data').eq('id','timings').maybeSingle(),
+      sb.from('recettes_menus').select('data').eq('id','plan-checks').maybeSingle(),
     ]);
     if (rRes.error) throw rRes.error;
     if (mRes.error) throw mRes.error;
@@ -274,7 +274,7 @@ async function loadAll() {
 async function saveTimings() {
   if (!sb) return;
   try {
-    const { error } = await sb.from('menus').upsert(
+    const { error } = await sb.from('recettes_menus').upsert(
       { id:'timings', data:{ timings: mealTimings }, updated_at: new Date().toISOString() },
       { onConflict:'id' }
     );
@@ -548,7 +548,7 @@ function toggleStep(ck, done) {
 async function saveChecks() {
   if (!sb) return;
   try {
-    await sb.from('menus').upsert(
+    await sb.from('recettes_menus').upsert(
       { id:'plan-checks', data:{ checks:[...checkedSteps] }, updated_at:new Date().toISOString() },
       { onConflict:'id' }
     );

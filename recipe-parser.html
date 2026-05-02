@@ -930,7 +930,7 @@ addLibBtn.addEventListener('click', async () => {
   addStatus.textContent = '⏳ Sauvegarde…';
   addStatus.style.color = 'var(--muted)';
   try {
-    const { error } = await sb.from('recettes').upsert(row, { onConflict: 'id' });
+    const { error } = await sb.from('recettes_recettes').upsert(row, { onConflict: 'id' });
     if (error) throw error;
     const idx = library.findIndex(r => r.id === row.id);
     if (idx >= 0) library[idx] = full; else library.push(full);
@@ -955,7 +955,7 @@ clearLibBtn.addEventListener('click', async () => {
   if (!sb) return;
   try {
     const ids = library.map(r => r.id);
-    const { error } = await sb.from('recettes').delete().in('id', ids);
+    const { error } = await sb.from('recettes_recettes').delete().in('id', ids);
     if (error) throw error;
     library = []; renderLibrary();
     showStatus('success', '✓ Bibliothèque vidée.');
@@ -967,7 +967,7 @@ clearLibBtn.addEventListener('click', async () => {
 async function saveLibrary() {
   if (!sb) { showStatus('error', '❌ Supabase non disponible.'); return; }
   try {
-    const { error } = await sb.from('recettes').upsert(
+    const { error } = await sb.from('recettes_recettes').upsert(
       library.map(r => ({ ...r, id: r.id })),
       { onConflict: 'id' }
     );
@@ -980,7 +980,7 @@ async function saveLibrary() {
 async function loadLibrary() {
   if (!sb) return;
   try {
-    const { data, error } = await sb.from('recettes').select('*').order('title', { ascending: true });
+    const { data, error } = await sb.from('recettes_recettes').select('*').order('title', { ascending: true });
     if (error) throw error;
     library = data || [];
     document.getElementById('lib-count-badge').textContent = library.length ? `${library.length} recette(s)` : '';
@@ -1073,7 +1073,7 @@ async function removeFromLibrary(i) {
   if (!recipe) return;
   if (!sb) return;
   try {
-    const { error } = await sb.from('recettes').delete().eq('id', recipe.id);
+    const { error } = await sb.from('recettes_recettes').delete().eq('id', recipe.id);
     if (error) throw error;
     library.splice(i, 1);
     renderLibrary();
