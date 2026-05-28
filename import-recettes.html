@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import Recettes — DOCX / PDF</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<style>
+:root {
+  --navy:#0f2d5a;--navy2:#1a4a8a;--navy3:#5a86c4;
+  --ice:#e8f0fb;--ice2:#f5f8fe;--border:#c8d9f0;
+  --text:#1a1a2e;--muted:#5a6a8a;--gold:#b8860b;
+  --green:#1a7a4a;--bg:#f0f2f7;--white:#ffffff;--red:#a02020;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.app-header{background:var(--navy);padding:1.8rem 3rem;display:flex;align-items:center;gap:1.5rem;}
+.header-icon{width:46px;height:46px;background:rgba(255,255,255,.1);border:.5px solid rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;}
+.header-title{color:#fff;}
+.header-title h1{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:2px;}
+.header-title p{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.06em;text-transform:uppercase;}
+.header-badge{margin-left:auto;padding:4px 14px;background:rgba(255,255,255,.08);border:.5px solid rgba(255,255,255,.15);border-radius:20px;font-size:11px;color:rgba(255,255,255,.45);font-family:'DM Mono',monospace;letter-spacing:.04em;}
+.app-body{max-width:1040px;margin:0 auto;padding:2.5rem 2rem;}
+.card{background:var(--white);border:.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;box-shadow:0 2px 12px rgba(15,45,90,.05);}
+.card-header{background:var(--ice);padding:12px 22px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--navy);}
+.card-body{padding:20px 22px;}
+.drop-zone{border:1.5px dashed var(--border);border-radius:10px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--ice2);}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--navy3);background:var(--ice);}
+.drop-icon{font-size:36px;margin-bottom:10px;}
+.drop-title{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px;}
+.drop-sub{font-size:12px;color:var(--muted);}
+.drop-formats{display:flex;gap:8px;justify-content:center;margin-top:12px;}
+.format-badge{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600;font-family:'DM Mono',monospace;letter-spacing:.04em;}
+.fmt-docx{background:#dbeafe;color:#1d4ed8;}
+.fmt-pdf{background:#fee2e2;color:#991b1b;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:8px 12px;background:var(--ice);color:var(--navy);font-size:11px;letter-spacing:.05em;text-transform:uppercase;border-bottom:.5px solid var(--border);font-weight:600;}
+td{padding:9px 12px;border-bottom:.5px solid var(--ice);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--ice2);}
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.s-waiting{background:#f1f5f9;color:#64748b;}
+.s-extract{background:#fef9c3;color:#92400e;}
+.s-parsing{background:#dbeafe;color:#1e40af;}
+.s-done{background:#dcfce7;color:#166534;}
+.s-error{background:#fee2e2;color:#991b1b;}
+.spin{width:10px;height:10px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.btn{padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:opacity .15s,transform .1s;display:inline-flex;align-items:center;gap:6px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn:not(:disabled):active{transform:scale(.97);}
+.btn-primary{background:var(--navy);color:#fff;}
+.btn-primary:not(:disabled):hover{background:var(--navy2);}
+.btn-success{background:#166534;color:#fff;}
+.btn-success:not(:disabled):hover{background:#14532d;}
+.btn-secondary{background:var(--ice);color:var(--navy);border:.5px solid var(--border);}
+.btn-secondary:not(:disabled):hover{background:var(--border);}
+.btn-danger{background:#fee2e2;color:var(--red);border:.5px solid #fecaca;}
+.btn-danger:not(:disabled):hover{background:#fecaca;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.progress-wrap{background:var(--ice);border-radius:4px;height:6px;margin:4px 0;overflow:hidden;}
+.progress-bar{height:100%;background:var(--navy3);border-radius:4px;transition:width .3s;}
+.result-panel{display:none;}
+.result-panel.visible{display:block;}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.result-card{background:var(--white);border:.5px solid var(--border);border-radius:10px;overflow:hidden;}
+.result-card.full{grid-column:1 / -1;}
+.rc-header{background:var(--ice);padding:10px 16px;border-bottom:.5px solid var(--border);font-size:12px;font-weight:600;color:var(--navy);display:flex;justify-content:space-between;align-items:center;}
+.rc-body{padding:14px 16px;font-size:13px;}
+.ingr-cat-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;margin-top:10px;}
+.ingr-cat-title:first-child{margin-top:0;}
+.ingr-item{display:flex;gap:8px;padding:3px 0;border-bottom:.5px solid var(--ice);}
+.ingr-qty{width:70px;color:var(--navy2);font-weight:500;flex-shrink:0;}
+.ingr-name{flex:1;}
+.phase-item{margin-bottom:14px;padding-bottom:14px;border-bottom:.5px solid var(--ice);}
+.phase-item:last-child{border-bottom:none;margin-bottom:0;}
+.phase-head{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.phase-letter{width:22px;height:22px;background:var(--navy);color:#fff;border-radius:50%;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.phase-title-txt{font-weight:600;font-size:13px;color:var(--navy);}
+.phase-step{display:flex;gap:8px;padding:2px 0;font-size:12px;color:var(--text);}
+.phase-step::before{content:'·';color:var(--navy3);flex-shrink:0;}
+.note-item{padding:8px 12px;background:var(--ice2);border-radius:6px;border-left:2px solid var(--navy3);margin-bottom:6px;font-size:12px;}
+.json-block{background:#0d1117;border-radius:10px;overflow:hidden;margin-top:1rem;}
+.json-header{padding:8px 16px;background:#161b22;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid #30363d;}
+.json-filename{font-size:12px;color:#58a6ff;font-family:'DM Mono',monospace;}
+pre.json-pre{padding:16px;overflow-x:auto;font-family:'DM Mono',monospace;font-size:11.5px;line-height:1.6;color:#e6edf3;max-height:320px;overflow-y:auto;}
+.jk{color:#7ee787;}.js{color:#a5d6ff;}.jn{color:#ff7b72;}.jb{color:#d29922;}
+.lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;}
+.lib-item{padding:10px 14px;border-radius:8px;border:.5px solid var(--border);background:var(--ice2);display:flex;flex-direction:column;gap:4px;}
+.lib-item-title{font-size:13px;font-weight:600;color:var(--navy);}
+.lib-item-meta{font-size:11px;color:var(--muted);}
+.lib-item-cat{font-size:10px;font-weight:600;letter-spacing:.04em;color:var(--navy3);text-transform:uppercase;}
+.lib-empty{text-align:center;padding:2rem;color:var(--muted);font-size:13px;}
+footer.app-footer{text-align:center;padding:1.5rem;font-size:11px;color:var(--muted);border-top:.5px solid var(--border);margin-top:2rem;}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-icon">📥</div>
+  <div class="header-title">
+    <h1>Import Recettes</h1>
+    <p>Conversion DOCX · PDF → JSON + HTML</p>
+  </div>
+  <div class="header-badge">v2.0 — Outil autonome</div>
+</header>
+
+<main class="app-body">
+
+  <div class="card" id="apikey-card">
+    <div class="card-header">🔑 Clé API Anthropic</div>
+    <div class="card-body" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <input type="password" id="api-key-input" placeholder="sk-ant-api03-…" autocomplete="off"
+        style="flex:1;min-width:280px;padding:9px 14px;border:.5px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;background:var(--ice2);color:var(--text);outline:none;"
+        oninput="onApiKeyInput(this.value)">
+      <button class="btn btn-secondary btn-sm" onclick="toggleApiKeyVisibility()" id="eye-btn" style="padding:9px 12px;">👁</button>
+      <span id="apikey-status" style="font-size:12px;color:var(--muted);">Clé non renseignée</span>
+      <p style="width:100%;font-size:11px;color:var(--muted);margin-top:4px;">Votre clé est stockée localement dans le navigateur et n'est jamais envoyée ailleurs que vers <code>api.anthropic.com</code>.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">📂 Importer des fichiers</div>
+    <div class="card-body">
+      <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <div class="drop-icon">⬆️</div>
+        <div class="drop-title">Glissez vos fichiers ici ou cliquez pour parcourir</div>
+        <div class="drop-sub">Plusieurs fichiers acceptés simultanément</div>
+        <div class="drop-formats">
+          <span class="format-badge fmt-docx">.docx</span>
+          <span class="format-badge fmt-pdf">.pdf</span>
+        </div>
+      </div>
+      <input type="file" id="file-input" multiple accept=".docx,.pdf" style="display:none">
+    </div>
+  </div>
+
+  <div class="card" id="queue-card" style="display:none">
+    <div class="card-header">
+      📋 File de traitement
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+        <span id="progress-label" style="font-size:12px;color:var(--muted);"></span>
+        <button class="btn btn-primary btn-sm" id="start-btn" onclick="startBatch()">▶ Lancer</button>
+        <button class="btn btn-danger btn-sm" onclick="clearQueue()">🗑 Vider</button>
+      </div>
+    </div>
+    <div class="progress-wrap" style="margin:0;border-radius:0;">
+      <div class="progress-bar" id="progress-bar" style="width:0%"></div>
+    </div>
+    <div class="card-body" style="padding:0">
+      <table id="queue-table">
+        <thead>
+          <tr>
+            <th style="width:32px">#</th>
+            <th>Fichier</th>
+            <th style="width:80px">Type</th>
+            <th style="width:130px">Statut</th>
+            <th>Titre détecté</th>
+            <th style="width:120px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="queue-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card result-panel" id="result-panel">
+    <div class="card-header">
+      👁️ Aperçu — <span id="preview-title" style="font-weight:400;"></span>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-success btn-sm" onclick="addCurrentToLibrary()">📚 Bibliothèque</button>
+        <button class="btn btn-secondary btn-sm" onclick="downloadCurrentJSON()">⬇️ JSON</button>
+        <button class="btn btn-primary btn-sm" onclick="downloadCurrentHTML()">⬇️ HTML</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="result-grid">
+        <div class="result-card">
+          <div class="rc-header">🏷️ Identité</div>
+          <div class="rc-body">
+            <div style="font-size:18px;font-family:'DM Serif Display',serif;color:var(--navy);margin-bottom:6px;" id="r-title">—</div>
+            <div id="r-category" style="font-size:11px;font-weight:600;color:var(--navy3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;"></div>
+            <div id="r-portions" style="font-size:12px;color:var(--muted);"></div>
+          </div>
+        </div>
+        <div class="result-card">
+          <div class="rc-header">⏱️ Temps</div>
+          <div class="rc-body" id="r-times"></div>
+        </div>
+        <div class="result-card">
+          <div class="rc-header">🥬 Ingrédients <span id="r-ingr-count" style="font-size:11px;color:var(--muted);font-weight:400;"></span></div>
+          <div class="rc-body" id="r-ingredients"></div>
+        </div>
+        <div class="result-card">
+          <div class="rc-header">🔧 Matériel</div>
+          <div class="rc-body" id="r-equipment"></div>
+        </div>
+        <div class="result-card full">
+          <div class="rc-header">👨‍🍳 Phases <span id="r-phase-count" style="font-size:11px;color:var(--muted);font-weight:400;"></span></div>
+          <div class="rc-body" id="r-phases"></div>
+        </div>
+        <div class="result-card full">
+          <div class="rc-header">📝 Notes</div>
+          <div class="rc-body" id="r-notes"></div>
+        </div>
+      </div>
+      <div class="json-block">
+        <div class="json-header">
+          <span class="json-filename" id="json-filename">recipe.json</span>
+          <button class="btn btn-secondary btn-sm" onclick="downloadCurrentJSON()" style="background:#21262d;color:#cdd9e5;border-color:#30363d;">⬇️ JSON</button>
+        </div>
+        <pre class="json-pre" id="json-output"></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      📚 Bibliothèque
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <span id="lib-count" style="font-size:12px;color:var(--muted);"></span>
+        <button class="btn btn-secondary btn-sm" id="export-lib-btn" onclick="exportLibrary()" disabled>⬇️ recipes.json</button>
+        <button class="btn btn-success btn-sm" id="push-site-btn" onclick="pushToSite()" disabled>📤 Envoyer vers le site</button>
+        <button class="btn btn-danger btn-sm" onclick="clearLibrary()">🗑 Vider</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="library-container"><div class="lib-empty">Aucune recette dans la bibliothèque.</div></div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="app-footer">Import Recettes · Outil autonome · v2.0 · Toutes les recettes générées portent le préfixe <strong>Temporaire_</strong></footer>
+
+<script>
+/* ══════════════════════════════════════
+   PALETTES PAR CATÉGORIE
+   ══════════════════════════════════════ */
+const PALETTES = {
+  'Plat':           { c1:'#0f2d5a', c2:'#1a4a8a', c3:'#5a86c4', bg:'#e8f0fb', bg2:'#f5f8fe', brd:'#c8d9f0' },
+  'Viande':         { c1:'#1a1a1a', c2:'#2d2d2d', c3:'#6a6a6a', bg:'#efefef', bg2:'#f7f7f7', brd:'#d4d4d4' },
+  'Poisson':        { c1:'#1a1a1a', c2:'#2d2d2d', c3:'#6a6a6a', bg:'#efefef', bg2:'#f7f7f7', brd:'#d4d4d4' },
+  'Accompagnement': { c1:'#1a6fb3', c2:'#0d5a9c', c3:'#4a90c4', bg:'#e0f0ff', bg2:'#f0f7fd', brd:'#a8cce8' },
+  'Dessert':        { c1:'#1a5c2e', c2:'#0d4a20', c3:'#4a8a5a', bg:'#e8f5ee', bg2:'#f4fbf6', brd:'#b0d8bc' },
+  'Boissons':       { c1:'#c45a10', c2:'#a34808', c3:'#d48040', bg:'#fdf0e8', bg2:'#fef8f2', brd:'#e8c8a8' },
+  'Apéritif':       { c1:'#4a2c10', c2:'#6b3f1e', c3:'#9a7050', bg:'#f5ece0', bg2:'#faf5f0', brd:'#d4b898' },
+  'Entrée':         { c1:'#3d1a6b', c2:'#5a2d8a', c3:'#8a5ab4', bg:'#f0e8fb', bg2:'#f8f4fd', brd:'#c8a8e8' },
+  'Sauce':          { c1:'#2e2e2e', c2:'#444444', c3:'#707070', bg:'#f0f0f0', bg2:'#f7f7f7', brd:'#d0d0d0' },
+};
+function getPalette(cat) {
+  return PALETTES[cat] || PALETTES['Plat'];
+}
+
+/* ══════════════════════════════════════
+   SYSTEM PROMPT CLAUDE
+   ══════════════════════════════════════ */
+const SYSTEM_PROMPT = `Tu es un expert culinaire chargé d'extraire et structurer des recettes de cuisine françaises à partir de texte brut.
+Le texte source a une structure semi-fixe : titre, liste d'ingrédients, puis étapes de préparation.
+Retourne UNIQUEMENT un objet JSON valide, sans texte avant/après, sans balises markdown.
+
+Structure JSON :
+{
+  "title": "Nom de la recette",
+  "category": "Plat|Viande|Poisson|Accompagnement|Dessert|Boissons|Apéritif|Entrée|Sauce",
+  "basePortions": 4,
+  "serveWith": "",
+  "times": { "preparation": "20 min", "cuisson": "30 min", "repos": "1 h", "total": "1 h 50 min" },
+  "equipment": [ { "icon": "🍳", "name": "Poêle", "note": "" } ],
+  "ingredients": [
+    { "icon": "🥩", "category": "Viande", "items": [ { "qty": 600, "unit": "g", "name": "blanc de poulet", "optional": false, "note": "" } ] }
+  ],
+  "phases": [
+    { "letter": "A", "title": "Titre de la phase", "timeBadges": ["15 min"], "ingredients": [ { "qty": 2, "unit": "c.à.s", "name": "huile d'olive" } ], "steps": ["Étape 1.", "Étape 2."] }
+  ],
+  "notes": [ { "title": "Conseil", "text": "Texte." } ]
+}
+
+RÈGLES :
+Catégories d'ingrédients (libellés exacts) :
+🥩 Viande · 🐟 Poisson & fruits de mer · 🥦 Légumes & aromates (inclut basilic, persil) · 🧀 Fromages (jamais fusionné avec laitier) · 🥚 Œufs & laitier (jamais fusionné avec fromages) · 🧂 Épicerie & condiments (pignons de pin ici) · 🥫 Charcuterie · 🫙 Féculents & céréales · 🧅 Fruits & légumes secs
+Notations : quantité non précisée → "PM" (Pour Mémoire) · cuillère à soupe → "c.à.s" · cuillère à café → "c.à.c" · Sel et Poivre séparés dans Épicerie & condiments · quantities décimales (0.5 pas ½)
+Phases : regrouper en étapes logiques (A, B, C…), titre court, ingrédients utilisés dans la phase, timeBadges = durées et températures
+N'invente aucune information absente du texte source.`;
+
+/* ══════════════════════════════════════
+   STATE
+   ══════════════════════════════════════ */
+const PREFIX = 'Temporaire_';
+let queue    = [];
+let library  = JSON.parse(localStorage.getItem('import-library') || '[]');
+let running  = false;
+let currentRecipe = null;
+
+/* ══════════════════════════════════════
+   FILE INPUT
+   ══════════════════════════════════════ */
+document.getElementById('file-input').addEventListener('change', e => addFiles(e.target.files));
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); addFiles(e.dataTransfer.files); });
+
+function addFiles(files) {
+  let added = 0;
+  for (const f of files) {
+    const ext = f.name.split('.').pop().toLowerCase();
+    if (ext !== 'docx' && ext !== 'pdf') continue;
+    if (queue.find(q => q.name === f.name)) continue;
+    queue.push({ id: Date.now() + Math.random(), file: f, name: f.name, type: ext.toUpperCase(), status: 'waiting', result: null, error: null });
+    added++;
+  }
+  if (added) renderQueue();
+}
+
+/* ══════════════════════════════════════
+   QUEUE RENDER
+   ══════════════════════════════════════ */
+function renderQueue() {
+  const card  = document.getElementById('queue-card');
+  const tbody = document.getElementById('queue-body');
+  const startBtn = document.getElementById('start-btn');
+  if (!queue.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  const done = queue.filter(q => q.status === 'done').length;
+  document.getElementById('progress-label').textContent = done + ' / ' + queue.length;
+  document.getElementById('progress-bar').style.width = (done / queue.length * 100) + '%';
+  startBtn.disabled = running || queue.every(q => q.status === 'done' || q.status === 'error');
+
+  tbody.innerHTML = queue.map((q, i) => `
+    <tr>
+      <td style="color:var(--muted);font-size:11px;">${i+1}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${q.name}">${q.name}</td>
+      <td><span class="format-badge ${q.type==='DOCX'?'fmt-docx':'fmt-pdf'}">${q.type}</span></td>
+      <td>${statusBadge(q)}</td>
+      <td style="font-size:12px;color:var(--navy);font-weight:500;">${q.result ? escHtml(q.result.title) : (q.error ? '<span style="color:var(--red);font-size:11px;">'+escHtml(q.error)+'</span>' : '—')}</td>
+      <td style="display:flex;gap:3px;">
+        ${q.status==='done' ? `<button class="btn btn-secondary btn-sm" onclick="previewItem(${i})" title="Aperçu">👁</button><button class="btn btn-secondary btn-sm" onclick="downloadItemJSON(${i})" title="JSON">J</button><button class="btn btn-primary btn-sm" onclick="downloadItemHTML(${i})" title="HTML">H</button><button class="btn btn-success btn-sm" onclick="addToLibFromQueue(${i})" title="Bibliothèque">+</button>` : ''}
+        ${q.status==='error' ? `<button class="btn btn-secondary btn-sm" onclick="retryItem(${i})">↺</button>` : ''}
+      </td>
+    </tr>`).join('');
+}
+
+function statusBadge(q) {
+  return { waiting:'<span class="status-badge s-waiting">En attente</span>', extract:'<span class="status-badge s-extract"><span class="spin"></span> Extraction…</span>', parsing:'<span class="status-badge s-parsing"><span class="spin"></span> Analyse IA…</span>', done:'<span class="status-badge s-done">✓ Terminé</span>', error:'<span class="status-badge s-error">✕ Erreur</span>' }[q.status] || '';
+}
+function clearQueue() { if (!running) { queue = []; renderQueue(); } }
+
+/* ══════════════════════════════════════
+   BATCH
+   ══════════════════════════════════════ */
+async function startBatch() {
+  if (running) return;
+  running = true; document.getElementById('start-btn').disabled = true;
+  for (const item of queue) { if (item.status === 'done') continue; await processItem(item); renderQueue(); }
+  running = false; renderQueue();
+}
+async function retryItem(i) {
+  queue[i].status = 'waiting'; queue[i].error = null; queue[i].result = null; renderQueue();
+  running = true; await processItem(queue[i]); running = false; renderQueue();
+}
+async function processItem(item) {
+  try {
+    item.status = 'extract'; renderQueue();
+    const rawText = item.type === 'DOCX' ? await extractDocx(item.file) : await extractPdf(item.file);
+    item.status = 'parsing'; renderQueue();
+    item.result = await parseWithClaude(rawText, item.name);
+    item.status = 'done';
+  } catch(e) { item.error = e.message || String(e); item.status = 'error'; }
+}
+
+/* ══════════════════════════════════════
+   EXTRACTION
+   ══════════════════════════════════════ */
+async function extractDocx(file) {
+  const ab = await file.arrayBuffer();
+  const r = await mammoth.extractRawText({ arrayBuffer: ab });
+  return r.value;
+}
+async function extractPdf(file) {
+  const ab = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: ab }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it => it.str).join(' ') + '\n';
+  }
+  return text;
+}
+
+/* ══════════════════════════════════════
+   CLAUDE API
+   ══════════════════════════════════════ */
+async function parseWithClaude(rawText, filename) {
+  if (!apiKey || !apiKey.startsWith('sk-ant-')) {
+    throw new Error('Clé API Anthropic manquante — renseignez-la en haut de la page');
+  }
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-allow-browser': 'true' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: 'Fichier : ' + filename + '\n\n---\n' + rawText.slice(0, 12000) + '\n---' }]
+    })
+  });
+  if (!resp.ok) { const e = await resp.json().catch(()=>({})); throw new Error(e.error?.message || 'HTTP ' + resp.status); }
+  const data = await resp.json();
+  const raw = data.content.map(b => b.text || '').join('').trim();
+  const clean = raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
+  let parsed;
+  try { parsed = JSON.parse(clean); } catch(e) { throw new Error('JSON invalide retourné par Claude'); }
+  // Préfixe Temporaire_
+  parsed.title = PREFIX + (parsed.title || filename.replace(/\.(docx|pdf)$/i,''));
+  parsed.id = slugify(parsed.title) + '-' + Date.now();
+  parsed.addedAt = new Date().toISOString();
+  parsed.sourceFile = filename;
+  return parsed;
+}
+
+/* ══════════════════════════════════════
+   PREVIEW
+   ══════════════════════════════════════ */
+function previewItem(i) {
+  const r = queue[i].result; if (!r) return;
+  currentRecipe = r; renderPreview(r);
+  document.getElementById('result-panel').classList.add('visible');
+  document.getElementById('result-panel').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function renderPreview(r) {
+  document.getElementById('preview-title').textContent = r.title || '—';
+  document.getElementById('r-title').textContent = r.title || '—';
+  document.getElementById('r-category').textContent = r.category || '';
+  document.getElementById('r-portions').textContent = r.basePortions ? r.basePortions + ' personne' + (r.basePortions > 1 ? 's' : '') : '';
+  const tLabels = { preparation:'🔪 Prépa', cuisson:'🔥 Cuisson', repos:'💤 Repos', total:'⏱ Total' };
+  document.getElementById('r-times').innerHTML = Object.entries(r.times||{}).map(([k,v]) =>
+    `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;"><span style="color:var(--muted);">${tLabels[k]||k}</span><span style="font-weight:600;color:var(--navy);">${v}</span></div>`
+  ).join('') || '<span style="color:var(--muted);font-size:12px;">—</span>';
+  let total = 0;
+  document.getElementById('r-ingredients').innerHTML = (r.ingredients||[]).map(cat => {
+    total += (cat.items||[]).length;
+    return `<div class="ingr-cat-title">${cat.icon||''} ${cat.category}</div>` +
+      (cat.items||[]).map(it => `<div class="ingr-item"><div class="ingr-qty">${it.qty||'PM'} ${it.unit||''}</div><div class="ingr-name">${escHtml(it.name)}</div></div>`).join('');
+  }).join('') || '<span style="color:var(--muted);font-size:12px;">—</span>';
+  document.getElementById('r-ingr-count').textContent = '(' + total + ')';
+  document.getElementById('r-equipment').innerHTML = (r.equipment||[]).map(e =>
+    `<div style="display:flex;gap:8px;align-items:center;padding:3px 0;font-size:12px;"><span>${e.icon||'🔧'}</span><span>${escHtml(e.name)}</span></div>`
+  ).join('') || '<span style="color:var(--muted);font-size:12px;">—</span>';
+  document.getElementById('r-phases').innerHTML = (r.phases||[]).map(p =>
+    `<div class="phase-item"><div class="phase-head"><div class="phase-letter">${p.letter}</div><div class="phase-title-txt">${escHtml(p.title)}</div>${(p.timeBadges||[]).map(t=>`<span style="font-size:10px;background:var(--ice);padding:2px 7px;border-radius:10px;color:var(--muted);">${t}</span>`).join('')}</div>${(p.steps||[]).map(s=>`<div class="phase-step">${escHtml(s)}</div>`).join('')}</div>`
+  ).join('') || '<span style="color:var(--muted);font-size:12px;">—</span>';
+  document.getElementById('r-phase-count').textContent = '(' + (r.phases||[]).length + ')';
+  document.getElementById('r-notes').innerHTML = (r.notes||[]).map(n =>
+    `<div class="note-item">${n.title?`<strong>${escHtml(n.title)} — </strong>`:''} ${escHtml(n.text)}</div>`
+  ).join('') || '<span style="color:var(--muted);font-size:12px;">—</span>';
+  const jsonStr = JSON.stringify(r, null, 2);
+  document.getElementById('json-output').innerHTML = syntaxHighlight(jsonStr);
+  document.getElementById('json-filename').textContent = slugify(r.title) + '.json';
+}
+
+/* ══════════════════════════════════════
+   HTML GENERATION
+   ══════════════════════════════════════ */
+function generateRecipeHTML(r) {
+  const p   = getPalette(r.category);
+  const bp  = r.basePortions || 4;
+  const cat = r.category || 'Plat';
+  const title = r.title || 'Sans titre';
+
+  function fmtQtyDisplay(qty, unit) {
+    if (!qty || qty === 'PM') return 'PM';
+    const n = parseFloat(qty);
+    if (isNaN(n) || n === 0) return 'PM';
+    const s = n < 10 ? (Math.round(n*4)/4).toString() : n < 100 ? (Math.round(n*2)/2).toString() : Math.round(n).toString();
+    return unit ? s + '\u00a0' + unit : s;
+  }
+  function safeQty(qty) {
+    if (!qty || qty === 'PM') return 0;
+    const n = parseFloat(qty); return isNaN(n) ? 0 : n;
+  }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  // Time pills
+  const timeIcons = { preparation:'&#x1F52A;', cuisson:'&#x1F525;', repos:'&#x1F4A4;', total:'&#x23F1;' };
+  const timeLabels = { preparation:'Préparation', cuisson:'Cuisson', repos:'Repos', total:'Total' };
+  const timesHtml = Object.entries(r.times||{}).map(([k,v]) => {
+    const icon = timeIcons[k] || '&#x23F1;';
+    const label = timeLabels[k] || k;
+    const isTotal = k === 'total';
+    return `<div class="meta-pill${isTotal?' total':''}"><span class="micon">${icon}</span><div><div class="mlabel">${label}</div><div class="mvalue">${esc(v)}</div></div></div>${isTotal?'':'<div class="meta-sep">·</div>'}`;
+  }).join('');
+
+  // Equipment
+  const equipHtml = (r.equipment||[]).length
+    ? `<div class="equipment-grid">${(r.equipment||[]).map(e=>`<div class="equip-item"><div class="equip-icon">${e.icon||'🔧'}</div><div><div class="equip-name">${esc(e.name)}</div>${e.note?`<div class="equip-note">${esc(e.note)}</div>`:''}</div></div>`).join('')}</div>`
+    : '<p style="color:#aaa;font-size:13px;font-family:Arial,sans-serif;">Aucun matériel spécifique</p>';
+
+  // Ingredients section
+  const ingrSecHtml = (r.ingredients||[]).map(cat => {
+    const rows = (cat.items||[]).map(it => {
+      const base = safeQty(it.qty);
+      const unit = it.unit || '';
+      const display = fmtQtyDisplay(it.qty, unit);
+      return `<div class="ingr-row"><span class="ingr-qty" data-base="${base}" data-unit="${esc(unit)}">${esc(display)}</span><span class="ingr-name">${esc(it.name)}${it.optional?' <span class="ingr-opt">(opt.)</span>':''}</span></div>`;
+    }).join('');
+    return `<div class="ingr-cat-block"><div class="ingr-cat-header"><span class="ingr-cat-icon">${cat.icon||''}</span><span class="ingr-cat-name">${esc(cat.category)}</span><span class="ingr-cat-count">${(cat.items||[]).length} ingr.</span></div><div class="ingr-cat-rows">${rows}</div></div>`;
+  }).join('');
+  const totalIngr = (r.ingredients||[]).reduce((a,c)=>a+(c.items||[]).length,0);
+
+  // Phases section
+  const phasesHtml = (r.phases||[]).map(ph => {
+    const timeBadges = (ph.timeBadges||[]).map(t=>`<span class="phase-badge-time">${esc(t)}</span>`).join('');
+    const chips = (ph.ingredients||[]).length
+      ? `<div class="phase-ingr"><span class="phase-ingr-label">Ingrédients</span>${(ph.ingredients||[]).map(it=>{
+          const base = safeQty(it.qty); const unit = it.unit||''; const display = fmtQtyDisplay(it.qty, unit);
+          return `<span class="ingr-chip"><span class="chip-qty" data-base="${base}" data-unit="${esc(unit)}">${esc(display)}</span> ${esc(it.name)}</span>`;
+        }).join('')}</div>`
+      : `<div class="phase-ingr"><span class="ingr-chip" style="color:${p.c3};font-style:italic;">Aucun ajout</span></div>`;
+    const steps = (ph.steps||[]).map(s=>`<div class="substep"><div class="substep-dot"></div><div class="substep-text">${esc(s)}</div></div>`).join('');
+    return `<div class="phase"><div class="phase-header"><div class="phase-badge">${esc(ph.letter)}</div><div class="phase-title">${esc(ph.title)}</div><div class="phase-meta">${timeBadges}</div></div>${chips}<div class="phase-steps">${steps}</div></div>`;
+  }).join('');
+
+  // Notes section
+  const notesHtml = (r.notes||[]).length
+    ? (r.notes||[]).map(n=>`<div class="note-box">${n.title?`<strong>${esc(n.title)}</strong>`:''}${esc(n.text)}</div>`).join('')
+    : '<p style="color:#aaa;font-size:13px;font-family:Arial,sans-serif;">Aucune note</p>';
+
+  // Serve with
+  const serveWithHtml = r.serveWith ? `<div class="servir-row"><span class="servir-label">🍽 À servir avec</span><span class="servir-value filled">${esc(r.serveWith)}</span></div>` : '';
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(title)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Georgia,"Times New Roman",serif;background:#ededed;color:#1a1a1a;}
+.page{background:#fff;max-width:800px;margin:2rem auto;border-radius:8px;border:.5px solid ${p.brd};overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1);}
+.doc-header{background:${p.c1};padding:2.5rem 3rem 2rem;}
+.doc-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:2rem;margin-bottom:1.5rem;}
+.header-left{flex:1;}
+.recipe-category-tag{display:inline-flex;align-items:center;padding:3px 12px;border-radius:12px;background:rgba(255,255,255,.12);border:.5px solid rgba(255,255,255,.2);font-family:Arial,sans-serif;font-size:11px;font-weight:600;color:rgba(255,255,255,.8);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;}
+.recipe-title{font-size:32px;font-weight:normal;line-height:1.2;color:#fff;font-family:Georgia,serif;}
+.photo-zone{width:180px;height:130px;border-radius:6px;border:1.5px dashed rgba(255,255,255,.22);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:rgba(255,255,255,.3);font-family:Arial,sans-serif;font-size:12px;flex-shrink:0;background:rgba(255,255,255,.04);}
+.portions-row{display:flex;align-items:center;gap:12px;padding:8px 14px;margin-bottom:10px;background:rgba(255,255,255,.07);border-radius:20px;border:.5px solid rgba(255,255,255,.12);width:fit-content;font-family:Arial,sans-serif;}
+.portions-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.42);}
+.portions-btn{width:20px;height:20px;border-radius:50%;border:.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1;font-family:Arial,sans-serif;}
+.portions-btn:hover{background:rgba(255,255,255,.22);}
+.portions-count{font-size:16px;font-weight:600;color:#fff;min-width:22px;text-align:center;}
+.portions-unit{font-size:12px;color:rgba(255,255,255,.52);}
+.portions-reset{font-size:10px;color:rgba(255,255,255,.35);cursor:pointer;border:.5px solid rgba(255,255,255,.18);border-radius:8px;padding:1px 7px;background:none;font-family:Arial,sans-serif;}
+.portions-reset:hover{color:rgba(255,255,255,.7);}
+.meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;font-family:Arial,sans-serif;align-items:center;}
+.meta-pill{display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:20px;background:rgba(255,255,255,.08);border:.5px solid rgba(255,255,255,.13);}
+.meta-pill .micon{font-size:15px;line-height:1;}
+.meta-pill .mlabel{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.4);}
+.meta-pill .mvalue{font-size:13px;font-weight:600;color:#fff;}
+.meta-pill.total{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.24);}
+.meta-sep{color:rgba(255,255,255,.18);font-size:18px;font-family:Arial,sans-serif;}
+.servir-row{display:flex;align-items:center;gap:10px;padding:9px 14px;background:rgba(255,255,255,.05);border-radius:6px;border:.5px dashed rgba(255,255,255,.16);font-family:Arial,sans-serif;}
+.servir-label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.4);white-space:nowrap;}
+.servir-value{font-size:13px;color:rgba(255,255,255,.3);font-style:italic;}
+.servir-value.filled{color:rgba(255,255,255,.88);font-style:normal;}
+.doc-body{padding:2.5rem 3rem;}
+.section{margin-bottom:2.5rem;}
+.section-header{display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;padding-bottom:8px;border-bottom:2px solid ${p.bg};}
+.section-num{width:24px;height:24px;background:${p.c1};color:#fff;border-radius:50%;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:Arial,sans-serif;}
+.section-title{font-family:Arial,sans-serif;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:${p.c2};}
+.section-tag{margin-left:auto;font-size:10px;padding:2px 9px;border-radius:10px;background:${p.bg};color:${p.c2};border:.5px solid ${p.brd};font-family:Arial,sans-serif;}
+.equipment-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.equip-item{display:flex;align-items:center;gap:10px;padding:9px 13px;border:.5px solid ${p.brd};border-radius:6px;}
+.equip-icon{width:30px;height:30px;border-radius:6px;background:${p.bg};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.equip-name{font-size:13px;font-family:Arial,sans-serif;}
+.equip-note{font-size:11px;color:${p.c3};font-family:Arial,sans-serif;}
+.ingr-cat-block{border:.5px solid ${p.brd};border-radius:6px;overflow:hidden;margin-bottom:8px;}
+.ingr-cat-header{display:flex;align-items:center;gap:10px;padding:8px 14px;background:${p.bg};border-bottom:.5px solid ${p.brd};}
+.ingr-cat-icon{font-size:15px;}
+.ingr-cat-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:${p.c1};font-family:Arial,sans-serif;}
+.ingr-cat-count{margin-left:auto;font-size:11px;color:${p.c3};font-family:Arial,sans-serif;}
+.ingr-cat-rows{padding:0 14px;}
+.ingr-row{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:.5px solid ${p.bg};font-size:14px;}
+.ingr-row:last-child{border-bottom:none;}
+.ingr-qty{min-width:85px;font-size:12px;color:${p.c2};font-family:Arial,sans-serif;font-variant-numeric:tabular-nums;transition:color .2s;}
+.ingr-qty.modified{color:#b8860b;font-weight:600;}
+.ingr-name{flex:1;font-family:Arial,sans-serif;}
+.ingr-opt{font-size:11px;color:${p.c3};font-style:italic;}
+.phase{margin-bottom:1.25rem;border:.5px solid ${p.brd};border-radius:8px;overflow:hidden;}
+.phase-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:${p.bg};border-bottom:.5px solid ${p.brd};}
+.phase-badge{width:28px;height:28px;background:${p.c1};color:#fff;border-radius:6px;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:Arial,sans-serif;}
+.phase-title{font-size:14px;font-weight:600;color:${p.c1};font-family:Arial,sans-serif;}
+.phase-meta{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.phase-badge-time{font-size:11px;padding:3px 10px;border-radius:10px;background:#fff;color:${p.c2};border:.5px solid ${p.brd};font-family:Arial,sans-serif;}
+.phase-ingr{padding:8px 16px;background:${p.bg2};border-bottom:.5px solid ${p.brd};display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.phase-ingr-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:${p.c3};margin-right:2px;white-space:nowrap;font-family:Arial,sans-serif;}
+.ingr-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:12px;background:#fff;border:.5px solid ${p.brd};font-size:12px;color:${p.c2};font-family:Arial,sans-serif;}
+.ingr-chip .chip-qty{font-size:11px;color:${p.c3};transition:color .2s;}
+.ingr-chip .chip-qty.modified{color:#b8860b;font-weight:600;}
+.phase-steps{padding:0 16px;}
+.substep{display:flex;gap:12px;padding:11px 0;border-bottom:.5px solid ${p.bg};}
+.substep:last-child{border-bottom:none;}
+.substep-dot{width:7px;height:7px;border-radius:50%;background:${p.c3};flex-shrink:0;margin-top:7px;}
+.substep-text{font-size:14px;line-height:1.65;font-family:Arial,sans-serif;}
+.substep-text b{font-weight:600;color:${p.c1};}
+.note-box{background:${p.bg2};border-left:3px solid ${p.c1};border-radius:0 6px 6px 0;padding:10px 15px;font-size:13px;line-height:1.6;color:#444;margin-bottom:7px;font-family:Arial,sans-serif;}
+.note-box strong{font-weight:600;color:${p.c1};font-size:11px;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px;}
+.doc-footer{display:flex;justify-content:space-between;align-items:center;padding:1rem 3rem;border-top:2px solid ${p.bg};font-size:11px;color:${p.c3};font-family:Arial,sans-serif;}
+.portions-legend{margin-top:1rem;padding:8px 14px;background:#fffbf0;border:.5px solid #e8d080;border-radius:6px;font-size:11px;font-family:Arial,sans-serif;color:#666;display:flex;align-items:center;gap:8px;}
+.portions-legend-dot{width:10px;height:10px;border-radius:50%;background:#b8860b;flex-shrink:0;}
+@media print{body{background:#fff;}.page{box-shadow:none;margin:0;border-radius:0;}.portions-btn,.portions-reset{display:none;}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="doc-header">
+    <div class="doc-header-top">
+      <div class="header-left">
+        <div class="recipe-category-tag">${esc(cat)}</div>
+        <div class="recipe-title">${esc(title)}</div>
+      </div>
+      <div class="photo-zone">
+        <div style="font-size:36px;opacity:.2;">&#x1F4F7;</div>
+        <div>Photo / illustration</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.2);">700 × 500 px recommandé</div>
+      </div>
+    </div>
+    <div class="portions-row">
+      <span class="portions-label">Personnes</span>
+      <button class="portions-btn" onclick="changePortions(-0.25)">&#8722;</button>
+      <span class="portions-count" id="portions-display">${bp}</span>
+      <span class="portions-unit">pers.</span>
+      <button class="portions-btn" onclick="changePortions(0.25)">&#43;</button>
+      <button class="portions-reset" onclick="resetPortions()">&#x21BA; base</button>
+    </div>
+    <div class="meta-row">${timesHtml}</div>
+    ${serveWithHtml}
+  </div>
+  <div class="doc-body">
+    <div class="section">
+      <div class="section-header"><div class="section-num">1</div><div class="section-title">Matériel nécessaire</div></div>
+      ${equipHtml}
+    </div>
+    <div class="section">
+      <div class="section-header"><div class="section-num">2</div><div class="section-title">Ingrédients</div><span class="section-tag" id="ingr-tag">pour&#160;${bp}&#160;personne${bp>1?'s':''}</span></div>
+      ${ingrSecHtml}
+      <div class="portions-legend"><div class="portions-legend-dot"></div>Les quantités en <span style="color:#b8860b;font-weight:600;">ambre</span> indiquent une valeur ajustée par le compteur de portions.</div>
+    </div>
+    <div class="section">
+      <div class="section-header"><div class="section-num">3</div><div class="section-title">Préparation</div><span class="section-tag">${(r.phases||[]).length} phase${(r.phases||[]).length>1?'s':''}</span></div>
+      ${phasesHtml}
+    </div>
+    <div class="section">
+      <div class="section-header"><div class="section-num">4</div><div class="section-title">Notes &amp; astuces famille</div></div>
+      ${notesHtml}
+    </div>
+  </div>
+  <div class="doc-footer"><span>${esc(title)}</span><span>p.&#160;1</span></div>
+</div>
+<script>
+const BASE_PORTIONS = ${bp};
+let currentPortions = BASE_PORTIONS;
+const display = document.getElementById('portions-display');
+const ingrTag = document.getElementById('ingr-tag');
+function formatQty(v){if(v===0)return'0';if(v<.1)return v.toFixed(2).replace(/\\.?0+$/,'');if(v<1)return v.toFixed(1).replace(/\\.?0+$/,'');if(v<10)return(Math.round(v*4)/4)+'';if(v<100)return(Math.round(v*2)/2)+'';return Math.round(v)+'';}
+function scaleAll(){const ratio=currentPortions/BASE_PORTIONS;document.querySelectorAll('.ingr-qty').forEach(el=>{const base=parseFloat(el.dataset.base);if(isNaN(base)||base===0)return;const unit=(el.dataset.unit||'').trim();const scaled=base*ratio;el.textContent=unit?formatQty(scaled)+'\\u00a0'+unit:formatQty(scaled);el.classList.toggle('modified',Math.abs(scaled-base)>.001);});document.querySelectorAll('.chip-qty').forEach(el=>{const base=parseFloat(el.dataset.base);if(isNaN(base)||base===0)return;const unit=(el.dataset.unit||'').trim();const scaled=base*ratio;el.textContent=unit?formatQty(scaled)+'\\u00a0'+unit:formatQty(scaled);el.classList.toggle('modified',Math.abs(scaled-base)>.001);});if(ingrTag)ingrTag.textContent='pour\\u00a0'+formatPortions(currentPortions)+'\\u00a0personne'+(currentPortions>1?'s':'');display.textContent=formatPortions(currentPortions);}
+function formatPortions(v){const fm={.25:'¼',.5:'½',.75:'¾'};const i=Math.floor(v);const f=Math.round((v-i)*4)/4;const fs=fm[f]||'';if(i===0)return fs||'0';return fs?i+'\\u00a0'+fs:''+i;}
+function changePortions(d){const n=Math.round((currentPortions+d)*4)/4;if(n<.25||n>50)return;currentPortions=n;scaleAll();}
+function resetPortions(){currentPortions=BASE_PORTIONS;scaleAll();}
+display.textContent=formatPortions(BASE_PORTIONS);
+<\/script>
+</body>
+</html>`;
+}
+
+/* ══════════════════════════════════════
+   DOWNLOADS
+   ══════════════════════════════════════ */
+function downloadCurrentJSON() {
+  if (!currentRecipe) return;
+  downloadJSON(currentRecipe, slugify(currentRecipe.title) + '.json');
+}
+function downloadCurrentHTML() {
+  if (!currentRecipe) return;
+  downloadHTML(currentRecipe, slugify(currentRecipe.title) + '.html');
+}
+function downloadItemJSON(i) {
+  const r = queue[i].result; if (!r) return;
+  downloadJSON(r, slugify(r.title) + '.json');
+}
+function downloadItemHTML(i) {
+  const r = queue[i].result; if (!r) return;
+  downloadHTML(r, slugify(r.title) + '.html');
+}
+function downloadJSON(data, filename) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+}
+function downloadHTML(r, filename) {
+  const html = generateRecipeHTML(r);
+  const blob = new Blob([html], { type:'text/html;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ══════════════════════════════════════
+   LIBRARY
+   ══════════════════════════════════════ */
+function addToLibrary(r) { const ex=library.findIndex(x=>x.id===r.id); if(ex>=0)library[ex]=r; else library.push(r); saveLibrary(); renderLibrary(); }
+function addCurrentToLibrary() { if (currentRecipe) addToLibrary(currentRecipe); }
+function addToLibFromQueue(i) { const r=queue[i].result; if(r) addToLibrary(r); }
+function saveLibrary() { localStorage.setItem('import-library', JSON.stringify(library)); }
+
+function pushToSite() {
+  if (!library.length) return;
+  const existing = JSON.parse(localStorage.getItem('recipe-library') || '[]');
+  let added = 0, updated = 0;
+  for (const r of library) {
+    const idx = existing.findIndex(x => x.id === r.id || x.title === r.title);
+    if (idx >= 0) { existing[idx] = r; updated++; }
+    else { existing.push(r); added++; }
+  }
+  localStorage.setItem('recipe-library', JSON.stringify(existing));
+  const total = existing.length;
+  alert('Bibliotheque principale mise a jour !\n\n' + added + ' recette(s) ajoutee(s)\n' + updated + ' recette(s) mise(s) a jour\nTotal dans le site : ' + total + ' recette(s)\n\nDisponibles dans le Parseur et le Menu Builder.');
+}
+function exportLibrary() {
+  const blob = new Blob([JSON.stringify({recipes:library,exportedAt:new Date().toISOString(),count:library.length},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='recipes.json';a.click();URL.revokeObjectURL(a.href);
+}
+function clearLibrary() { if(!library.length)return; if(confirm('Vider la bibliothèque ? ('+library.length+' recette(s))'))  { library=[];saveLibrary();renderLibrary(); } }
+function renderLibrary() {
+  const el = document.getElementById('library-container');
+  document.getElementById('lib-count').textContent = library.length ? library.length + ' recette(s)' : '';
+  document.getElementById('export-lib-btn').disabled = !library.length;
+  document.getElementById('push-site-btn').disabled = !library.length;
+  if (!library.length) { el.innerHTML='<div class="lib-empty">Aucune recette dans la bibliothèque.</div>'; return; }
+  el.innerHTML = '<div class="lib-grid">' + library.map((r,i) =>
+    `<div class="lib-item"><div class="lib-item-cat">${escHtml(r.category||'?')}</div><div class="lib-item-title">${escHtml(r.title)}</div><div class="lib-item-meta">${r.basePortions||'?'} pers. · ${(r.phases||[]).length} phases · ${r.times?.total||'—'}</div><div style="display:flex;gap:4px;margin-top:6px;"><button class="btn btn-secondary btn-sm" onclick="previewLibItem(${i})">👁</button><button class="btn btn-primary btn-sm" onclick="downloadHTML(library[${i}],slugify(library[${i}].title)+'.html')">⬇️ HTML</button><button class="btn btn-danger btn-sm" onclick="removeFromLib(${i})">✕</button></div></div>`
+  ).join('') + '</div>';
+}
+function previewLibItem(i) { currentRecipe=library[i]; renderPreview(library[i]); document.getElementById('result-panel').classList.add('visible'); document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'start'}); }
+function removeFromLib(i) { library.splice(i,1); saveLibrary(); renderLibrary(); }
+
+/* ══════════════════════════════════════
+   UTILS
+   ══════════════════════════════════════ */
+function slugify(s) { return (s||'recette').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function syntaxHighlight(json) {
+  return json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,m=>{let c='jn';if(/^"/.test(m))c=/:$/.test(m)?'jk':'js';else if(/true|false/.test(m))c='jb';return`<span class="${c}">${m}</span>`;});
+}
+
+/* ══════════════════════════════════════
+   API KEY
+   ══════════════════════════════════════ */
+let apiKey = localStorage.getItem('anthropic-api-key') || '';
+(function initApiKey() {
+  const inp = document.getElementById('api-key-input');
+  if (apiKey) { inp.value = apiKey; setApiKeyStatus(true); }
+})();
+function onApiKeyInput(v) {
+  apiKey = v.trim();
+  localStorage.setItem('anthropic-api-key', apiKey);
+  setApiKeyStatus(apiKey.startsWith('sk-ant-'));
+}
+function setApiKeyStatus(ok) {
+  const el = document.getElementById('apikey-status');
+  const card = document.getElementById('apikey-card');
+  el.textContent = ok ? '✓ Clé valide' : 'Clé non renseignée';
+  el.style.color = ok ? 'var(--green)' : 'var(--muted)';
+  card.style.borderColor = ok ? '#b0d8bc' : 'var(--border)';
+}
+function toggleApiKeyVisibility() {
+  const inp = document.getElementById('api-key-input');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+
+renderLibrary();
+</script>
+</body>
+</html>
