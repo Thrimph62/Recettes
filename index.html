@@ -619,9 +619,11 @@ const TABLE_NAME        = 'recettes_recettes';
           <option value="Apéritif">Apéritif</option>
           <option value="Boissons">Boissons</option>
           <option value="Dessert">Dessert</option>
+          <option value="Divers">Divers</option>
           <option value="Entrée">Entrée</option>
           <option value="Plat">Plat</option>
           <option value="Poisson">Poisson</option>
+          <option value="Sauce">Sauce</option>
           <option value="Viande">Viande</option>
         </select>
       </div>
@@ -753,6 +755,8 @@ const CAT_COLORS = {
   'Viande':          '#8a2020',
   'Accompagnement':  '#4a6a1a',
   'Boissons':        '#2a4a8a',
+  'Sauce':           '#4a4a4a',
+  'Divers':          '#6a5a8a',
 };
 const CAT_CLASS = {
   'Plat':           'cat-plat',
@@ -763,6 +767,8 @@ const CAT_CLASS = {
   'Viande':         'cat-viande',
   'Accompagnement': 'cat-accompagnement',
   'Boissons':       'cat-boissons',
+  'Sauce':          'cat-sauce',
+  'Divers':         'cat-divers',
 };
 function catColor(cat) { return CAT_COLORS[cat] || '#5a6a8a'; }
 function catClass(cat) { return CAT_CLASS[cat] || 'cat-default'; }
