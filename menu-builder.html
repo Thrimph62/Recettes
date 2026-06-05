@@ -478,8 +478,7 @@ function acBuildHTML(q) {
       ? r.title.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<em>$1</em>')
       : r.title;
     // Escape title for the inline handler
-    const safeTitle = r.title.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    html += `<div class="ac-item" onmousedown="event.preventDefault()" onclick="acPick('${r.id}','${safeTitle}')">${hl}</div>`;
+    html += `<div class="ac-item" data-id="${r.id.replace(/"/g,'&quot;')}" data-title="${r.title.replace(/"/g,'&quot;')}" onmousedown="event.preventDefault()" onclick="acPickEl(this)">${hl}</div>`;
   }
   return html;
 }
@@ -510,6 +509,10 @@ function acFilter(el) {
   acDrop.classList.add('open');
   acPos(el);
   updateGenInfo();
+}
+
+function acPickEl(el) {
+  acPick(el.dataset.id, el.dataset.title);
 }
 
 function acPick(recipeId, title) {
