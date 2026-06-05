@@ -143,11 +143,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .stock-unit{font-size:11px;color:var(--muted);min-width:22px;}
 
 /* FINAL LIST */
-.final-list-section{margin-top:1.5rem;border:1.5px solid var(--green);border-radius:12px;overflow:hidden;}
-.final-list-header{background:var(--green);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;}
-.final-list-header h3{font-family:'DM Serif Display',serif;font-size:16px;font-weight:400;color:#fff;}
-.final-list-header span{font-size:12px;color:rgba(255,255,255,.6);}
-.final-list-body{padding:16px 20px;}
+
 .final-cat-block{margin-bottom:14px;}
 .final-cat-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--green);margin-bottom:6px;}
 .final-item{display:flex;align-items:baseline;gap:10px;padding:4px 0;border-bottom:0.5px solid var(--ice);font-size:13px;}
@@ -256,7 +252,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
     <div class="shopping-footer hidden" id="shopping-footer">
-      <button class="btn btn-success" onclick="generateFinalList()">✅ Générer la liste définitive</button>
       <button class="btn btn-ghost btn-sm" onclick="saveShoppingList()">💾 Sauvegarder la liste</button>
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="clearStock()">🗑️ Vider les stocks</button>
@@ -703,7 +698,6 @@ function clearMenu() {
   document.getElementById('shopping-footer').classList.add('hidden');
   document.getElementById('sh-meta').textContent='—';
   shoppingList=null;
-  document.getElementById('final-list-container')?.remove();
 }
 
 function resetPersonsDialog() {
@@ -832,7 +826,6 @@ function renderShoppingList(agg, mealCount) {
 
   document.getElementById('shopping-body').innerHTML = html;
   document.getElementById('shopping-footer').classList.remove('hidden');
-  document.getElementById('final-list-container')?.remove();
   showStatus('success', `✓ ${totalItems} ingrédients sur ${mealCount} repas.`);
 }
 
@@ -866,84 +859,6 @@ function clearStock() {
     row.classList.remove('checked');
   });
   checkedItems.clear();
-}
-
-function generateFinalList() {
-  if (!shoppingList) return;
-  const bycat = {};
-  for (const [catName, catData] of Object.entries(shoppingList)) {
-    for (const item of Object.values(catData.items)) {
-      const key = norm(item.name);
-      if (checkedItems.has(key)) continue; // skip checked items
-      const needed = item.qty || 0;
-      const stock  = stockData[key] || 0;
-      const toBuy  = Math.max(0, needed - stock);
-      // Include if: has qty to buy, OR is a PM item (qty=0, no stock input)
-      const isPM = needed === 0;
-      if (!isPM && toBuy <= 0) continue;
-      if (!bycat[catName]) bycat[catName] = { icon:catData.icon, items:[] };
-      bycat[catName].items.push({ name:item.name, toBuy, unit:item.unit||'', optional:item.optional, isPM });
-    }
-  }
-
-  document.getElementById('final-list-container')?.remove();
-  const total = Object.values(bycat).reduce((a,c)=>a+c.items.length,0);
-
-  if (!total) {
-    const div = document.createElement('div');
-    div.id = 'final-list-container';
-    div.style.cssText = 'margin-top:1.5rem;padding:1.5rem;text-align:center;background:#edfaf3;border-radius:12px;border:1.5px solid var(--green);color:var(--green);font-size:14px;';
-    div.textContent = '✅ Vous avez tout en stock — rien à acheter !';
-    document.getElementById('shopping-section').after(div);
-    return;
-  }
-
-  let html = `<div class="final-list-section" id="final-list-container">
-    <div class="final-list-header">
-      <h3>✅ Liste définitive de courses</h3>
-      <span>${total} article${total>1?'s':''} à acheter</span>
-    </div><div class="final-list-body">`;
-  const sortedCats = Object.keys(bycat).sort((a,b) => a.localeCompare(b,'fr'));
-  for (const catName of sortedCats) {
-    const catData = bycat[catName];
-    const sortedItems = catData.items.sort((a,b) => a.name.localeCompare(b.name,'fr'));
-    html += `<div class="final-cat-block"><div class="final-cat-name">${catData.icon} ${catName}</div>`;
-    for (const item of sortedItems) {
-      const qtyDisplay = item.isPM ? 'PM' : fmtQty(item.toBuy, item.unit);
-      html += `<div class="final-item">
-        <span style="color:var(--muted)">☐</span>
-        <span class="final-item-name">${item.name}${item.optional?' <em style="font-size:11px;color:var(--muted)">(opt.)</em>':''}</span>
-        <span class="final-item-qty">${qtyDisplay}</span>
-      </div>`;
-    }
-    html += '</div>';
-  }
-  html += `<div style="margin-top:12px;display:flex;gap:8px;">
-    <button class="btn btn-ghost btn-sm" onclick="exportFinalList()">⬇️ Exporter TXT</button>
-    <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Imprimer</button>
-  </div></div></div>`;
-
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  document.getElementById('shopping-section').after(tmp.firstElementChild);
-  document.getElementById('final-list-container').scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function exportFinalList() {
-  if (!shoppingList) return;
-  let txt = '═══════════════════════════════════\n  LISTE DÉFINITIVE DE COURSES\n  '+new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})+'\n═══════════════════════════════════\n\n';
-  for (const catName of Object.keys(shoppingList).sort((a,b)=>a.localeCompare(b,'fr'))) {
-    const catData = shoppingList[catName];
-    let lines = '';
-    for (const item of Object.values(catData.items).sort((a,b)=>a.name.localeCompare(b.name,'fr'))) {
-      const key = norm(item.name);
-      if (checkedItems.has(key)) continue;
-      const toBuy = Math.max(0,(item.qty||0)-(stockData[key]||0));
-      if (toBuy > 0) lines += `  ☐  ${item.name} ........... ${fmtQty(toBuy,item.unit)}\n`;
-    }
-    if (lines) txt += `── ${catName.toUpperCase()} ──\n${lines}\n`;
-  }
-  dl(txt,'liste-definitives-courses.txt');
 }
 
 function exportShoppingList() {
