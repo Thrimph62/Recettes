@@ -112,36 +112,38 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 /* SHOPPING SECTION */
 .shopping-section{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(15,45,90,.06);width:fit-content;min-width:500px;margin:0 auto;}
-.ingr-name-cell{padding-right:30px;white-space:nowrap;}
+.ingr-name-cell{padding-right:30px;white-space:nowrap;font-size:13px;line-height:1.4;}
+.ingr-table{width:100%;border-collapse:collapse;}
+.ingr-table thead th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:4px 10px;border-bottom:0.5px solid var(--border);white-space:nowrap;}
+.ingr-table thead th.col-qty{text-align:right;}
+.ingr-table thead th.col-stock{text-align:center;}
+.ingr-table thead th.col-cb{width:20px;}
+.col-cb{width:28px;padding:6px 8px;vertical-align:middle;}
+.col-cb input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--navy);display:block;}
+.col-stock{text-align:center;padding:4px 10px;}
+.ingr-row{border-bottom:0.5px solid var(--ice);transition:background .1s;}
+.ingr-row:last-child{border-bottom:none;}
+.ingr-row:hover td{background:var(--ice2);}
+.ingr-row.zero-needed{opacity:.4;}
+.ingr-row.checked .ingr-name-cell{text-decoration:line-through;color:var(--muted);}
+.ingr-row.checked td{background:#f5fff8;opacity:.55;}
+.ingr-name-cell{padding:6px 10px;}
 .shopping-header{background:var(--navy);padding:14px 22px;display:flex;align-items:center;gap:10px;}
 .shopping-header h2{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:#fff;flex:1;}
 .sh-meta{font-size:12px;color:rgba(255,255,255,.45);}
 .shopping-body{padding:20px 22px;}
-
-/* SHOPPING ROWS */
 .cat-block{margin-bottom:22px;}
 .cat-title{display:flex;align-items:center;gap:10px;margin-bottom:6px;padding-bottom:6px;border-bottom:2px solid var(--ice);}
 .cat-icon{font-size:16px;}
 .cat-name{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--navy2);}
 .cat-count{margin-left:auto;font-size:11px;color:var(--navy3);font-family:'DM Mono',monospace;}
-.ingr-list-header{display:grid;grid-template-columns:20px max-content 100px 140px 100px;gap:0 10px;align-items:center;padding:4px 8px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:0.5px solid var(--border);margin-bottom:2px;}
-.ingr-row{display:grid;grid-template-columns:20px max-content 100px 140px 100px;gap:0 10px;align-items:center;padding:6px 8px;border-bottom:0.5px solid var(--ice);transition:background .1s;}
-.ingr-row:last-child{border-bottom:none;}
-.ingr-row:hover{background:var(--ice2);}
-.ingr-row.zero-needed{opacity:.4;}
-.ingr-row input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--navy);}
-.ingr-row.checked .ingr-name-cell{text-decoration:line-through;color:var(--muted);}
-.ingr-row.checked{background:#f5fff8;opacity:.55;}
-.ingr-name-cell{font-size:13px;line-height:1.4;}
 .ingr-opt-tag{font-size:10px;color:var(--muted);font-style:italic;margin-left:4px;}
-.qty-badge{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;text-align:right;white-space:nowrap;}
+.qty-badge{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;text-align:right;white-space:nowrap;padding:6px 10px;}
 .qty-badge.needed{color:var(--navy2);}
 .qty-badge.tobuy{color:var(--green);font-weight:600;}
 .qty-badge.tobuy.zero{color:var(--muted);font-weight:400;}
-.stock-cell{display:flex;align-items:center;justify-content:center;}
 .stock-input{width:90px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:center;background:var(--white);outline:none;transition:border-color .15s;}
 .stock-input:focus{border-color:var(--navy3);}
-.stock-unit{font-size:11px;color:var(--muted);min-width:22px;}
 
 /* FINAL LIST */
 
@@ -782,30 +784,31 @@ function renderShoppingList(agg, mealCount) {
         <span class="cat-name">${catName}</span>
         <span class="cat-count">${items.length} article${items.length>1?'s':''}</span>
       </div>
-      <div class="ingr-list-header">
-        <span></span><span>Ingrédient</span>
-        <span style="text-align:right">Besoin</span>
-        <span style="text-align:center">En stock</span>
-        <span style="text-align:right">À acheter</span>
-      </div><div>`;
+      <table class="ingr-table">
+        <thead><tr>
+          <th class="col-cb"></th>
+          <th class="col-name">Ingrédient</th>
+          <th class="col-qty">Besoin</th>
+          <th class="col-stock">En stock</th>
+          <th class="col-qty">À acheter</th>
+        </tr></thead>
+        <tbody>`;
     for (const item of items) {
       const key = norm(item.name);
       const stock = stockData[key] || 0;
       const needed = item.qty || 0;
       const toBuy = Math.max(0, needed - stock);
-      html += `<div class="ingr-row ${toBuy===0&&needed>0?'zero-needed':''}" id="row-${key}" data-key="${key}" data-needed="${needed}" data-unit="${item.unit||''}">
-        <input type="checkbox" onchange="onRowCheck(this,'${key}')">
-        <div class="ingr-name-cell">${item.name}${item.optional?'<span class="ingr-opt-tag">(opt.)</span>':''}</div>
-        <div class="qty-badge needed" id="needed-${key}">${needed?fmtQty(needed,item.unit):'—'}</div>
-        <div class="stock-cell">
-          <input class="stock-input" type="number" min="0" step="any"
-            value="${stock||''}" placeholder="0${item.unit?' '+item.unit:''}"
-            oninput="onStockInput(this,'${key}')">
-        </div>
-        <div class="qty-badge tobuy ${toBuy===0?'zero':''}" id="tobuy-${key}">${needed?fmtQty(toBuy,item.unit):'—'}</div>
-      </div>`;
+      html += `<tr class="ingr-row ${toBuy===0&&needed>0?'zero-needed':''}" id="row-${key}" data-key="${key}" data-needed="${needed}" data-unit="${item.unit||''}">
+        <td class="col-cb"><input type="checkbox" onchange="onRowCheck(this,'${key}')"></td>
+        <td class="ingr-name-cell">${item.name}${item.optional?'<span class="ingr-opt-tag">(opt.)</span>':''}</td>
+        <td class="qty-badge needed" id="needed-${key}">${needed?fmtQty(needed,item.unit):'—'}</td>
+        <td class="col-stock"><input class="stock-input" type="number" min="0" step="any"
+          value="${stock||''}" placeholder="0${item.unit?' '+item.unit:''}"
+          oninput="onStockInput(this,'${key}')"></td>
+        <td class="qty-badge tobuy ${toBuy===0?'zero':''}" id="tobuy-${key}">${needed?fmtQty(toBuy,item.unit):'—'}</td>
+      </tr>`;
     }
-    html += '</div></div>';
+    html += `</tbody></table></div>`;
   }
 
   document.getElementById('shopping-body').innerHTML = html;
@@ -827,7 +830,7 @@ function onStockInput(input, key) {
 }
 
 function onRowCheck(cb, key) {
-  cb.closest('.ingr-row').classList.toggle('checked', cb.checked);
+  cb.closest('tr').classList.toggle('checked', cb.checked);
   if (cb.checked) checkedItems.add(key); else checkedItems.delete(key);
 }
 
