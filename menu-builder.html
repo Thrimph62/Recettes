@@ -245,18 +245,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <span class="sh-meta" id="sh-meta">—</span>
       <button class="btn btn-white btn-sm" onclick="loadShoppingList()" style="margin-left:12px;">📂 Charger liste sauvegardée</button>
     </div>
-    <div class="shopping-body" id="shopping-body">
-      <div class="empty-state">
-        <div class="em">🧺</div>
-        <p>Construisez votre menu puis cliquez sur « Générer la liste de courses »</p>
-      </div>
-    </div>
     <div class="shopping-footer hidden" id="shopping-footer">
       <button class="btn btn-ghost btn-sm" onclick="saveShoppingList()">💾 Sauvegarder la liste</button>
       <div style="flex:1"></div>
       <button class="btn btn-ghost btn-sm" onclick="clearStock()">🗑️ Vider les stocks</button>
       <button class="btn btn-ghost btn-sm" onclick="exportShoppingList()">⬇️ Exporter TXT</button>
       <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨️ Imprimer</button>
+    </div>
+    <div class="shopping-body" id="shopping-body">
+      <div class="empty-state">
+        <div class="em">🧺</div>
+        <p>Construisez votre menu puis cliquez sur « Générer la liste de courses »</p>
+      </div>
     </div>
   </div>
 </main>
