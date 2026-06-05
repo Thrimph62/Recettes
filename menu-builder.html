@@ -138,8 +138,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .qty-badge.needed{color:var(--navy2);}
 .qty-badge.tobuy{color:var(--green);font-weight:600;}
 .qty-badge.tobuy.zero{color:var(--muted);font-weight:400;}
-.stock-cell{display:flex;align-items:center;gap:4px;}
-.stock-input{width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:right;background:var(--white);outline:none;transition:border-color .15s;}
+.stock-cell{display:flex;align-items:center;justify-content:center;}
+.stock-input{width:90px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);text-align:center;background:var(--white);outline:none;transition:border-color .15s;}
 .stock-input:focus{border-color:var(--navy3);}
 .stock-unit{font-size:11px;color:var(--muted);min-width:22px;}
 
@@ -799,9 +799,8 @@ function renderShoppingList(agg, mealCount) {
         <div class="qty-badge needed" id="needed-${key}">${needed?fmtQty(needed,item.unit):'—'}</div>
         <div class="stock-cell">
           <input class="stock-input" type="number" min="0" step="any"
-            value="${stock||''}" placeholder="0"
+            value="${stock||''}" placeholder="0${item.unit?' '+item.unit:''}"
             oninput="onStockInput(this,'${key}')">
-          <span class="stock-unit">${item.unit||''}</span>
         </div>
         <div class="qty-badge tobuy ${toBuy===0?'zero':''}" id="tobuy-${key}">${needed?fmtQty(toBuy,item.unit):'—'}</div>
       </div>`;
