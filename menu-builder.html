@@ -802,12 +802,12 @@ function renderShoppingList(agg, mealCount) {
       const needed = item.qty || 0;
       const toBuy = Math.max(0, needed - stock);
       html += `<tr class="ingr-row ${toBuy===0&&needed>0?'zero-needed':''}" id="row-${key}" data-key="${key}" data-needed="${needed}" data-unit="${item.unit||''}">
-        <td class="col-cb"><input type="checkbox" onchange="onRowCheck(this,'${key}')"></td>
+        <td class="col-cb"><input type="checkbox" data-key="${key}" onchange="onRowCheck(this)"></td>
         <td class="ingr-name-cell">${item.name}${item.optional?'<span class="ingr-opt-tag">(opt.)</span>':''}</td>
         <td class="qty-badge needed" id="needed-${key}">${needed?fmtQty(needed,item.unit):'—'}</td>
         <td class="col-stock"><input class="stock-input" type="number" min="0" step="any"
-          value="${stock||''}" placeholder="0${item.unit?' '+item.unit:''}"
-          oninput="onStockInput(this,'${key}')"></td>
+          data-key="${key}" value="${stock||''}" placeholder="0${item.unit?' '+item.unit:''}"
+          oninput="onStockInput(this)"></td>
         <td class="qty-badge tobuy ${toBuy===0?'zero':''}" id="tobuy-${key}">${needed?fmtQty(toBuy,item.unit):'—'}</td>
       </tr>`;
     }
@@ -819,7 +819,8 @@ function renderShoppingList(agg, mealCount) {
   showStatus('success', `✓ ${totalItems} ingrédients sur ${mealCount} repas.`);
 }
 
-function onStockInput(input, key) {
+function onStockInput(input) {
+  const key = input.dataset.key;
   const val = parseFloat(input.value) || 0;
   stockData[key] = val;
   const row = document.getElementById('row-'+key);
@@ -832,7 +833,8 @@ function onStockInput(input, key) {
   row.classList.toggle('zero-needed', toBuy===0 && needed>0);
 }
 
-function onRowCheck(cb, key) {
+function onRowCheck(cb) {
+  const key = cb.dataset.key;
   cb.closest('tr').classList.toggle('checked', cb.checked);
   if (cb.checked) checkedItems.add(key); else checkedItems.delete(key);
 }
@@ -840,14 +842,8 @@ function onRowCheck(cb, key) {
 function clearStock() {
   if (!confirm('Vider toutes les quantités en stock ?')) return;
   stockData = {};
-  document.querySelectorAll('.stock-input').forEach(el => { el.value = ''; });
-  document.querySelectorAll('.ingr-row').forEach(row => {
-    const key = row.dataset.key;
-    if (key) onStockInput({value:''}, key);
-    const cb = row.querySelector('input[type=checkbox]');
-    if (cb) cb.checked = false;
-    row.classList.remove('checked');
-  });
+  document.querySelectorAll('.stock-input').forEach(el => { el.value = ''; onStockInput(el); });
+  document.querySelectorAll('.ingr-row input[type=checkbox]').forEach(cb => { cb.checked = false; cb.closest('tr')?.classList.remove('checked'); });
   checkedItems.clear();
 }
 
