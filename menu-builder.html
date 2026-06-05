@@ -558,27 +558,11 @@ window.addEventListener('resize', () => { if(acInput) acPos(acInput); });
    SLOT ACTIONS
 ══════════════════════════════════════ */
 function fmtPersons(n) {
-  const whole = Math.floor(n);
-  const frac  = Math.round((n - whole) * 4); // quarters
-  const fracs = ['', '¼', '½', '¾'];
-  if (whole === 0) return fracs[frac] || '¼';
-  return frac === 0 ? String(whole) : whole + fracs[frac];
+  return (Math.round(n * 4) / 4).toString();
 }
 
 function parsePersons(str) {
-  // Parse fraction display back to number
-  const s = String(str).trim();
-  const map = {'¼':0.25,'½':0.5,'¾':0.75};
-  // Whole + fraction e.g. "2½"
-  for (const [f, v] of Object.entries(map)) {
-    if (s.endsWith(f)) {
-      const w = parseInt(s) || 0;
-      return w + v;
-    }
-  }
-  // Pure fraction
-  if (map[s]) return map[s];
-  return parseFloat(s) || 1;
+  return parseFloat(str) || 1;
 }
 
 function changePer(d, mealId, s, delta) {
