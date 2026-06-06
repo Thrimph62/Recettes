@@ -160,11 +160,13 @@ tr[data-meal="sp"] .recap-meal-label{border-left-color:#f97316;}
   body{background:#fff;}
   -webkit-print-color-adjust:exact;print-color-adjust:exact;
 
-  /* Print menu only */
+  /* Print menu only — recap table without times */
   body.print-menu #section-heures,
   body.print-menu #planning-section,
   body.print-menu .section-title,
-  body.print-menu .recap-time-input{display:none!important;}
+  body.print-menu .recap-time-input,
+  body.print-menu #recap-actions{display:none!important;}
+  body.print-menu .recap-cell{padding:10px!important;}
 
   /* Print planning only */
   body.print-planning #section-heures,
@@ -224,7 +226,7 @@ tr[data-meal="sp"] .recap-meal-label{border-left-color:#f97316;}
   <div class="section-block" id="recap-section">
     <div class="section-title">📅 2 · Récap du menu — modifiez les heures par jour si besoin</div>
     <div id="recap-menu"><p style="font-size:13px;color:var(--muted);">Chargement…</p></div>
-    <div style="display:flex;gap:8px;margin-top:1rem;">
+    <div id="recap-actions" style="display:flex;gap:8px;margin-top:1rem;">
       <button class="btn btn-primary" onclick="generateAll()">▶ Générer le planning</button>
       <button class="btn btn-ghost btn-sm" onclick="saveTimings()">💾 Sauvegarder les horaires</button>
     </div>
