@@ -92,10 +92,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ac-dropdown{position:fixed;z-index:9999;background:var(--white);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 24px rgba(15,45,90,.15);max-height:220px;overflow-y:auto;min-width:200px;max-width:280px;display:none;}
 .ac-dropdown.open{display:block;}
 .ac-cat-header{padding:5px 10px 3px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--navy3);background:var(--ice2);border-bottom:0.5px solid var(--border);position:sticky;top:0;}
-.ac-item{padding:6px 10px;font-size:12px;cursor:pointer;border-bottom:0.5px solid var(--ice);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ac-item{padding:6px 10px;font-size:12px;cursor:pointer;border-bottom:0.5px solid var(--ice);display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .ac-item:last-child{border-bottom:none;}
 .ac-item:hover,.ac-item.focused{background:var(--ice);}
 .ac-item em{font-style:normal;background:#fff3a0;border-radius:2px;}
+.ac-already{font-size:10px;color:var(--navy3);font-family:'DM Mono',monospace;white-space:nowrap;opacity:.75;flex-shrink:0;}
 .ac-empty{padding:10px;font-size:12px;color:var(--muted);text-align:center;}
 
 /* PERSONS */
@@ -468,17 +469,40 @@ function acSortedOptions(q) {
   return {result, query};
 }
 
+// Returns a map of recipeId → array of day/meal labels where it's used
+function getMenuRecipeUsage() {
+  const usage = {};
+  for (const [dateKey, meals] of Object.entries(menu)) {
+    // Build a readable day label
+    const dt = new Date(dateKey + 'T12:00:00');
+    const dayLabel = dt.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'numeric' });
+    for (const [mealId, slots] of Object.entries(meals)) {
+      const meal = getMealDef(mealId);
+      for (const slot of slots) {
+        if (!slot.recipeId) continue;
+        if (!usage[slot.recipeId]) usage[slot.recipeId] = [];
+        usage[slot.recipeId].push(`${dayLabel} ${meal.icon}`);
+      }
+    }
+  }
+  return usage;
+}
+
 function acBuildHTML(q) {
   const {result, query} = acSortedOptions(q);
   if (!result.length) return `<div class="ac-empty">Aucune recette trouvée</div>`;
+  const usage = getMenuRecipeUsage();
   let html='', lastCat=null;
   for (const {cat, r} of result) {
     if (cat !== lastCat) { html += `<div class="ac-cat-header">${cat}</div>`; lastCat=cat; }
     const hl = query
       ? r.title.replace(new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<em>$1</em>')
       : r.title;
-    // Escape title for the inline handler
-    html += `<div class="ac-item" data-id="${r.id.replace(/"/g,'&quot;')}" data-title="${r.title.replace(/"/g,'&quot;')}" onmousedown="event.preventDefault()" onclick="acPickEl(this)">${hl}</div>`;
+    const uses = usage[r.id];
+    const badge = uses
+      ? `<span class="ac-already" title="${uses.join(', ')}">✓ ${uses.length}×</span>`
+      : '';
+    html += `<div class="ac-item" data-id="${r.id.replace(/"/g,'&quot;')}" data-title="${r.title.replace(/"/g,'&quot;')}" onmousedown="event.preventDefault()" onclick="acPickEl(this)">${hl}${badge}</div>`;
   }
   return html;
 }
@@ -965,7 +989,8 @@ function showStatus(type, msg) {
   // Load recipes from Supabase only
   if (sb) {
     try {
-      const { data, error } = await sb.from(SB_RECIPES).select('*');
+      const { data, error } = await sb.from(SB_RECIPES)
+        .select('id, title, category, baseportions, times, serving, equipment, ingredients, phases');
       if (!error && data?.length) {
         recipes = data;
       } else if (error) {

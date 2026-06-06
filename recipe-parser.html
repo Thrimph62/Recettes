@@ -1013,7 +1013,7 @@ async function saveLibrary() {
 async function loadLibrary() {
   if (!sb) return;
   try {
-    const { data, error } = await sb.from('recettes_recettes').select('*').order('title', { ascending: true });
+    const { data, error } = await sb.from('recettes_recettes').select('id, title, category, baseportions, times, serving').order('title', { ascending: true });
     if (error) throw error;
     library = data || [];
     document.getElementById('lib-count-badge').textContent = library.length ? `${library.length} recette(s)` : '';

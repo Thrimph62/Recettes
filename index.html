@@ -808,7 +808,7 @@ async function loadRecipes() {
   try {
     const { data, error } = await sbClient
       .from(TABLE_NAME)
-      .select('*')
+      .select('id, title, category, baseportions, times, serving')
       .order('title', { ascending: true });
 
     if (error) throw error;

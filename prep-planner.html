@@ -249,7 +249,7 @@ async function loadAll() {
   showStatus('info','Chargement des données…');
   try {
     const [rRes, mRes, tRes, cRes] = await Promise.all([
-      sb.from('recettes_recettes').select('*'),
+      sb.from('recettes_recettes').select('id, title, phases'),
       sb.from('recettes_menus').select('data').eq('id','main').maybeSingle(),
       sb.from('recettes_menus').select('data').eq('id','timings').maybeSingle(),
       sb.from('recettes_menus').select('data').eq('id','plan-checks').maybeSingle(),
