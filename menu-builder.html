@@ -96,7 +96,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .ac-item:last-child{border-bottom:none;}
 .ac-item:hover,.ac-item.focused{background:var(--ice);}
 .ac-item em{font-style:normal;background:#fff3a0;border-radius:2px;}
-.ac-already{font-size:10px;color:var(--navy3);font-family:'DM Mono',monospace;white-space:nowrap;opacity:.75;flex-shrink:0;}
+.ac-already{font-size:10px;color:#fff;background:var(--navy2);font-family:'DM Mono',monospace;white-space:nowrap;flex-shrink:0;padding:1px 6px;border-radius:10px;}
 .ac-empty{padding:10px;font-size:12px;color:var(--muted);text-align:center;}
 
 /* PERSONS */
@@ -473,15 +473,17 @@ function acSortedOptions(q) {
 function getMenuRecipeUsage() {
   const usage = {};
   for (const [dateKey, meals] of Object.entries(menu)) {
-    // Build a readable day label
+    if (!meals || typeof meals !== 'object') continue;
     const dt = new Date(dateKey + 'T12:00:00');
     const dayLabel = dt.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'numeric' });
     for (const [mealId, slots] of Object.entries(meals)) {
+      if (!Array.isArray(slots)) continue;
       const meal = getMealDef(mealId);
+      const icon = meal?.icon || '🍽️';
       for (const slot of slots) {
-        if (!slot.recipeId) continue;
+        if (!slot?.recipeId) continue;
         if (!usage[slot.recipeId]) usage[slot.recipeId] = [];
-        usage[slot.recipeId].push(`${dayLabel} ${meal.icon}`);
+        usage[slot.recipeId].push(`${dayLabel} ${icon}`);
       }
     }
   }
