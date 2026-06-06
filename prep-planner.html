@@ -159,22 +159,27 @@ tr[data-meal="sp"] .recap-meal-label{border-left-color:#f97316;}
   .app-nav,.app-header,.btn,#status{display:none!important;}
   body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 
-  /* Print menu only — recap table without times */
+  /* Print menu only — recap table without times, equal columns */
   body.print-menu #section-heures,
   body.print-menu #planning-section,
   body.print-menu .section-title,
   body.print-menu .recap-time-input,
   body.print-menu #recap-actions{display:none!important;}
-  body.print-menu .recap-cell{padding:10px!important;}
+  body.print-menu .recap-table{table-layout:fixed;width:100%;}
+  body.print-menu .recap-th-label,
+  body.print-menu .recap-meal-label{width:100px!important;}
+  body.print-menu .recap-th-day,
+  body.print-menu .recap-cell{width:auto!important;}
+  body.print-menu .recap-cell{padding:8px 6px!important;}
 
-  /* Print planning only */
+  /* Print planning only — keep 3-col grid */
   body.print-planning #section-heures,
   body.print-planning #recap-section{display:none!important;}
+  body.print-planning #week-plan{display:grid!important;grid-template-columns:repeat(3,1fr);gap:12px;}
 
   /* Always keep day headers colored */
   .day-header{background:var(--navy)!important;}
-  #week-plan{display:block!important;}
-  .day-section{margin-bottom:1.5rem;}
+  .day-section{margin-bottom:0;}
 }
 </style>
 </head>
