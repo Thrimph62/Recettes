@@ -138,10 +138,42 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .week-empty .em{font-size:40px;margin-bottom:12px;}
 .week-empty p{font-size:13px;}
 
+/* RECAP ROW COLORS */
+.recap-table tbody tr[data-meal="pd"]{background:rgba(245,158,11,.06);}
+.recap-table tbody tr[data-meal="dj"]{background:rgba(59,130,246,.06);}
+.recap-table tbody tr[data-meal="ap"]{background:rgba(34,197,94,.06);}
+.recap-table tbody tr[data-meal="di"]{background:rgba(99,102,241,.06);}
+.recap-table tbody tr[data-meal="de"]{background:rgba(236,72,153,.06);}
+.recap-table tbody tr[data-meal="bo"]{background:rgba(6,182,212,.06);}
+.recap-table tbody tr[data-meal="sp"]{background:rgba(249,115,22,.06);}
+.recap-meal-label{border-left:3px solid transparent;}
+tr[data-meal="pd"] .recap-meal-label{border-left-color:#f59e0b;}
+tr[data-meal="dj"] .recap-meal-label{border-left-color:#3b82f6;}
+tr[data-meal="ap"] .recap-meal-label{border-left-color:#22c55e;}
+tr[data-meal="di"] .recap-meal-label{border-left-color:#6366f1;}
+tr[data-meal="de"] .recap-meal-label{border-left-color:#ec4899;}
+tr[data-meal="bo"] .recap-meal-label{border-left-color:#06b6d4;}
+tr[data-meal="sp"] .recap-meal-label{border-left-color:#f97316;}
+
 @media print{
-  .app-nav,.app-header,.setup-card,.section-title,.btn{display:none!important;}
-  .day-header{background:var(--navy)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .app-nav,.app-header,.btn,#status{display:none!important;}
   body{background:#fff;}
+  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+
+  /* Print menu only */
+  body.print-menu #section-heures,
+  body.print-menu #planning-section,
+  body.print-menu .section-title,
+  body.print-menu .recap-time-input{display:none!important;}
+
+  /* Print planning only */
+  body.print-planning #section-heures,
+  body.print-planning #recap-section{display:none!important;}
+
+  /* Always keep day headers colored */
+  .day-header{background:var(--navy)!important;}
+  #week-plan{display:block!important;}
+  .day-section{margin-bottom:1.5rem;}
 }
 </style>
 </head>
@@ -164,7 +196,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
     <p>Heures · Récap du menu · Planning semaine</p>
   </div>
   <div class="header-actions">
-    <button class="btn btn-white btn-sm" onclick="window.print()">🖨️ Imprimer</button>
+    <button class="btn btn-white btn-sm" onclick="printMenu()">🖨️ Imprimer le menu</button>
+    <button class="btn btn-white btn-sm" onclick="printPlanning()">🖨️ Imprimer le planning</button>
   </div>
 </header>
 
@@ -174,7 +207,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <!-- ══════════════════════════════════
        SECTION 1 — HEURES DES REPAS
   ══════════════════════════════════ -->
-  <div class="section-block">
+  <div class="section-block" id="section-heures">
     <div class="section-title">⏰ 1 · Heures des repas — toute la semaine</div>
     <div class="setup-card" style="width:fit-content;">
       <div class="setup-body" style="padding:16px 18px;">
@@ -388,7 +421,7 @@ function buildRecapTable() {
 
   for (const mealId of usedMeals) {
     const color = MEAL_COLORS[mealId];
-    html += '<tr>';
+    html += `<tr data-meal="${mealId}">`;
     html += `<td class="recap-meal-label">
       <div class="recap-meal-inner">
         <div class="recap-meal-dot" style="background:${color}"></div>
@@ -667,6 +700,20 @@ function showStatus(type, msg) {
   el.className = 'status-bar '+type; el.textContent = msg;
   el.classList.remove('hidden');
   if (type==='success') setTimeout(()=>el.classList.add('hidden'), 4000);
+}
+
+/* ══════════════════════════════════════
+   PRINT
+══════════════════════════════════════ */
+function printMenu() {
+  document.body.classList.add('print-menu');
+  window.print();
+  document.body.classList.remove('print-menu');
+}
+function printPlanning() {
+  document.body.classList.add('print-planning');
+  window.print();
+  document.body.classList.remove('print-planning');
 }
 
 /* ══════════════════════════════════════
