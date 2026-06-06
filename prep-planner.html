@@ -43,7 +43,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .btn-success:hover{opacity:.9;}
 .btn-sm{padding:5px 12px;font-size:11px;}
 
-.app-body{max-width:860px;margin:0 auto;padding:2rem 1.5rem;}
+.app-body{width:94%;margin:0 auto;padding:2rem 0;}
 
 /* STATUS */
 .status-bar{padding:9px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
@@ -52,45 +52,52 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .status-bar.info{background:var(--ice);color:var(--navy2);border:0.5px solid var(--border);}
 .hidden{display:none!important;}
 
+/* SECTION BLOCKS */
+.section-block{margin-bottom:2rem;}
+.section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.75rem;padding-left:2px;}
+
 /* SETUP CARD */
-.setup-card{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;box-shadow:0 1px 6px rgba(15,45,90,.05);}
-.setup-header{background:var(--ice);padding:12px 18px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.setup-card{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:.875rem;box-shadow:0 1px 6px rgba(15,45,90,.05);}
+.setup-header{background:var(--ice);padding:10px 18px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .setup-header-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--navy2);}
-.setup-body{padding:16px 18px;display:flex;flex-direction:column;gap:6px;}
+.setup-body{padding:12px 18px;display:flex;flex-direction:column;gap:6px;}
 .setup-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:0.5px solid var(--border);border-radius:8px;background:var(--ice2);}
 .setup-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.setup-meal-label{font-size:12px;font-weight:500;min-width:80px;}
+.setup-meal-label{font-size:12px;font-weight:500;min-width:100px;}
 .setup-chips{display:flex;flex-wrap:wrap;gap:4px;flex:1;}
 .setup-chip{font-size:11px;padding:2px 9px;border-radius:10px;background:var(--white);border:0.5px solid var(--border);color:var(--navy2);}
-.time-picker{padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);background:var(--white);outline:none;width:84px;}
+.time-picker{padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text);background:var(--white);outline:none;width:88px;}
 .time-picker:focus{border-color:var(--navy3);}
+.time-picker.is-override{border-color:var(--gold);background:#fffdf0;}
 .setup-actions{padding:12px 18px 16px;border-top:0.5px solid var(--border);display:flex;gap:8px;}
+
+/* RECAP TABLE */
+.recap-wrap{overflow-x:auto;}
+.recap-table{border-collapse:collapse;width:100%;background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;}
+.recap-table thead th{background:var(--navy);color:#fff;padding:10px 14px;font-size:11px;font-weight:500;text-align:center;white-space:nowrap;border-right:0.5px solid rgba(255,255,255,.1);}
+.recap-table thead th:first-child{text-align:left;min-width:110px;}
+.recap-day-date{font-size:10px;color:rgba(255,255,255,.5);font-weight:400;}
+.recap-table tbody tr{border-bottom:0.5px solid var(--border);}
+.recap-table tbody tr:last-child{border-bottom:none;}
+.recap-meal-label{padding:10px 14px;vertical-align:middle;}
+.recap-meal-inner{display:flex;align-items:center;gap:8px;}
+.recap-meal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.recap-meal-name{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--navy2);}
+.recap-cell{padding:8px 14px;vertical-align:middle;border-left:0.5px solid var(--border);text-align:center;}
+.recap-empty{color:var(--border);font-size:13px;}
+.recap-chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:8px;background:var(--ice);border:0.5px solid var(--border);color:var(--navy2);margin:2px;white-space:nowrap;}
 
 /* DAY SECTION */
 .day-section{margin-bottom:2rem;}
-.day-header{
-  display:flex;align-items:center;gap:12px;margin-bottom:12px;
-  padding:14px 18px;background:var(--navy);border-radius:12px;
-  box-shadow:0 2px 8px rgba(15,45,90,.12);
-}
+.day-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;padding:14px 18px;background:var(--navy);border-radius:12px;box-shadow:0 2px 8px rgba(15,45,90,.12);}
 .day-header-date{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:#fff;}
 .day-header-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px;}
-.day-header-badge{
-  margin-left:auto;padding:3px 12px;border-radius:12px;
-  background:rgba(255,255,255,.12);border:0.5px solid rgba(255,255,255,.2);
-  font-size:11px;color:rgba(255,255,255,.7);font-family:'DM Mono',monospace;
-}
-.day-empty{
-  padding:20px;text-align:center;color:var(--muted);font-size:13px;
-  background:var(--white);border:0.5px solid var(--border);border-radius:12px;
-}
+.day-header-badge{margin-left:auto;padding:3px 12px;border-radius:12px;background:rgba(255,255,255,.12);border:0.5px solid rgba(255,255,255,.2);font-size:11px;color:rgba(255,255,255,.7);font-family:'DM Mono',monospace;}
+.day-empty{padding:20px;text-align:center;color:var(--muted);font-size:13px;background:var(--white);border:0.5px solid var(--border);border-radius:12px;}
 
-/* SECTION TYPE (Avance / Jour J) */
+/* PLAN SECTIONS */
 .plan-section{background:var(--white);border:0.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px;box-shadow:0 1px 5px rgba(15,45,90,.04);}
-.plan-section-header{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 16px;border-bottom:0.5px solid var(--border);
-}
+.plan-section-header{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid var(--border);}
 .plan-section-header.dayj{background:var(--ice);}
 .plan-section-header.advance{background:#fff8f0;}
 .psh-icon{font-size:16px;}
@@ -99,48 +106,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .psh-count{margin-left:auto;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;}
 
 /* STEP ROW */
-.step-row{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 16px;border-bottom:0.5px solid var(--ice);
-  transition:background .1s;
-}
+.step-row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:0.5px solid var(--ice);transition:background .1s;}
 .step-row:last-child{border-bottom:none;}
 .step-row:hover{background:var(--ice2);}
 .step-row.done{opacity:.45;}
 .step-row.done .step-name,.step-row.done .step-recipe{text-decoration:line-through;color:var(--muted);}
-
 .step-cb{width:15px;height:15px;cursor:pointer;accent-color:var(--navy);flex-shrink:0;}
-
-/* time column */
-.step-time{
-  display:flex;flex-direction:column;align-items:flex-end;gap:1px;
-  min-width:88px;flex-shrink:0;
-}
+.step-time{display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:88px;flex-shrink:0;}
 .step-time-range{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--navy2);white-space:nowrap;}
 .step-time-range.advance-label{color:#a06000;font-size:11px;}
 .step-dur{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);}
-
-/* color bar */
 .step-bar{width:3px;height:36px;border-radius:2px;flex-shrink:0;}
-
-/* content */
 .step-content{flex:1;min-width:0;}
 .step-recipe{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px;}
 .step-name{font-size:13px;font-weight:500;color:var(--text);}
-
-/* phase badge */
-.step-phase-badge{
-  font-size:10px;padding:2px 8px;border-radius:8px;
-  background:var(--ice);color:var(--navy3);border:0.5px solid var(--border);
-  flex-shrink:0;white-space:nowrap;
-}
+.step-phase-badge{font-size:10px;padding:2px 8px;border-radius:8px;background:var(--ice);color:var(--navy3);border:0.5px solid var(--border);flex-shrink:0;white-space:nowrap;}
 
 .week-empty{text-align:center;padding:4rem 2rem;color:var(--muted);}
 .week-empty .em{font-size:40px;margin-bottom:12px;}
 .week-empty p{font-size:13px;}
 
 @media print{
-  .app-nav,.app-header,.setup-card,.btn{display:none!important;}
+  .app-nav,.app-header,.setup-card,.section-title,.btn{display:none!important;}
   .day-header{background:var(--navy)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   body{background:#fff;}
 }
@@ -162,7 +149,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="header-icon">⏱️</div>
   <div class="header-title">
     <h1>Planificateur de Préparation</h1>
-    <p>Planning semaine — Jour J + Préparation à l'avance</p>
+    <p>Heures · Récap du menu · Planning semaine</p>
   </div>
   <div class="header-actions">
     <button class="btn btn-white btn-sm" onclick="window.print()">🖨️ Imprimer</button>
@@ -172,22 +159,52 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <main class="app-body">
   <div id="status" class="hidden"></div>
 
-  <!-- SERVICE TIMES SETUP -->
-  <div class="setup-card" id="setup-card">
-    <div class="setup-header">
-      <span class="setup-header-title">⚙️ Horaires de service — définissez l'heure de chaque repas</span>
+  <!-- ══════════════════════════════════
+       SECTION 1 — HEURES DES REPAS
+  ══════════════════════════════════ -->
+  <div class="section-block">
+    <div class="section-title">⏰ 1 · Heures des repas</div>
+
+    <!-- Global times (session only) -->
+    <div class="setup-card">
+      <div class="setup-header">
+        <span class="setup-header-title">🌍 Heures par défaut — toute la semaine</span>
+      </div>
+      <div class="setup-body" id="global-times-body">
+        <p style="font-size:13px;color:var(--muted);">Chargement…</p>
+      </div>
     </div>
-    <div class="setup-body" id="setup-body">
-      <p style="font-size:13px;color:var(--muted);">Chargement…</p>
-    </div>
-    <div class="setup-actions">
-      <button class="btn btn-primary" onclick="generatePlan()">▶ Générer le planning</button>
-      <button class="btn btn-ghost btn-sm" onclick="saveTimings()">💾 Sauvegarder les horaires</button>
+
+    <!-- Per-day overrides (saved to Supabase) -->
+    <div class="setup-card">
+      <div class="setup-header">
+        <span class="setup-header-title">📅 Horaires spécifiques par jour — laissez vide pour utiliser l'heure par défaut</span>
+      </div>
+      <div class="setup-body" id="override-body">
+        <p style="font-size:13px;color:var(--muted);">Chargement…</p>
+      </div>
+      <div class="setup-actions">
+        <button class="btn btn-primary" onclick="generateAll()">▶ Générer le planning</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveTimings()">💾 Sauvegarder les horaires</button>
+      </div>
     </div>
   </div>
 
-  <!-- WEEKLY PLAN -->
-  <div id="week-plan"></div>
+  <!-- ══════════════════════════════════
+       SECTION 2 — RÉCAP DU MENU
+  ══════════════════════════════════ -->
+  <div class="section-block" id="recap-section" style="display:none;">
+    <div class="section-title">📅 2 · Récap du menu</div>
+    <div id="recap-menu"></div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SECTION 3 — PLANNING
+  ══════════════════════════════════ -->
+  <div class="section-block" id="planning-section" style="display:none;">
+    <div class="section-title">⏱️ 3 · Planning de préparation</div>
+    <div id="week-plan"></div>
+  </div>
 
 </main>
 
@@ -214,12 +231,13 @@ const DEFAULT_T    = { pd:'08:00',dj:'12:30',ap:'18:30',di:'19:30',de:'20:30',bo
 /* ══════════════════════════════════════
    STATE
 ══════════════════════════════════════ */
-let recipes    = [];
-let menu       = {};
-let numDays    = 7;
-let startDate  = '';
-let mealTimings = {}; // mealTimings[dateKey][mealId] = "HH:MM"
-let checkedSteps = new Set(); // "dateKey-recipeId-phaseIdx"
+let recipes      = [];
+let menu         = {};
+let numDays      = 7;
+let startDate    = '';
+let globalTimes  = {...DEFAULT_T};   // Session only — not saved to Supabase
+let mealTimings  = {};               // Per-day overrides — saved to Supabase
+let checkedSteps = new Set();
 
 /* ══════════════════════════════════════
    DATE HELPERS
@@ -257,11 +275,11 @@ async function loadAll() {
     if (rRes.error) throw rRes.error;
     if (mRes.error) throw mRes.error;
 
-    recipes   = rRes.data || [];
-    const mp  = mRes.data?.data || {};
-    menu      = mp.menu     || {};
-    numDays   = mp.numDays  || 7;
-    startDate = mp.startDate || localDate(new Date());
+    recipes      = rRes.data || [];
+    const mp     = mRes.data?.data || {};
+    menu         = mp.menu      || {};
+    numDays      = mp.numDays   || 7;
+    startDate    = mp.startDate || localDate(new Date());
     mealTimings  = tRes.data?.data?.timings || {};
     checkedSteps = new Set(cRes.data?.data?.checks || []);
 
@@ -285,7 +303,7 @@ async function saveTimings() {
 }
 
 /* ══════════════════════════════════════
-   SETUP PANEL — one row per meal per day
+   SETUP PANEL
 ══════════════════════════════════════ */
 function getMealsForDay(dateKey) {
   if (!menu[dateKey]) return [];
@@ -301,43 +319,146 @@ function getMealsForDay(dateKey) {
 }
 
 function buildSetupPanel() {
-  const body = document.getElementById('setup-body');
-  let html = '';
-  let anyMeals = false;
+  // Collect all meal types used this week
+  const usedMealTypes = new Set();
+  for (let d = 0; d < numDays; d++) {
+    getMealsForDay(dayToDate(d)).forEach(m => usedMealTypes.add(m.mealId));
+  }
 
+  // ── Global times ──
+  let globalHtml = '';
+  for (const mId of MEAL_ORDER) {
+    if (!usedMealTypes.has(mId)) continue;
+    const color = MEAL_COLORS[mId];
+    globalHtml += `<div class="setup-row">
+      <div class="setup-dot" style="background:${color}"></div>
+      <div class="setup-meal-label">${MEAL_ICONS[mId]} ${MEAL_LABELS[mId]}</div>
+      <div style="flex:1"></div>
+      <input type="time" class="time-picker" value="${globalTimes[mId]||DEFAULT_T[mId]}"
+        onchange="onGlobalTimeChange('${mId}',this.value)">
+    </div>`;
+  }
+  document.getElementById('global-times-body').innerHTML =
+    globalHtml || '<p style="font-size:13px;color:var(--muted);">Aucun repas dans le menu.</p>';
+
+  // ── Per-day overrides ──
+  let overrideHtml = '';
+  let anyMeals = false;
   for (let d = 0; d < numDays; d++) {
     const dateKey = dayToDate(d);
     const meals   = getMealsForDay(dateKey);
     if (!meals.length) continue;
     anyMeals = true;
-
     const lbl = dayToLabel(d);
-    html += `<div style="margin-bottom:6px;">
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:4px 0 6px;">${lbl.name} ${lbl.date}</div>`;
+    overrideHtml += `<div style="margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:4px 0 6px;">
+        ${lbl.name} ${lbl.date}
+      </div>`;
     for (const { mealId, slots } of meals) {
-      const color = MEAL_COLORS[mealId]||'#888';
-      const savedTime = mealTimings[dateKey]?.[mealId] || DEFAULT_T[mealId] || '12:00';
-      const names = slots.map(s => recipes.find(r=>r.id===s.recipeId)?.title || '?');
-      html += `<div class="setup-row">
+      const color    = MEAL_COLORS[mealId];
+      const override = mealTimings[dateKey]?.[mealId] || '';
+      const names    = slots.map(s => recipes.find(r=>r.id===s.recipeId)?.title || '?');
+      overrideHtml += `<div class="setup-row">
         <div class="setup-dot" style="background:${color}"></div>
-        <div class="setup-meal-label">${MEAL_ICONS[mealId]} ${MEAL_LABELS[mealId]||mealId}</div>
+        <div class="setup-meal-label">${MEAL_ICONS[mealId]} ${MEAL_LABELS[mealId]}</div>
         <div class="setup-chips">${names.map(n=>`<span class="setup-chip">${n}</span>`).join('')}</div>
-        <input type="time" class="time-picker" value="${savedTime}"
-          onchange="onTimingChange('${dateKey}','${mealId}',this.value)">
+        <input type="time" class="time-picker ${override?'is-override':''}"
+          value="${override}"
+          onchange="onTimingChange('${dateKey}','${mealId}',this.value)"
+          title="Laisser vide = heure par défaut (${globalTimes[mealId]||DEFAULT_T[mealId]})">
       </div>`;
     }
-    html += '</div>';
+    overrideHtml += '</div>';
   }
+  document.getElementById('override-body').innerHTML =
+    anyMeals ? overrideHtml : '<p style="font-size:13px;color:var(--muted);">Aucun repas dans le menu. Créez-en un dans le Menu Builder.</p>';
+}
 
-  if (!anyMeals) {
-    html = '<p style="font-size:13px;color:var(--muted);">Aucun repas dans le menu. Créez-en un dans le Menu Builder.</p>';
-  }
-  body.innerHTML = html;
+function onGlobalTimeChange(mealId, val) {
+  globalTimes[mealId] = val;
 }
 
 function onTimingChange(dateKey, mealId, val) {
   if (!mealTimings[dateKey]) mealTimings[dateKey] = {};
-  mealTimings[dateKey][mealId] = val;
+  if (val) {
+    mealTimings[dateKey][mealId] = val;
+  } else {
+    delete mealTimings[dateKey][mealId];
+  }
+}
+
+/* ══════════════════════════════════════
+   RECAP TABLE
+══════════════════════════════════════ */
+function buildRecapTable() {
+  const container = document.getElementById('recap-menu');
+
+  // Collect meal types used this week
+  const usedMeals = MEAL_ORDER.filter(mId => {
+    for (let d = 0; d < numDays; d++) {
+      if (getMealsForDay(dayToDate(d)).some(m => m.mealId === mId)) return true;
+    }
+    return false;
+  });
+
+  if (!usedMeals.length) {
+    container.innerHTML = '<p style="font-size:13px;color:var(--muted);padding:1rem;">Aucun repas dans le menu.</p>';
+    document.getElementById('recap-section').style.display = 'none';
+    return;
+  }
+
+  let html = '<div class="recap-wrap"><table class="recap-table"><thead><tr>';
+  html += '<th style="text-align:left;padding:10px 14px;font-size:11px;"></th>';
+  for (let d = 0; d < numDays; d++) {
+    const lbl = dayToLabel(d);
+    html += `<th><div>${lbl.name}</div><div class="recap-day-date">${lbl.date}</div></th>`;
+  }
+  html += '</tr></thead><tbody>';
+
+  for (const mealId of usedMeals) {
+    const color = MEAL_COLORS[mealId];
+    html += '<tr>';
+    html += `<td class="recap-meal-label">
+      <div class="recap-meal-inner">
+        <div class="recap-meal-dot" style="background:${color}"></div>
+        <div>
+          <div style="font-size:14px;">${MEAL_ICONS[mealId]}</div>
+          <div class="recap-meal-name">${MEAL_LABELS[mealId]}</div>
+        </div>
+      </div>
+    </td>`;
+    for (let d = 0; d < numDays; d++) {
+      const dateKey  = dayToDate(d);
+      const meals    = getMealsForDay(dateKey);
+      const mealData = meals.find(m => m.mealId === mealId);
+      if (mealData) {
+        const chips = mealData.slots.map(s => {
+          const r = recipes.find(r => r.id === s.recipeId);
+          return r ? `<span class="recap-chip">${r.title}</span>` : '';
+        }).join('');
+        html += `<td class="recap-cell">${chips}</td>`;
+      } else {
+        html += `<td class="recap-cell recap-empty">—</td>`;
+      }
+    }
+    html += '</tr>';
+  }
+
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+  document.getElementById('recap-section').style.display = 'block';
+}
+
+/* ══════════════════════════════════════
+   GENERATE ALL
+══════════════════════════════════════ */
+function generateAll() {
+  buildRecapTable();
+  generatePlan();
+  document.getElementById('planning-section').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('recap-section').scrollIntoView({ behavior:'smooth', block:'start' });
+  }, 100);
 }
 
 /* ══════════════════════════════════════
@@ -375,12 +496,11 @@ function fmtDur(min) {
 }
 
 /* ══════════════════════════════════════
-   GENERATE FULL PLAN
+   GENERATE PLAN
 ══════════════════════════════════════ */
 function generatePlan() {
   const container = document.getElementById('week-plan');
   container.innerHTML = '';
-
   let totalSteps = 0;
 
   for (let d = 0; d < numDays; d++) {
@@ -388,14 +508,18 @@ function generatePlan() {
     const meals   = getMealsForDay(dateKey);
     const lbl     = dayToLabel(d);
 
-    // Collect all steps for this day
-    const dayJSteps    = []; // {startMin, endMin, dur, recipe, phase, phaseIdx, mealId}
-    const advanceSteps = []; // {daysBack, dur, recipe, phase, phaseIdx, mealId}
+    const dayJSteps    = [];
+    const advanceSteps = [];
 
     for (const { mealId, slots } of meals) {
-      const serviceTime = mealTimings[dateKey]?.[mealId] || DEFAULT_T[mealId] || '12:00';
-      const serviceMin  = parseInt(serviceTime.split(':')[0])*60 + parseInt(serviceTime.split(':')[1]);
-      const color = MEAL_COLORS[mealId];
+      // Per-day override → global time → hardcoded default
+      const effectiveTime = mealTimings[dateKey]?.[mealId]
+        || globalTimes[mealId]
+        || DEFAULT_T[mealId]
+        || '12:00';
+      const [hh, mm]   = effectiveTime.split(':').map(Number);
+      const serviceMin = hh * 60 + mm;
+      const color      = MEAL_COLORS[mealId];
 
       for (const slot of slots) {
         const recipe = recipes.find(r => r.id === slot.recipeId);
@@ -407,7 +531,6 @@ function generatePlan() {
           const dur   = getPhaseDur(phase);
 
           if (isRest(phase) && dur >= 240) {
-            // Only truly advance prep if rest is ≥ 4h
             advanceSteps.push({ daysBack: dur>=720?2:1, dur, recipe, phase, phaseIdx:pi, mealId, color });
           } else {
             dayJSteps.push({ startMin: cursor-dur, endMin: cursor, dur, recipe, phase, phaseIdx:pi, mealId, color });
@@ -417,38 +540,29 @@ function generatePlan() {
       }
     }
 
-    // Group day-J steps by recipe, sorted by each recipe's first step start time
-    const recipeGroups = {}; // recipeId -> { recipe, mealId, color, firstStart, steps[] }
+    const recipeGroups = {};
     for (const s of dayJSteps) {
-      const rid = s.recipe.id+'-'+s.mealId; // unique per recipe+meal combo
-      if (!recipeGroups[rid]) {
-        recipeGroups[rid] = { recipe:s.recipe, mealId:s.mealId, color:s.color, firstStart:s.startMin, steps:[] };
-      }
+      const rid = s.recipe.id+'-'+s.mealId;
+      if (!recipeGroups[rid]) recipeGroups[rid] = { recipe:s.recipe, mealId:s.mealId, color:s.color, firstStart:s.startMin, steps:[] };
       recipeGroups[rid].steps.push(s);
       recipeGroups[rid].firstStart = Math.min(recipeGroups[rid].firstStart, s.startMin);
     }
-    // Sort phases within each recipe chronologically
     for (const g of Object.values(recipeGroups)) g.steps.sort((a,b)=>a.startMin-b.startMin);
-    // Sort recipe groups by their first step
     const sortedGroups = Object.values(recipeGroups).sort((a,b)=>a.firstStart-b.firstStart);
 
-    // Build day section
     const hasSomething = dayJSteps.length > 0 || advanceSteps.length > 0;
     totalSteps += dayJSteps.length + advanceSteps.length;
 
     const sec = document.createElement('div');
     sec.className = 'day-section';
-
-    // Day header
     const badge = `${dayJSteps.length+advanceSteps.length} étape${dayJSteps.length+advanceSteps.length>1?'s':''}`;
-    sec.innerHTML = `
-      <div class="day-header">
-        <div>
-          <div class="day-header-date">${lbl.name} ${lbl.date}</div>
-          <div class="day-header-sub">${meals.length} repas planifié${meals.length>1?'s':''}</div>
-        </div>
-        <div class="day-header-badge">${hasSomething ? badge : '—'}</div>
-      </div>`;
+    sec.innerHTML = `<div class="day-header">
+      <div>
+        <div class="day-header-date">${lbl.name} ${lbl.date}</div>
+        <div class="day-header-sub">${meals.length} repas planifié${meals.length>1?'s':''}</div>
+      </div>
+      <div class="day-header-badge">${hasSomething ? badge : '—'}</div>
+    </div>`;
 
     if (!hasSomething) {
       sec.innerHTML += `<div class="day-empty">Aucun repas planifié ce jour</div>`;
@@ -456,7 +570,6 @@ function generatePlan() {
       continue;
     }
 
-    // Advance section
     if (advanceSteps.length) {
       const groups = {};
       for (const s of advanceSteps) {
@@ -493,7 +606,6 @@ function generatePlan() {
       }
     }
 
-    // Jour J section
     if (dayJSteps.length) {
       let html = `<div class="plan-section">
         <div class="plan-section-header dayj">
@@ -502,7 +614,6 @@ function generatePlan() {
           <span class="psh-count">${dayJSteps.length} étape${dayJSteps.length>1?'s':''}</span>
         </div>`;
       for (const grp of sortedGroups) {
-        // Recipe sub-header
         html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px 4px;background:var(--ice2);border-bottom:0.5px solid var(--border);">
           <div style="width:9px;height:9px;border-radius:50%;background:${grp.color};flex-shrink:0;"></div>
           <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--navy2);">${MEAL_ICONS[grp.mealId]} ${grp.recipe.title}</span>
@@ -554,17 +665,6 @@ async function saveChecks() {
       { onConflict:'id' }
     );
   } catch(e) { console.warn('Save checks failed:', e); }
-}
-
-/* ══════════════════════════════════════
-   COLOR HELPER
-══════════════════════════════════════ */
-function hexLight(hex, a) {
-  const n=parseInt(hex.replace('#',''),16);
-  const r=Math.round(((n>>16)&0xff)*(1-a)+255*a);
-  const g=Math.round(((n>>8)&0xff)*(1-a)+255*a);
-  const b=Math.round((n&0xff)*(1-a)+255*a);
-  return `rgb(${r},${g},${b})`;
 }
 
 /* ══════════════════════════════════════
