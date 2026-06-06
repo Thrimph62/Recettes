@@ -157,8 +157,7 @@ tr[data-meal="sp"] .recap-meal-label{border-left-color:#f97316;}
 
 @media print{
   .app-nav,.app-header,.btn,#status{display:none!important;}
-  body{background:#fff;}
-  -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 
   /* Print menu only — recap table without times */
   body.print-menu #section-heures,
@@ -709,13 +708,19 @@ function showStatus(type, msg) {
 ══════════════════════════════════════ */
 function printMenu() {
   document.body.classList.add('print-menu');
+  window.onafterprint = () => {
+    document.body.classList.remove('print-menu');
+    window.onafterprint = null;
+  };
   window.print();
-  document.body.classList.remove('print-menu');
 }
 function printPlanning() {
   document.body.classList.add('print-planning');
+  window.onafterprint = () => {
+    document.body.classList.remove('print-planning');
+    window.onafterprint = null;
+  };
   window.print();
-  document.body.classList.remove('print-planning');
 }
 
 /* ══════════════════════════════════════
