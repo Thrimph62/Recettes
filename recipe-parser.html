@@ -1077,7 +1077,7 @@ function renderLibrary() {
     if (!items.length) continue;
     // Auto-open if there's an active search
     const isOpen = q ? 'open' : '';
-    html += `<div class="lib-cat-group ${isOpen}" id="catgroup-${btoa(cat).replace(/=/g,'')}">
+    html += `<div class="lib-cat-group ${isOpen}" id="catgroup-${btoa(unescape(encodeURIComponent(cat))).replace(/=/g,'')}">
       <div class="lib-cat-group-title" onclick="toggleCatGroup(this.parentElement)">
         <span class="lib-cat-group-chevron">▶</span>
         <span class="lib-cat-group-name">${cat}</span>
