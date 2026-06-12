@@ -6,8 +6,6 @@
 <title>Parseur de Recettes — Étape 1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="auth.js"></script>
 <style>
 :root {
   --navy:   #0f2d5a;
@@ -31,13 +29,6 @@ body {
   color: var(--text);
   min-height: 100vh;
 }
-
-.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
-.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;}
-.nav-links{display:flex;}
-.nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
-.nav-link:hover{color:rgba(255,255,255,.8);}
-.nav-link.active{color:#fff;border-bottom-color:var(--gold);}
 
 /* ── HEADER ── */
 .app-header {
@@ -347,21 +338,13 @@ body {
 .empty-library .em-icon { font-size: 32px; margin-bottom: 8px; }
 .empty-library p { font-size: 13px; }
 
-.lib-cat-group { margin-bottom: 8px; border: 0.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+.lib-cat-group { margin-bottom: 16px; }
 .lib-cat-group-title {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 14px; cursor: pointer;
-  background: var(--ice); border-bottom: 0.5px solid transparent;
-  user-select: none; transition: background .15s;
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--navy3);
+  padding: 6px 4px 4px; border-bottom: 1.5px solid var(--ice);
+  margin-bottom: 6px;
 }
-.lib-cat-group-title:hover { background: var(--ice2); }
-.lib-cat-group.open .lib-cat-group-title { border-bottom-color: var(--border); }
-.lib-cat-group-name { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--navy2); flex: 1; }
-.lib-cat-group-count { font-size: 11px; color: var(--navy3); font-family: 'DM Mono', monospace; background: var(--white); padding: 2px 8px; border-radius: 10px; border: 0.5px solid var(--border); }
-.lib-cat-group-chevron { font-size: 11px; color: var(--muted); transition: transform .2s; }
-.lib-cat-group.open .lib-cat-group-chevron { transform: rotate(90deg); }
-.lib-cat-group-items { display: none; }
-.lib-cat-group.open .lib-cat-group-items { display: block; }
 
 /* Footer */
 .app-footer {
@@ -373,16 +356,6 @@ body {
 </style>
 </head>
 <body>
-
-<nav class="app-nav">
-  <div class="nav-brand">🍽️ Recettes</div>
-  <div class="nav-links">
-    <a href="index.html" class="nav-link">Bibliothèque</a>
-    <a href="recipe-parser.html" class="nav-link active">Parseur</a>
-    <a href="menu-builder.html" class="nav-link">Menu</a>
-    <a href="prep-planner.html" class="nav-link">Planificateur</a>
-  </div>
-</nav>
 
 <header class="app-header">
   <div class="header-icon">🍽️</div>
@@ -522,38 +495,6 @@ body {
         <button class="btn btn-secondary" id="clear-lib-btn" style="font-size:12px;padding:7px 14px;color:var(--red);">🗑️ Vider</button>
       </div>
     </div>
-
-    <!-- BATCH IMPORT -->
-    <div style="background:var(--ice2);border:1px dashed var(--border);border-radius:10px;padding:18px 20px;margin-bottom:1.5rem;">
-      <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--navy2);margin-bottom:12px;">⚡ Import en masse</div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <!-- Multiple HTML -->
-        <label style="cursor:pointer;">
-          <input type="file" id="batch-html-input" accept=".html,.htm" multiple style="display:none;">
-          <div class="btn btn-secondary" onclick="document.getElementById('batch-html-input').click()">📂 Importer plusieurs HTML</div>
-        </label>
-        <!-- JSON -->
-        <label style="cursor:pointer;">
-          <input type="file" id="batch-json-input" accept=".json" style="display:none;">
-          <div class="btn btn-secondary" onclick="document.getElementById('batch-json-input').click()">📋 Importer fichier JSON</div>
-        </label>
-      </div>
-
-      <!-- Progress -->
-      <div id="batch-progress-wrap" style="display:none;margin-top:14px;">
-        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px;">
-          <span id="batch-progress-label">Traitement en cours…</span>
-          <span id="batch-progress-pct">0%</span>
-        </div>
-        <div style="background:var(--border);border-radius:6px;height:8px;overflow:hidden;">
-          <div id="batch-progress-bar" style="background:var(--navy2);height:100%;width:0%;transition:width .2s;border-radius:6px;"></div>
-        </div>
-      </div>
-
-      <!-- Report -->
-      <div id="batch-report" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;font-size:13px;"></div>
-    </div>
-
     <div id="library-container"></div>
   </div>
 
@@ -567,19 +508,8 @@ body {
 /* ════════════════════════════════════════
    STATE
    ════════════════════════════════════════ */
-/* ════════════════════════════════════════
-   SUPABASE
-   ════════════════════════════════════════ */
-const SB_URL = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
-let sb = null;
-try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
-
-/* ════════════════════════════════════════
-   STATE
-   ════════════════════════════════════════ */
 let currentRecipe = null;
-let library = [];
+let library = JSON.parse(localStorage.getItem('recipe-library') || '[]');
 
 /* ════════════════════════════════════════
    DOM REFS
@@ -713,10 +643,6 @@ function parseRecipeHTML(html) {
   // Servir avec
   const serveWith = text(doc, '.servir-value.filled') || '';
 
-  // Photo — extract base64 src from photo-zone img
-  const photoImg = doc.querySelector('.photo-zone img');
-  const photo = photoImg ? (photoImg.getAttribute('src') || '') : '';
-
   // Times
   const times = {};
   doc.querySelectorAll('.meta-pill').forEach(pill => {
@@ -786,7 +712,8 @@ function parseRecipeHTML(html) {
     });
 
     if (steps.length || phaseIngr.length) {
-      phases.push({ letter, title, timeBadges, ingredients: phaseIngr, steps });
+      const durationMode = phase.dataset.durationMode || 'max';
+      phases.push({ letter, title, timeBadges, durationMode, ingredients: phaseIngr, steps });
     }
   });
 
@@ -800,10 +727,9 @@ function parseRecipeHTML(html) {
   });
 
   return {
-    id: crypto.randomUUID ? crypto.randomUUID() : (slugify(title) + '-' + Date.now()),
+    id: slugify(title) + '-' + Date.now(),
     title, category: category.trim(), basePortions,
     serveWith, times, equipment, ingredients, phases, notes,
-    photo, html,
     _totalIngredients: totalIngr,
     addedAt: new Date().toISOString()
   };
@@ -826,7 +752,7 @@ function renderResults(r) {
   // Identity
   document.getElementById('r-title').textContent = r.title;
   document.getElementById('r-category').textContent = r.category || 'Non spécifiée';
-  document.getElementById('r-portions').textContent = `Base : ${r.basePortions || r.baseportions || '?'} personne${(r.basePortions || r.baseportions || 1) > 1 ? 's' : ''}`;
+  document.getElementById('r-portions').textContent = `Base : ${r.basePortions} personne${r.basePortions > 1 ? 's' : ''}`;
   document.getElementById('r-serve').textContent = r.serveWith ? `À servir avec : ${r.serveWith}` : '';
 
   // Times
@@ -937,44 +863,14 @@ function downloadJSON(data, filename) {
 /* ════════════════════════════════════════
    LIBRARY
    ════════════════════════════════════════ */
-addLibBtn.addEventListener('click', async () => {
+addLibBtn.addEventListener('click', () => {
   if (!currentRecipe) return;
-  if (!sb) { addStatus.textContent = '❌ Supabase non disponible.'; addStatus.style.color='var(--red)'; return; }
-  const full = JSON.parse(JSON.stringify(currentRecipe));
-  delete full._totalIngredients;
-
-  // Only send fields that exist as columns in the recettes table
-  const row = {
-    id:           full.id,
-    title:        full.title,
-    category:     full.category || '',
-    baseportions: full.basePortions || full.baseportions || 4,
-    times:        full.times        || {},
-    serving:      full.serveWith    || '',
-    equipment:    full.equipment    || [],
-    ingredients:  full.ingredients  || [],
-    phases:       full.phases       || [],
-    notes:        full.notes        || [],
-    addedat:      full.addedAt      || new Date().toISOString(),
-    photo:        full.photo        || '',
-    html:         full.html         || '',
-  };
-
-  addStatus.textContent = '⏳ Sauvegarde…';
-  addStatus.style.color = 'var(--muted)';
-  try {
-    const { error } = await sb.from('recettes_recettes').upsert(row, { onConflict: 'id' });
-    if (error) throw error;
-    const idx = library.findIndex(r => r.id === row.id);
-    if (idx >= 0) library[idx] = full; else library.push(full);
-    addStatus.textContent = `✓ Sauvegardé — ${library.length} recette(s)`;
-    addStatus.style.color = 'var(--green)';
-    renderLibrary();
-  } catch(e) {
-    addStatus.textContent = '❌ ' + e.message;
-    addStatus.style.color = 'var(--red)';
-    console.error('Supabase upsert error:', e);
-  }
+  const clean = JSON.parse(JSON.stringify(currentRecipe));
+  delete clean._totalIngredients;
+  const exists = library.findIndex(r => r.id === clean.id);
+  if (exists >= 0) { library[exists] = clean; addStatus.textContent = '✓ Recette mise à jour'; }
+  else { library.push(clean); addStatus.textContent = `✓ Ajouté — ${library.length} recette(s) dans la bibliothèque`; }
+  saveLibrary(); renderLibrary();
 });
 
 exportLibBtn.addEventListener('click', () => {
@@ -982,49 +878,15 @@ exportLibBtn.addEventListener('click', () => {
   downloadJSON({ recipes: library, exportedAt: new Date().toISOString(), count: library.length }, 'recipes.json');
 });
 
-clearLibBtn.addEventListener('click', async () => {
+clearLibBtn.addEventListener('click', () => {
   if (!library.length) return;
-  if (!confirm(`Vider la bibliothèque ? (${library.length} recette(s) supprimées)`)) return;
-  if (!sb) return;
-  try {
-    const ids = library.map(r => r.id);
-    const { error } = await sb.from('recettes_recettes').delete().in('id', ids);
-    if (error) throw error;
-    library = []; renderLibrary();
-    showStatus('success', '✓ Bibliothèque vidée.');
-  } catch(e) {
-    showStatus('error', '❌ ' + e.message);
+  if (confirm(`Vider la bibliothèque ? (${library.length} recette(s) seront supprimées)`)) {
+    library = []; saveLibrary(); renderLibrary();
   }
 });
 
-async function saveLibrary() {
-  if (!sb) { showStatus('error', '❌ Supabase non disponible.'); return; }
-  try {
-    const { error } = await sb.from('recettes_recettes').upsert(
-      library.map(r => ({ ...r, id: r.id })),
-      { onConflict: 'id' }
-    );
-    if (error) throw error;
-  } catch(e) {
-    showStatus('error', '❌ Erreur sauvegarde Supabase : ' + e.message);
-  }
-}
-
-async function loadLibrary() {
-  if (!sb) return;
-  try {
-    const { data, error } = await sb.from('recettes_recettes').select('id, title, category, baseportions, times, serving').order('title', { ascending: true });
-    if (error) throw error;
-    library = data || [];
-    document.getElementById('lib-count-badge').textContent = library.length ? `${library.length} recette(s)` : '';
-    renderLibrary();
-  } catch(e) {
-    showStatus('error', '❌ Erreur chargement bibliothèque : ' + e.message);
-  }
-}
-
-function toggleCatGroup(el) {
-  el.classList.toggle('open');
+function saveLibrary() {
+  localStorage.setItem('recipe-library', JSON.stringify(library));
 }
 
 function renderLibrary() {
@@ -1071,48 +933,26 @@ function renderLibrary() {
 
   let html = '';
   for (const cat of sortedCats) {
-    const items = groups[cat].filter(r =>
-      !q || r.title.toLowerCase().includes(q) || cat.toLowerCase().includes(q)
-    );
-    if (!items.length) continue;
-    // Auto-open if there's an active search
-    const isOpen = q ? 'open' : '';
-    html += `<div class="lib-cat-group ${isOpen}" id="catgroup-${btoa(unescape(encodeURIComponent(cat))).replace(/=/g,'')}">
-      <div class="lib-cat-group-title" onclick="toggleCatGroup(this.parentElement)">
-        <span class="lib-cat-group-chevron">▶</span>
-        <span class="lib-cat-group-name">${cat}</span>
-        <span class="lib-cat-group-count">${items.length} recette${items.length>1?'s':''}</span>
-      </div>
-      <div class="lib-cat-group-items">
-        <div class="library-list">
-          ${items.map(r => {
-            const i = library.indexOf(r);
-            return `<div class="library-item">
-              <span class="lib-cat">${r.category || '?'}</span>
-              <div class="lib-name">${r.title}</div>
-              <div class="lib-meta">${r.basePortions || r.baseportions || '?'} pers. · ${(r.phases||[]).length} phases · ${r.times?.total || r.times?.Total || '—'}</div>
-              <button class="lib-remove" onclick="removeFromLibrary(${i})" title="Supprimer">✕</button>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>
-    </div>`;
+    html += `<div class="lib-cat-group">
+      <div class="lib-cat-group-title">${cat}</div>
+      <div class="library-list">`;
+    for (const r of groups[cat]) {
+      const i = library.indexOf(r);
+      html += `<div class="library-item">
+        <span class="lib-cat">${r.category || '?'}</span>
+        <div class="lib-name">${r.title}</div>
+        <div class="lib-meta">${r.basePortions} pers. · ${r.phases.length} phases · ${r.times.total || r.times.Total || '—'}</div>
+        <button class="lib-remove" onclick="removeFromLibrary(${i})" title="Supprimer">✕</button>
+      </div>`;
+    }
+    html += '</div></div>';
   }
   container.innerHTML = html;
 }
 
-async function removeFromLibrary(i) {
-  const recipe = library[i];
-  if (!recipe) return;
-  if (!sb) return;
-  try {
-    const { error } = await sb.from('recettes_recettes').delete().eq('id', recipe.id);
-    if (error) throw error;
-    library.splice(i, 1);
-    renderLibrary();
-  } catch(e) {
-    showStatus('error', '❌ Erreur suppression : ' + e.message);
-  }
+function removeFromLibrary(i) {
+  library.splice(i, 1);
+  saveLibrary(); renderLibrary();
 }
 
 /* ════════════════════════════════════════
@@ -1125,139 +965,9 @@ function showStatus(type, msg) {
 }
 
 /* ════════════════════════════════════════
-   BATCH IMPORT
-   ════════════════════════════════════════ */
-
-// Batch upsert — sends rows in chunks of 20
-async function batchUpsert(rows) {
-  const CHUNK = 20;
-  for (let i = 0; i < rows.length; i += CHUNK) {
-    const chunk = rows.slice(i, i + CHUNK);
-    const { error } = await sb.from('recettes_recettes').upsert(chunk, { onConflict: 'id' });
-    if (error) throw error;
-  }
-}
-
-function buildRow(recipe) {
-  return {
-    id:           recipe.id,
-    title:        recipe.title,
-    category:     recipe.category || '',
-    baseportions: recipe.basePortions || recipe.baseportions || 4,
-    times:        recipe.times       || {},
-    serving:      recipe.serveWith   || recipe.serving || '',
-    equipment:    recipe.equipment   || [],
-    ingredients:  recipe.ingredients || [],
-    phases:       recipe.phases      || [],
-    notes:        recipe.notes       || [],
-    addedat:      recipe.addedAt     || recipe.addedat || new Date().toISOString(),
-    photo:        recipe.photo       || '',
-    html:         recipe.html        || '',
-  };
-}
-
-function setBatchProgress(current, total, label) {
-  const pct = total ? Math.round((current / total) * 100) : 0;
-  document.getElementById('batch-progress-bar').style.width = pct + '%';
-  document.getElementById('batch-progress-pct').textContent = pct + '%';
-  document.getElementById('batch-progress-label').textContent = label || `${current} / ${total}`;
-}
-
-function showBatchReport(ok, errors) {
-  const el = document.getElementById('batch-report');
-  if (errors.length === 0) {
-    el.style.background = '#edfaf3';
-    el.style.border = '0.5px solid #a0ddc0';
-    el.style.color = 'var(--green)';
-    el.innerHTML = `✓ ${ok} recette${ok>1?'s':''} importée${ok>1?'s':''} avec succès.`;
-  } else {
-    el.style.background = '#fef0f0';
-    el.style.border = '0.5px solid #f0c0c0';
-    el.style.color = 'var(--red)';
-    el.innerHTML = `✓ ${ok} importée${ok>1?'s':''} · ❌ ${errors.length} erreur${errors.length>1?'s':''} :<br>`
-      + errors.map(e => `<small>${e}</small>`).join('<br>');
-  }
-  el.style.display = 'block';
-}
-
-// ── MULTI-HTML IMPORT ──
-document.getElementById('batch-html-input').addEventListener('change', async function() {
-  const files = [...this.files];
-  if (!files.length) return;
-  if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
-
-  document.getElementById('batch-progress-wrap').style.display = 'block';
-  document.getElementById('batch-report').style.display = 'none';
-
-  const rows = [], errors = [];
-  for (let i = 0; i < files.length; i++) {
-    setBatchProgress(i, files.length, `Analyse : ${files[i].name}`);
-    try {
-      const html = await files[i].text();
-      const recipe = parseRecipeHTML(html);
-      if (!recipe.title || recipe.title === 'Sans titre') throw new Error('Titre introuvable');
-      rows.push(buildRow(recipe));
-    } catch(e) {
-      errors.push(`${files[i].name} — ${e.message}`);
-    }
-  }
-
-  setBatchProgress(files.length, files.length, 'Sauvegarde Supabase…');
-  try {
-    await batchUpsert(rows);
-    rows.forEach(r => {
-      const idx = library.findIndex(x => x.id === r.id);
-      if (idx >= 0) library[idx] = r; else library.push(r);
-    });
-    renderLibrary();
-    document.getElementById('lib-count-badge').textContent = library.length + ' recette(s)';
-    showBatchReport(rows.length, errors);
-  } catch(e) {
-    errors.push('Erreur Supabase : ' + e.message);
-    showBatchReport(rows.length, errors);
-  }
-  this.value = '';
-});
-
-// ── JSON IMPORT ──
-document.getElementById('batch-json-input').addEventListener('change', async function() {
-  const file = this.files[0];
-  if (!file) return;
-  if (!sb) { showStatus('error','❌ Supabase non disponible.'); return; }
-
-  document.getElementById('batch-progress-wrap').style.display = 'block';
-  document.getElementById('batch-report').style.display = 'none';
-  setBatchProgress(0, 1, 'Lecture du fichier JSON…');
-
-  try {
-    const raw = await file.text();
-    const parsed = JSON.parse(raw);
-    const items = Array.isArray(parsed) ? parsed : (parsed.recipes || Object.values(parsed));
-    if (!items.length) throw new Error('Aucune recette trouvée dans le JSON');
-
-    setBatchProgress(0, items.length, 'Préparation des données…');
-    const rows = items.map(buildRow);
-
-    setBatchProgress(items.length, items.length, 'Sauvegarde Supabase…');
-    await batchUpsert(rows);
-
-    rows.forEach(r => {
-      const idx = library.findIndex(x => x.id === r.id);
-      if (idx >= 0) library[idx] = r; else library.push(r);
-    });
-    renderLibrary();
-    document.getElementById('lib-count-badge').textContent = library.length + ' recette(s)';
-    showBatchReport(rows.length, []);
-  } catch(e) {
-    showBatchReport(0, [e.message]);
-  }
-  this.value = '';
-});
-
-/* ════════════════════════════════════════
    INIT
    ════════════════════════════════════════ */
-loadLibrary();
+renderLibrary();
 </script>
 </body>
 </html>
