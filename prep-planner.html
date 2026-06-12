@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Planificateur de Préparation — Étape 3</title>
+<title>Planificateur de Préparation</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --navy:#0f2d5a;--navy2:#1a4a8a;--navy3:#5a86c4;
@@ -132,6 +133,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
 .legend-dot{width:12px;height:12px;border-radius:3px;}
 
+
+/* NAV */
+.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
+.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;}
+.nav-links{display:flex;}
+.nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-link:hover{color:rgba(255,255,255,.8);}
+.nav-link.active{color:#fff;border-bottom-color:#b8860b;}
 @media print{
   .app-header,.day-strip,.setup-card,.tabs,.btn{display:none!important;}
   .tab-content{border:none;box-shadow:none;padding:0;}
@@ -141,14 +150,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </head>
 <body>
 
+<nav class="app-nav">
+  <span class="nav-brand">🍽️ Recettes</span>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Bibliothèque</a>
+    <a href="recipe-parser.html" class="nav-link">Parseur</a>
+    <a href="menu-builder.html" class="nav-link">Menu</a>
+    <a href="prep-planner.html" class="nav-link active">Planificateur</a>
+  </div>
+</nav>
+
 <header class="app-header">
   <div class="header-icon">⏱️</div>
   <div class="header-title">
     <h1>Planificateur de Préparation</h1>
-    <p>J-1 / J-2 + Timing Jour J · Étape 3 sur 5</p>
+    <p>J-1 / J-2 + Timing Jour J</p>
   </div>
   <div class="header-actions">
-    <button class="btn btn-white" onclick="loadData()">🔗 Charger depuis menu</button>
+    <button class="btn btn-white" onclick="loadData()">🔄 Recharger</button>
     <button class="btn btn-white btn-sm" onclick="window.print()">🖨️ Imprimer</button>
   </div>
 </header>
@@ -192,6 +211,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 
 <script>
 /* ═══════════════════════════════════════
+   SUPABASE
+═══════════════════════════════════════ */
+const SB_URL  = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
+const SB_RECIPES  = 'recettes_recettes';
+const SB_MENUS    = 'recettes_menus';
+const MENU_ID     = 'main';
+let sb = null;
+try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+
+/* ═══════════════════════════════════════
    CONFIG
 ═══════════════════════════════════════ */
 const MEAL_COLORS = { pd:'#f59e0b',dj:'#3b82f6',ap:'#22c55e',di:'#6366f1',de:'#ec4899',bo:'#06b6d4',sp:'#f97316' };
@@ -214,23 +244,54 @@ let phaseOverrides = {};
 let planData = null; // computed plan
 
 /* ═══════════════════════════════════════
-   LOAD DATA
+   LOAD DATA (Supabase)
 ═══════════════════════════════════════ */
-function loadData(){
-  const rRaw = localStorage.getItem('recipe-library');
-  const mRaw = localStorage.getItem('weekly-menu');
-  if(!rRaw||!mRaw){ showStatus('error','❌ Bibliothèque ou menu introuvable. Ouvrez d\'abord le Parseur puis le Menu Builder.'); return; }
+async function loadData(){
+  if(!sb){ showStatus('error','❌ Supabase non disponible.'); return; }
+  showStatus('info','⏳ Chargement depuis Supabase…');
   try{
-    recipes = JSON.parse(rRaw);
-    const ms = JSON.parse(mRaw);
-    menu = ms.menu||{}; numDays = ms.numDays||7;
-    const saved = JSON.parse(localStorage.getItem('meal-timings')||'{}');
-    mealTimings = saved;
+    // Recettes
+    const { data: recData, error: recErr } = await sb.from(SB_RECIPES)
+      .select('id, title, category, baseportions, times, serving, equipment, ingredients, phases');
+    if(recErr) throw new Error('Recettes : '+recErr.message);
+    recipes = recData || [];
+
+    // Menu
+    const { data: menuData, error: menuErr } = await sb.from(SB_MENUS)
+      .select('data').eq('id', MENU_ID).maybeSingle();
+    if(menuErr) throw new Error('Menu : '+menuErr.message);
+    if(!menuData?.data){ showStatus('error','❌ Aucun menu sauvegardé. Créez un menu dans le Menu Builder.'); return; }
+
+    const payload = menuData.data;
+    numDays = payload.numDays || 7;
+    if(payload.startDate) startDate = payload.startDate;
+
+    // Reconstruire menu avec clés date locales
+    const rawMenu = payload.menu || {};
+    menu = {};
+    const allKeys = Object.keys(rawMenu);
+    const isPositional = allKeys.length > 0 && allKeys.every(k => /^\d+$/.test(k));
+    for(const [k, v] of Object.entries(rawMenu)){
+      let key;
+      if(isPositional){
+        const start = new Date((payload.startDate||localDate(new Date()))+'T00:00:00');
+        const dt = new Date(start); dt.setDate(start.getDate()+parseInt(k));
+        key = localDate(dt);
+      } else { key = k; }
+      menu[key] = {};
+      for(const [mealId, slots] of Object.entries(v)){
+        menu[key][mealId] = Array.isArray(slots) ? slots : [slots];
+      }
+    }
+
+    mealTimings = JSON.parse(localStorage.getItem('meal-timings')||'{}');
     buildDayStrip();
     selectDay(0);
-    showStatus('success','✓ Données chargées — sélectionnez un jour et définissez les horaires.');
-  }catch(e){ showStatus('error','❌ Erreur de lecture : '+e.message); }
+    showStatus('success','✓ '+recipes.length+' recette(s) et menu chargés depuis Supabase.');
+  }catch(e){ showStatus('error','❌ '+e.message); }
 }
+
+function localDate(dt){ return dt.toLocaleDateString('fr-CA'); }
 
 /* ═══════════════════════════════════════
    DAY STRIP
@@ -346,14 +407,12 @@ function isRestPhase(phase){
 }
 
 function getPhaseDuration(phase){
-  const badges=(phase.timeBadges||[]);
-  if(!badges.length) return 15;
-  // data-duration-mode="sum" sur la div.phase → sommer tous les badges (phases séquentielles)
-  // par défaut : max (badges parallèles ou redondants)
-  if(phase.durationMode==='sum'){
-    return badges.reduce((acc,b)=>acc+parseDuration(b),0)||15;
+  let total=0;
+  for(const badge of (phase.timeBadges||[])){
+    const d=parseDuration(badge);
+    total=Math.max(total,d); // take the max badge (avoid summing e.g. knife+fire)
   }
-  return badges.reduce((acc,b)=>Math.max(acc,parseDuration(b)),0)||15;
+  return total||15; // default 15 min
 }
 
 /* ═══════════════════════════════════════
@@ -567,19 +626,8 @@ function showStatus(type,msg){
 /* ═══════════════════════════════════════
    INIT
 ═══════════════════════════════════════ */
-(function(){
-  const rRaw=localStorage.getItem('recipe-library');
-  const mRaw=localStorage.getItem('weekly-menu');
-  if(rRaw&&mRaw){
-    try{
-      recipes=JSON.parse(rRaw);
-      const ms=JSON.parse(mRaw); menu=ms.menu||{}; numDays=ms.numDays||7;
-      mealTimings=JSON.parse(localStorage.getItem('meal-timings')||'{}');
-      buildDayStrip(); selectDay(0);
-      showStatus('info','ℹ️ Données chargées automatiquement. Définissez les horaires de service et cliquez sur « Calculer ».');
-    }catch(_){}
-  }
-})();
+let startDate = localDate(new Date());
+loadData();
 </script>
 </body>
 </html>
