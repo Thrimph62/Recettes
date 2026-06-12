@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Parseur de Recettes — Étape 1</title>
+<title>Parseur de Recettes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --navy:   #0f2d5a;
@@ -22,6 +23,14 @@
   --white:  #ffffff;
   --red:    #a02020;
 }
+
+/* NAV */
+.app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
+.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;}
+.nav-links{display:flex;}
+.nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-link:hover{color:rgba(255,255,255,.8);}
+.nav-link.active{color:#fff;border-bottom-color:#b8860b;}
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'DM Sans', sans-serif;
@@ -357,11 +366,21 @@ body {
 </head>
 <body>
 
+<nav class="app-nav">
+  <span class="nav-brand">🍽️ Recettes</span>
+  <div class="nav-links">
+    <a href="index.html" class="nav-link">Bibliothèque</a>
+    <a href="recipe-parser.html" class="nav-link active">Parseur</a>
+    <a href="menu-builder.html" class="nav-link">Menu</a>
+    <a href="prep-planner.html" class="nav-link">Planificateur</a>
+  </div>
+</nav>
+
 <header class="app-header">
   <div class="header-icon">🍽️</div>
   <div class="header-title">
     <h1>Parseur de Recettes</h1>
-    <p>HTML → JSON · Étape 1 sur 5</p>
+    <p>HTML → Supabase</p>
   </div>
   <div class="header-badge">v1.0 · standalone</div>
 </header>
@@ -506,10 +525,19 @@ body {
 
 <script>
 /* ════════════════════════════════════════
+   SUPABASE
+   ════════════════════════════════════════ */
+const SB_URL  = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
+const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
+const SB_TABLE = 'recettes_recettes';
+let sb = null;
+try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+
+/* ════════════════════════════════════════
    STATE
    ════════════════════════════════════════ */
 let currentRecipe = null;
-let library = JSON.parse(localStorage.getItem('recipe-library') || '[]');
+let library = [];
 
 /* ════════════════════════════════════════
    DOM REFS
@@ -585,6 +613,7 @@ parseBtn.addEventListener('click', async () => {
       const url = urlInput.value.trim();
       html = await fetchURL(url);
     }
+    currentHtml = html;
     const recipe = parseRecipeHTML(html);
     currentRecipe = recipe;
     renderResults(recipe);
@@ -712,8 +741,7 @@ function parseRecipeHTML(html) {
     });
 
     if (steps.length || phaseIngr.length) {
-      const durationMode = phase.dataset.durationMode || 'max';
-      phases.push({ letter, title, timeBadges, durationMode, ingredients: phaseIngr, steps });
+      phases.push({ letter, title, timeBadges, ingredients: phaseIngr, steps });
     }
   });
 
@@ -861,16 +889,38 @@ function downloadJSON(data, filename) {
 }
 
 /* ════════════════════════════════════════
-   LIBRARY
+   LIBRARY (Supabase)
    ════════════════════════════════════════ */
-addLibBtn.addEventListener('click', () => {
+addLibBtn.addEventListener('click', async () => {
   if (!currentRecipe) return;
   const clean = JSON.parse(JSON.stringify(currentRecipe));
   delete clean._totalIngredients;
-  const exists = library.findIndex(r => r.id === clean.id);
-  if (exists >= 0) { library[exists] = clean; addStatus.textContent = '✓ Recette mise à jour'; }
-  else { library.push(clean); addStatus.textContent = `✓ Ajouté — ${library.length} recette(s) dans la bibliothèque`; }
-  saveLibrary(); renderLibrary();
+  addStatus.textContent = '⏳ Sauvegarde…';
+  try {
+    const row = {
+      id:           clean.id,
+      title:        clean.title,
+      category:     clean.category || '',
+      baseportions: clean.basePortions || 4,
+      times:        clean.times || {},
+      serving:      clean.serveWith || '',
+      equipment:    clean.equipment || [],
+      ingredients:  clean.ingredients || [],
+      phases:       clean.phases || [],
+      notes:        clean.notes || [],
+      addedat:      clean.addedAt || new Date().toISOString(),
+      html:         currentHtml || '',
+    };
+    const { error } = await sb.from(SB_TABLE).upsert(row, { onConflict: 'id' });
+    if (error) throw error;
+    // Mettre à jour la bibliothèque locale
+    const exists = library.findIndex(r => r.id === clean.id);
+    if (exists >= 0) { library[exists] = clean; addStatus.textContent = '✓ Recette mise à jour dans Supabase'; }
+    else { library.push(clean); addStatus.textContent = `✓ Ajouté — ${library.length} recette(s)`; }
+    renderLibrary();
+  } catch(e) {
+    addStatus.textContent = '❌ Erreur : ' + e.message;
+  }
 });
 
 exportLibBtn.addEventListener('click', () => {
@@ -880,13 +930,13 @@ exportLibBtn.addEventListener('click', () => {
 
 clearLibBtn.addEventListener('click', () => {
   if (!library.length) return;
-  if (confirm(`Vider la bibliothèque ? (${library.length} recette(s) seront supprimées)`)) {
-    library = []; saveLibrary(); renderLibrary();
+  if (confirm(`Vider l'affichage local ? (ne supprime pas Supabase)`)) {
+    library = []; renderLibrary();
   }
 });
 
 function saveLibrary() {
-  localStorage.setItem('recipe-library', JSON.stringify(library));
+  // Plus utilisé — Supabase est la source de vérité
 }
 
 function renderLibrary() {
@@ -967,7 +1017,28 @@ function showStatus(type, msg) {
 /* ════════════════════════════════════════
    INIT
    ════════════════════════════════════════ */
-renderLibrary();
+// Stocker le HTML source pour l'envoyer à Supabase
+let currentHtml = '';
+
+// Charger la bibliothèque depuis Supabase au démarrage
+(async () => {
+  if (!sb) { renderLibrary(); return; }
+  try {
+    const { data, error } = await sb.from(SB_TABLE)
+      .select('id, title, category, baseportions, times, serving, equipment, ingredients, phases, notes, addedat')
+      .order('addedat', { ascending: false });
+    if (!error && data) {
+      library = data.map(r => ({
+        id: r.id, title: r.title, category: r.category,
+        basePortions: r.baseportions, times: r.times,
+        serveWith: r.serving, equipment: r.equipment,
+        ingredients: r.ingredients, phases: r.phases,
+        notes: r.notes, addedAt: r.addedat
+      }));
+    }
+  } catch(e) { console.warn('Supabase load error:', e); }
+  renderLibrary();
+})();
 </script>
 </body>
 </html>
