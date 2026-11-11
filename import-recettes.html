@@ -10,6 +10,7 @@
 <script src="auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<link rel="stylesheet" href="style.css">
 <style>
 :root {
   --navy:#0f2d5a;--navy2:#1a4a8a;--navy3:#5a86c4;
@@ -17,13 +18,10 @@
   --text:#1a1a2e;--muted:#5a6a8a;--gold:#b8860b;
   --green:#1a7a4a;--bg:#f0f2f7;--white:#ffffff;--red:#a02020;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 .app-header{background:var(--navy);padding:1.8rem 3rem;display:flex;align-items:center;gap:1.5rem;}
 .header-icon{width:46px;height:46px;background:rgba(255,255,255,.1);border:.5px solid rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;}
 .header-title{color:#fff;}
 .header-title h1{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;margin-bottom:2px;}
-.header-title p{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.06em;text-transform:uppercase;}
 .header-badge{margin-left:auto;padding:4px 14px;background:rgba(255,255,255,.08);border:.5px solid rgba(255,255,255,.15);border-radius:20px;font-size:11px;color:rgba(255,255,255,.45);font-family:'DM Mono',monospace;letter-spacing:.04em;}
 .app-body{max-width:1040px;margin:0 auto;padding:2.5rem 2rem;}
 .card{background:var(--white);border:.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:1.5rem;box-shadow:0 2px 12px rgba(15,45,90,.05);}
@@ -252,6 +250,7 @@ const PALETTES = {
   'Apéritif':       { c1:'#4a2c10', c2:'#6b3f1e', c3:'#9a7050', bg:'#f5ece0', bg2:'#faf5f0', brd:'#d4b898' },
   'Entrée':         { c1:'#3d1a6b', c2:'#5a2d8a', c3:'#8a5ab4', bg:'#f0e8fb', bg2:'#f8f4fd', brd:'#c8a8e8' },
   'Sauce':          { c1:'#2e2e2e', c2:'#444444', c3:'#707070', bg:'#f0f0f0', bg2:'#f7f7f7', brd:'#d0d0d0' },
+  'Divers':         { c1:'#2c2c2c', c2:'#4a4a4a', c3:'#7a7a7a', bg:'#efefef', bg2:'#f7f7f7', brd:'#d8d8d8' },
 };
 function getPalette(cat) {
   return PALETTES[cat] || PALETTES['Plat'];
@@ -267,7 +266,7 @@ Retourne UNIQUEMENT un objet JSON valide, sans texte avant/après, sans balises 
 Structure JSON :
 {
   "title": "Nom de la recette",
-  "category": "Plat|Viande|Poisson|Accompagnement|Dessert|Boissons|Apéritif|Entrée|Sauce",
+  "category": "Plat|Viande|Poisson|Accompagnement|Dessert|Boissons|Apéritif|Entrée|Sauce|Divers",
   "basePortions": 4,
   "serveWith": "",
   "times": { "preparation": "20 min", "cuisson": "30 min", "repos": "1 h", "total": "1 h 50 min" },

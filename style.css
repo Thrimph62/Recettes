@@ -1,0 +1,18 @@
+/* style.css — règles communes aux pages de l'app (reset, body, navigation) */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+/* NAV */ .app-nav{background:var(--navy);padding:0 2.5rem;display:flex;align-items:center;border-bottom:0.5px solid rgba(255,255,255,.08);}
+.nav-brand{font-family:'DM Serif Display',serif;color:#fff;font-size:17px;font-weight:400;padding:1rem 0;margin-right:2rem;white-space:nowrap;}
+.nav-links{display:flex;}
+.nav-link{color:rgba(255,255,255,.45);text-decoration:none;font-size:12px;letter-spacing:.05em;text-transform:uppercase;padding:1rem 1.2rem;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-link:hover{color:rgba(255,255,255,.8);}
+.nav-link.active{color:#fff;border-bottom-color:var(--gold);}
+.header-title p{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.06em;text-transform:uppercase;}
+
+/* ── Mobile ── */
+@media (max-width:640px){
+  .app-nav{padding:0 1rem;overflow-x:auto;}
+  .nav-brand{margin-right:1rem;}
+  .nav-link{padding:1rem .75rem;}
+  .app-header{padding:1rem;flex-wrap:wrap;}
+}
