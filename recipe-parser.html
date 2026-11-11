@@ -972,9 +972,11 @@ addLibBtn.addEventListener('click', async () => {
   }
 });
 
-exportLibBtn.addEventListener('click', () => {
+exportLibBtn.addEventListener('click', async () => {
   if (!library.length) return;
-  downloadJSON({ recipes: library, exportedAt: new Date().toISOString(), count: library.length }, 'recipes.json');
+  const { data, error } = await sb.from('recettes_recettes').select('*').order('title');
+  if (error) return showStatus('error', '❌ Export impossible : ' + error.message);
+  downloadJSON({ recipes: data, exportedAt: new Date().toISOString(), count: data.length }, 'recipes.json');
 });
 
 clearLibBtn.addEventListener('click', async () => {

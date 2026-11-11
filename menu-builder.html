@@ -642,13 +642,11 @@ async function loadSavedMenu() {
   if (!sb) { showStatus('error','❌ Supabase non disponible.'); buildGrid(); return; }
   try {
     const { data, error } = await sb.from(SB_MENUS).select('data').eq('id', MENU_ID).maybeSingle();
-    console.log('[Menu] Supabase response:', { data, error });
 
     if (error) { console.error('[Menu] Error:', error); buildGrid(); return; }
-    if (!data?.data) { console.log('[Menu] No saved menu.'); buildGrid(); return; }
+    if (!data?.data) { buildGrid(); return; }
 
     const payload = data.data;
-    console.log('[Menu] Payload:', payload);
 
     // Apply settings BEFORE computing dateKey
     numDays = payload.numDays || 7;
@@ -668,7 +666,6 @@ async function loadSavedMenu() {
     menu = {};
     const allKeys = Object.keys(rawMenu);
     const isPositional = allKeys.length > 0 && allKeys.every(k => /^\d+$/.test(k));
-    console.log('[Menu] Keys from Supabase:', allKeys, '| Positional?', isPositional);
 
     for (const [k, v] of Object.entries(rawMenu)) {
       let key;
@@ -686,8 +683,6 @@ async function loadSavedMenu() {
       }
     }
 
-    console.log('[Menu] Final menu keys:', Object.keys(menu));
-    console.log('[Menu] dateKey(0) will be:', dateKey(0));
 
     buildGrid();
   } catch(e) {
