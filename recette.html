@@ -68,8 +68,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 <div id="recipe-container" style="display:none"></div>
 
 <script>
-const SB_URL = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
 
 (async () => {
   // Get id from URL
@@ -77,8 +75,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
   const id = params.get('id');
   if (!id) { showError(); return; }
 
-  let sb;
-  try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) { showError(); return; }
+  const sb = window._sb;
 
   try {
     const { data, error } = await sb
@@ -94,25 +91,18 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
     document.getElementById('breadcrumb').textContent = data.category + ' · ' + data.title;
 
     if (data.html) {
-      // Render the stored HTML directly in an iframe for full isolation
+      // Isolation : sandbox sans allow-same-origin (les scripts de la recette tournent, mais sans accès à la session)
       const container = document.getElementById('recipe-container');
       const iframe = document.createElement('iframe');
       iframe.id = 'recipe-frame';
       iframe.scrolling = 'no';
+      iframe.sandbox = 'allow-scripts';
+      const reporter = '<script>new ResizeObserver(()=>parent.postMessage({recipeH:document.documentElement.scrollHeight},"*")).observe(document.documentElement)<\/script>';
+      iframe.srcdoc = data.html + reporter;
+      window.addEventListener('message', e => {
+        if (e.source === iframe.contentWindow && e.data?.recipeH) iframe.style.height = e.data.recipeH + 'px';
+      });
       container.appendChild(iframe);
-
-      const iDoc = iframe.contentDocument || iframe.contentWindow.document;
-      iDoc.open();
-      iDoc.write(data.html);
-      iDoc.close();
-
-      // Auto-resize iframe to content height
-      const resize = () => {
-        try { iframe.style.height = iDoc.body.scrollHeight + 'px'; } catch(_) {}
-      };
-      iframe.onload = resize;
-      setTimeout(resize, 300);
-      setTimeout(resize, 800);
 
       document.getElementById('state-loading').style.display = 'none';
       container.style.display = 'block';

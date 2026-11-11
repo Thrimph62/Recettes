@@ -556,8 +556,6 @@ body.view-list .recipes-list { display: flex; }
 
 <!-- ══ CONFIG SUPABASE ══════════════════════ -->
 <script>
-const SUPABASE_URL      = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
 const TABLE_NAME        = 'recettes_recettes';
 </script>
 <!-- ══════════════════════════════════════════════ -->
@@ -729,12 +727,7 @@ const TABLE_NAME        = 'recettes_recettes';
 /* ════════════════════════════════════════
    INIT SUPABASE
 ════════════════════════════════════════ */
-let sbClient = null;
-try {
-  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch(e) {
-  console.warn('Supabase init failed', e);
-}
+const sbClient = window._sb;
 
 /* ════════════════════════════════════════
    STATE
@@ -917,7 +910,7 @@ function renderFilterTags(f) {
 
   el.innerHTML = tags.map(t => `
     <span class="filter-tag">
-      ${t.label}
+      ${esc(t.label)}
       <button class="filter-tag-remove" onclick="clearOneFilter('${t.key}')" title="Retirer">✕</button>
     </span>
   `).join('');
@@ -1000,6 +993,8 @@ function renderRecipes() {
   }
 }
 
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
 function recipeUrl(r) {
   return `recette.html?id=${encodeURIComponent(r.id)}`;
 }
@@ -1032,8 +1027,8 @@ function renderGrid(recipes) {
     <a href="${recipeUrl(r)}" class="recipe-card ${catClass(r.category)}">
       <div class="card-category-bar" style="background:${color}"></div>
       <div class="card-body">
-        <div class="card-cat-tag" style="color:${color}">${r.category || 'Recette'}</div>
-        <div class="card-title">${r.title}</div>
+        <div class="card-cat-tag" style="color:${color}">${esc(r.category || 'Recette')}</div>
+        <div class="card-title">${esc(r.title)}</div>
         <div class="card-meta">
           ${total ? `<div class="card-meta-item"><span class="card-meta-icon">⏱</span>${formatTime(total)}</div>` : ''}
           <div class="card-meta-item"><span class="card-meta-icon">👤</span>${portions} pers.</div>
@@ -1053,8 +1048,8 @@ function renderList(recipes) {
     return `
     <a href="${recipeUrl(r)}" class="recipe-row">
       <div class="row-cat-dot" style="background:${color}"></div>
-      <div class="row-title">${r.title}</div>
-      <div class="row-cat" style="color:${color}">${r.category || '—'}</div>
+      <div class="row-title">${esc(r.title)}</div>
+      <div class="row-cat" style="color:${color}">${esc(r.category || '—')}</div>
       <div class="row-meta">
         <div class="row-meta-item"><span>⏱</span> ${formatTime(total)}</div>
         <div class="row-meta-item"><span>👤</span> ${portions} pers.</div>

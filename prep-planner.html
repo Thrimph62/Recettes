@@ -250,10 +250,8 @@ tr[data-meal="sp"] .recap-meal-label{border-left-color:#f97316;}
 /* ══════════════════════════════════════
    SUPABASE
 ══════════════════════════════════════ */
-const SB_URL = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
 let sb = null;
-try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+sb = window._sb;
 
 /* ══════════════════════════════════════
    CONFIG
@@ -623,7 +621,7 @@ function generatePlan() {
         for (const s of groups[db]) {
           const ck = `${dateKey}-${s.recipe.id}-${s.phaseIdx}`;
           const done = checkedSteps.has(ck);
-          html += `<div class="step-row ${done?'done':''}" id="sr-${ck}">
+          html += `<div class="step-row ${done?'done':''}" data-ck="${ck}">
             <input type="checkbox" class="step-cb" ${done?'checked':''} onchange="toggleStep('${ck}',this.checked)">
             <div class="step-time">
               <span class="step-time-range advance-label">J − ${db}</span>
@@ -658,7 +656,7 @@ function generatePlan() {
         for (const s of grp.steps) {
           const ck   = `${dateKey}-${s.recipe.id}-${s.phaseIdx}`;
           const done = checkedSteps.has(ck);
-          html += `<div class="step-row ${done?'done':''}" id="sr-${ck}">
+          html += `<div class="step-row ${done?'done':''}" data-ck="${ck}">
             <input type="checkbox" class="step-cb" ${done?'checked':''} onchange="toggleStep('${ck}',this.checked)">
             <div class="step-time">
               <span class="step-time-range">${minToTime(s.startMin)} → ${minToTime(s.endMin)}</span>
@@ -688,8 +686,7 @@ function generatePlan() {
 ══════════════════════════════════════ */
 function toggleStep(ck, done) {
   if (done) checkedSteps.add(ck); else checkedSteps.delete(ck);
-  const row = document.getElementById('sr-'+ck);
-  if (row) row.classList.toggle('done', done);
+  document.querySelectorAll(`[data-ck="${CSS.escape(ck)}"]`).forEach(r => r.classList.toggle('done', done));
   saveChecks();
 }
 

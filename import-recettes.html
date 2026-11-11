@@ -6,6 +6,8 @@
 <title>Import Recettes — DOCX / PDF</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
@@ -403,7 +405,7 @@ async function parseWithClaude(rawText, filename) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-allow-browser': 'true' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
+      model: 'claude-sonnet-5-5',
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: 'Fichier : ' + filename + '\n\n---\n' + rawText.slice(0, 12000) + '\n---' }]
@@ -715,18 +717,19 @@ function addCurrentToLibrary() { if (currentRecipe) addToLibrary(currentRecipe);
 function addToLibFromQueue(i) { const r=queue[i].result; if(r) addToLibrary(r); }
 function saveLibrary() { localStorage.setItem('import-library', JSON.stringify(library)); }
 
-function pushToSite() {
+async function pushToSite() {
   if (!library.length) return;
-  const existing = JSON.parse(localStorage.getItem('recipe-library') || '[]');
-  let added = 0, updated = 0;
-  for (const r of library) {
-    const idx = existing.findIndex(x => x.id === r.id || x.title === r.title);
-    if (idx >= 0) { existing[idx] = r; updated++; }
-    else { existing.push(r); added++; }
-  }
-  localStorage.setItem('recipe-library', JSON.stringify(existing));
-  const total = existing.length;
-  alert('Bibliotheque principale mise a jour !\n\n' + added + ' recette(s) ajoutee(s)\n' + updated + ' recette(s) mise(s) a jour\nTotal dans le site : ' + total + ' recette(s)\n\nDisponibles dans le Parseur et le Menu Builder.');
+  const rows = library.map(r => ({
+    id: r.id, title: r.title, category: r.category || '',
+    baseportions: r.basePortions || r.baseportions || 4,
+    times: r.times || {}, serving: r.serveWith || '',
+    equipment: r.equipment || [], ingredients: r.ingredients || [],
+    phases: r.phases || [], notes: r.notes || [],
+    addedat: r.addedAt || new Date().toISOString(),
+    photo: r.photo || '', html: generateRecipeHTML(r),
+  }));
+  const { error } = await window._sb.from('recettes_recettes').upsert(rows, { onConflict: 'id' });
+  alert(error ? 'Erreur Supabase : ' + error.message : rows.length + ' recette(s) envoyée(s) vers le site.');
 }
 function exportLibrary() {
   const blob = new Blob([JSON.stringify({recipes:library,exportedAt:new Date().toISOString(),count:library.length},null,2)],{type:'application/json'});

@@ -271,8 +271,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 /* ══════════════════════════════════════
    SUPABASE
 ══════════════════════════════════════ */
-const SB_URL  = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
 const SB_RECIPES = 'recettes_recettes';
 const SB_MENUS   = 'recettes_menus';
 const MENU_ID    = 'main';
@@ -280,7 +278,7 @@ const SB_SHOPPING = 'recettes_listes_courses';
 const SHOPPING_ROW_ID = 'main';
 
 let sb = null;
-try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+sb = window._sb;
 
 /* ══════════════════════════════════════
    CONFIG

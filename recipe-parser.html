@@ -570,10 +570,8 @@ body {
 /* ════════════════════════════════════════
    SUPABASE
    ════════════════════════════════════════ */
-const SB_URL = 'https://wcmbbgkjjlohxviwjivm.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjbWJiZ2tqamxvaHh2aXdqaXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY2MDk5NTMsImV4cCI6MjA5MjE4NTk1M30.CUf2regwchLkDtCPnQn-lkVBMR42LKkvMQs3QEUfdMs';
 let sb = null;
-try { sb = window.supabase.createClient(SB_URL, SB_KEY); } catch(e) {}
+sb = window._sb;
 
 /* ════════════════════════════════════════
    STATE
