@@ -701,8 +701,8 @@ function parseRecipeHTML(html) {
   // Base portions — from JS constant or display element
   let basePortions = 4;
   const scriptContent = doc.querySelector('script')?.textContent || '';
-  const bpMatch = scriptContent.match(/BASE_PORTIONS\s*=\s*(\d+)/);
-  if (bpMatch) basePortions = parseInt(bpMatch[1]);
+  const bpMatch = scriptContent.match(/BASE_PORTIONS\s*=\s*([\d.]+)/);
+  if (bpMatch) basePortions = parseFloat(bpMatch[1]);
 
   // Servir avec
   const serveWith = text(doc, '.servir-value.filled') || '';
@@ -765,6 +765,7 @@ function parseRecipeHTML(html) {
 
     const phaseIngr = [];
     phase.querySelectorAll('.ingr-chip').forEach(chip => {
+      if (chip.textContent.trim() === 'Aucun ajout') return;
       const qtyEl = chip.querySelector('.chip-qty');
       const qty   = qtyEl ? (parseFloat(qtyEl.dataset.base) || 0) : 0;
       const unit  = qtyEl ? (qtyEl.dataset.unit || '') : '';
